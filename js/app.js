@@ -229,9 +229,9 @@ HeadsUp.prototype.BIG_TEXT_Y = 606/2 - 20;
 HeadsUp.prototype.INSTRUCTIONS_X = 505/2;
 HeadsUp.prototype.INSTRUCTIONS_Y = 606/2 + 20;
 HeadsUp.prototype.LEVEL_X = 0;
-HeadsUp.prototype.LEVEL_Y = 7 * 83;
-HeadsUp.prototype.LIVES_X = 6 * 101;
-HeadsUp.prototype.LIVES_Y = 7 * 83;
+HeadsUp.prototype.LEVEL_Y = (Map.prototype.ROWS + 1) * Map.prototype.ROW_HEIGHT + 25;
+HeadsUp.prototype.LIVES_X = Map.prototype.COLS * Map.prototype.COL_WIDTH;
+HeadsUp.prototype.LIVES_Y = (Map.prototype.ROWS + 1) * Map.prototype.ROW_HEIGHT + 25;
 HeadsUp.prototype.TYPEFACE = 'Impact';
 HeadsUp.prototype.render = function() {
 	if (this.bigText){
@@ -247,10 +247,10 @@ HeadsUp.prototype.render = function() {
 		}
 	}
 	if (this.levelText){
-		this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,LIVES_TEXT_SIZE,this.TYPEFACE,'center');
+		this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,LEVEL_TEXT_SIZE,this.TYPEFACE,'left');
 	}
 	if (this.livesText){
-		this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,LEVEL_TEXT_SIZE,this.TYPEFACE,'center');
+		this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,LIVES_TEXT_SIZE,this.TYPEFACE,'right');
 	}
 };
 HeadsUp.prototype.renderText = function(text,x,y,textSize,typeface,alignment) {
