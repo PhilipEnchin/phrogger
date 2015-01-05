@@ -274,7 +274,6 @@ Enemy.prototype.EDGE_ADJUST_RIGHT = 5; //Adjustment in bug's right (leading) sid
 Enemy.prototype.EDGE_ADJUST_LEFT = 4; //Adjustment in bug's left (trailing) side for collision detection
 Enemy.prototype.init = function(x, y, lowerSpeedLimit, upperSpeedLimit) {
 	this.speed = Math.random() * (upperSpeedLimit - lowerSpeedLimit) + lowerSpeedLimit;
-	console.log(lowerSpeedLimit + " < " + this.speed + " < " + upperSpeedLimit);
 	this.x = x;
 	this.y = y + this.PIXEL_ADJUST;
 	return this;
@@ -367,6 +366,9 @@ EnemyHandler.prototype.update = function(dt,now) {
 						for (var i = enemyObject.entryTimes.length - 1; i >= 0; i--) {
 							enemyObject.entryTimes[i] += this.timePaused;
 						}
+						for (var i = enemyObject.exitTimes.length - 1; i >= 0; i--) {
+							enemyObject.exitTimes[i] += this.timePaused;
+						}
 					}, this);
 				}
 			}, this);
@@ -409,8 +411,6 @@ EnemyHandler.prototype.spawnNewEnemy = function() {
 	var nakedEnemy = enemyObjectWithRetireTime.enemy;
 	var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
 	var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
-	console.log(entryTimes);
-	console.log(enemyObjectWithEntryAndExitTimes.exitTimes);
 	var rowIndex = nakedEnemy.y;
 	var retireTime = entryTimes[map.COLS+1];
 	var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
@@ -443,7 +443,6 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
 	var secondsPerColumn = map.COL_WIDTH / enemy.speed;
 	var secondsPerEntryEdgeAdjustWidth = (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
 	var secondsPerExitEdgeAdjustWidth = (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed; 
-	console.log(secondsPerExitEdgeAdjustWidth,secondsPerEntryEdgeAdjustWidth,enemy.speed);
 	var now = Date.now() / 1000;
 	for (var col = map.COLS + 1; col >= 0; col--) {
 		entryTimes.splice(0, 0, col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
@@ -482,7 +481,6 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
 		if (columnEntry > now){
 			return columnEntry;
 		} else if (columnExit > now) {
-			console.log("immediate death");
 			player.die();
 			return;
 		}
@@ -541,7 +539,6 @@ Player.prototype.setState = function(state) {
 // Update the player's position
 Player.prototype.update = function(dt,now) {
 	if (this.collisionDetectionOn && this.collisionTime && now > this.collisionTime) {
-		console.log("head on collision");
 		this.die();
 	}
 };
