@@ -223,7 +223,7 @@ HeadsUp.prototype.setState = function(state) {
 	}
 };
 /* Helper function to display text with an outline */
-function renderText(text,x,y,textSize,typeface,alignment) {
+HeadsUp.prototype.renderText = function(text,x,y,textSize,typeface,alignment) {
 	ctx.fillStyle = 'white';
 	ctx.strokeStyle = 'black';
 	ctx.font = textSize + 'pt ' + typeface;
@@ -242,22 +242,22 @@ HeadsUp.prototype.LIVES_Y = 7 * 83;
 HeadsUp.prototype.TYPEFACE = 'Impact';
 HeadsUp.prototype.render = function() {
 	if (this.bigText){
-		renderText(this.bigText,this.BIG_TEXT_X,this.BIG_TEXT_Y,TITLE_TEXT_SIZE,this.TYPEFACE,'center');
+		this.renderText(this.bigText,this.BIG_TEXT_X,this.BIG_TEXT_Y,TITLE_TEXT_SIZE,this.TYPEFACE,'center');
 	}
 	if (this.instructionText){
 		if(this.instructionText.constructor == Array){
 			for (var i = this.instructionText.length - 1; i >= 0; i--) {
-				renderText(this.instructionText[i],this.INSTRUCTIONS_X,INSTRUCTION_LINE_HEIGHT*i + this.INSTRUCTIONS_Y,INSTRUCTION_TEXT_SIZE,this.TYPEFACE,'center');
+				this.renderText(this.instructionText[i],this.INSTRUCTIONS_X,INSTRUCTION_LINE_HEIGHT*i + this.INSTRUCTIONS_Y,INSTRUCTION_TEXT_SIZE,this.TYPEFACE,'center');
 			}
 		} else {
-			renderText(this.instructionText,this.INSTRUCTIONS_X,this.INSTRUCTIONS_Y,INSTRUCTION_TEXT_SIZE,this.TYPEFACE,'center');
+			this.renderText(this.instructionText,this.INSTRUCTIONS_X,this.INSTRUCTIONS_Y,INSTRUCTION_TEXT_SIZE,this.TYPEFACE,'center');
 		}
 	}
 	if (this.levelText){
-		renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,this.TYPEFACE,'center');
+		this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,this.TYPEFACE,'center');
 	}
 	if (this.livesText){
-		renderText(this.livesText,this.LIVES_X,this.LIVES_Y,this.TYPEFACE,'center');
+		this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,this.TYPEFACE,'center');
 	}
 };
 
@@ -273,7 +273,8 @@ Enemy.prototype.PIXEL_ADJUST = -20; //Adjustment in bug's vertical location so i
 Enemy.prototype.EDGE_ADJUST_RIGHT = 5; //Adjustment in bug's right (leading) side for collision detection
 Enemy.prototype.EDGE_ADJUST_LEFT = 4; //Adjustment in bug's left (trailing) side for collision detection
 Enemy.prototype.init = function(x, y, lowerSpeedLimit, upperSpeedLimit) {
-	this.speed = Math.random() * upperSpeedLimit + lowerSpeedLimit;
+	this.speed = Math.random() * (upperSpeedLimit - lowerSpeedLimit) + lowerSpeedLimit;
+	console.log(lowerSpeedLimit + " < " + this.speed + " < " + upperSpeedLimit);
 	this.x = x;
 	this.y = y + this.PIXEL_ADJUST;
 	return this;
@@ -404,17 +405,21 @@ EnemyHandler.prototype.getNewEnemy = function() {
 };
 EnemyHandler.prototype.spawnNewEnemy = function() {
 	this.timeUntilSpawn = Math.random() * this.spawnVariance * 2 - this.spawnVariance + this.spawnInterval;
-	var newEnemy = this.getNewEnemy();
-	var rowIndex = newEnemy.enemy.y;
-	var entryTimes = this.getColumnEntries(newEnemy.enemy);
-	var retireTime = entryTimes[entryTimes.length - 1];
+	var enemyObjectWithRetireTime = this.getNewEnemy();
+	var nakedEnemy = enemyObjectWithRetireTime.enemy;
+	var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
+	var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
+	console.log(entryTimes);
+	console.log(enemyObjectWithEntryAndExitTimes.exitTimes);
+	var rowIndex = nakedEnemy.y;
+	var retireTime = entryTimes[map.COLS+1];
 	var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
 	if (rowOfEnemies === undefined) {
 		rowOfEnemies = [];
 		this.activeEnemiesByRow[rowIndex] = rowOfEnemies;
 	}
 
-	if (rowOfEnemies.length > 0){		
+	if (rowOfEnemies.length > 0){
 		var leftMostEnemyInRowExitCompletion = rowOfEnemies[rowOfEnemies.length-1].entryTimes[map.COLS+1];
 		var newEnemyExitBegin = entryTimes[map.COLS];
 		if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
@@ -425,26 +430,37 @@ EnemyHandler.prototype.spawnNewEnemy = function() {
 	if (this.potentialCollisionLocation.rowIndex === rowIndex)
 		player.newEnemyInRow(entryTimes[this.potentialCollisionLocation.column]);
 
-	//Push new enemy onto the appropriate row. Order here is guaranteed already.
-	this.activeEnemiesByRow[rowIndex].push({
-		enemy: newEnemy.enemy,
-		entryTimes: entryTimes
-	});
 
-	newEnemy.retireTime = retireTime;
-	this.activeEnemies.push(newEnemy);
+	//Push new enemy onto the appropriate row. Order here is guaranteed already.
+	this.activeEnemiesByRow[rowIndex].push(enemyObjectWithEntryAndExitTimes);
+
+	enemyObjectWithRetireTime.retireTime = retireTime;
+	this.activeEnemies.push(enemyObjectWithRetireTime);
 };
-EnemyHandler.prototype.getColumnEntries = function(enemy) {
+EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
 	var entryTimes = [];
+	var exitTimes = [];
 	var secondsPerColumn = map.COL_WIDTH / enemy.speed;
-	var secondsPerEdgeAdjustWidth = (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
+	var secondsPerEntryEdgeAdjustWidth = (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
+	var secondsPerExitEdgeAdjustWidth = (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed; 
+	console.log(secondsPerExitEdgeAdjustWidth,secondsPerEntryEdgeAdjustWidth,enemy.speed);
 	var now = Date.now() / 1000;
 	for (var col = map.COLS + 1; col >= 0; col--) {
-		entryTimes.splice(0, 0,col * secondsPerColumn + secondsPerEdgeAdjustWidth + now);
+		entryTimes.splice(0, 0, col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
+		exitTimes.splice(0, 0, (col+2) * secondsPerColumn - secondsPerExitEdgeAdjustWidth + now);
 	};
-	return entryTimes;
+	return {
+		enemy: enemy,
+		entryTimes: entryTimes,
+		exitTimes: exitTimes
+	};
 };
 EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
+	if(x === undefined) {
+		this.potentialCollisionLocation.column = null;
+		this.potentialCollisionLocation.rowIndex = null;
+		return null;
+	}
 	var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y + Enemy.prototype.PIXEL_ADJUST;
 
 	this.potentialCollisionLocation.column = x;
@@ -462,13 +478,11 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
 	for (var i = 0; i < rowOfEnemies.length; i++) {
 		enemyObject = rowOfEnemies[i];
 		columnEntry = enemyObject.entryTimes[x];
-		columnExit = enemyObject.entryTimes[x+2];
-
+		columnExit = enemyObject.exitTimes[x];
 		if (columnEntry > now){
 			return columnEntry;
 		} else if (columnExit > now) {
-			
-			console.log("squish");
+			console.log("immediate death");
 			player.die();
 			return;
 		}
@@ -527,6 +541,7 @@ Player.prototype.setState = function(state) {
 // Update the player's position
 Player.prototype.update = function(dt,now) {
 	if (this.collisionDetectionOn && this.collisionTime && now > this.collisionTime) {
+		console.log("head on collision");
 		this.die();
 	}
 };
@@ -546,14 +561,13 @@ Player.prototype.setPosition = function(x,y) {
 
 	switch (map.tileTypes[this.column][this.row]) {
 		case map.STONE:
-			console.log(this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column,this.row));
+			this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column,this.row);
 			break;
 		case map.WATER:
 			this.die();
-			this.collisionTime = null;
-			break;
+			//Fall through...
 		case map.GRASS:
-			this.collisionTime = null;
+			this.collisionTime = enemyHandler.collisionTimeForCoordinates();
 			break;
 	}
 };
