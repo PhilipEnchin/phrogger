@@ -223,14 +223,7 @@ HeadsUp.prototype.setState = function(state) {
 	}
 };
 /* Helper function to display text with an outline */
-HeadsUp.prototype.renderText = function(text,x,y,textSize,typeface,alignment) {
-	ctx.fillStyle = 'white';
-	ctx.strokeStyle = 'black';
-	ctx.font = textSize + 'pt ' + typeface;
-	ctx.textAlign = alignment;
-	ctx.fillText(text,x,y,canvas.width);
-	ctx.strokeText(text,x,y,canvas.width);
-}
+
 HeadsUp.prototype.BIG_TEXT_X = 505/2;
 HeadsUp.prototype.BIG_TEXT_Y = 606/2 - 20;
 HeadsUp.prototype.INSTRUCTIONS_X = 505/2;
@@ -254,11 +247,19 @@ HeadsUp.prototype.render = function() {
 		}
 	}
 	if (this.levelText){
-		this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,this.TYPEFACE,'center');
+		this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,LIVES_TEXT_SIZE,this.TYPEFACE,'center');
 	}
 	if (this.livesText){
-		this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,this.TYPEFACE,'center');
+		this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,LEVEL_TEXT_SIZE,this.TYPEFACE,'center');
 	}
+};
+HeadsUp.prototype.renderText = function(text,x,y,textSize,typeface,alignment) {
+	ctx.fillStyle = 'white';
+	ctx.strokeStyle = 'black';
+	ctx.font = textSize + 'pt ' + typeface;
+	ctx.textAlign = alignment;
+	ctx.fillText(text,x,y,canvas.width);
+	ctx.strokeText(text,x,y,canvas.width);
 };
 
 
