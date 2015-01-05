@@ -254,8 +254,6 @@ HeadsUp.prototype.render = function() {
 	}
 };
 HeadsUp.prototype.renderText = function(text,x,y,textSize,typeface,alignment) {
-	ctx.fillStyle = 'white';
-	ctx.strokeStyle = 'black';
 	ctx.font = textSize + 'pt ' + typeface;
 	ctx.textAlign = alignment;
 	ctx.fillText(text,x,y,canvas.width);

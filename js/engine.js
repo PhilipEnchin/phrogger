@@ -67,6 +67,8 @@ var Engine = (function(global) {
         reset();
         lastTime = Date.now() / 1000;
         main();
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
     }
 
     /* This function is called by main (our game loop) and itself calls all
