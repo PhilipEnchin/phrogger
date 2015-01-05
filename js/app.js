@@ -83,6 +83,7 @@ Game.prototype.update = function(dt,now) {
 	}
 };
 Game.prototype.render = function() {
+	ctx.clearRect(0,0,canvas.width,canvas.height);
 	map.render();
 	player.render();
 	enemyHandler.render();
