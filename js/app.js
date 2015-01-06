@@ -62,6 +62,15 @@ Game.prototype.handleInput = function(keyString) {
 };
 Game.prototype.setLevel = function(newLevel) {
 	this.level = newLevel;
+
+	//
+	switch (newLevel) {
+		case 1:
+			map.setRows(
+				0,map.WATER,
+				1,map.STONE,
+				map.GRASS);
+	}
 };
 Game.prototype.getEnemySpeedArray = function() {
 	return[1,10];
@@ -142,7 +151,36 @@ Map.prototype.setState = function(state) {
 Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
 	return this.tileCoordinates[colNumber][rowNumber];
 };
+/*Takes an arbitrary number of arguments. Each pair is either:
+	- a row number and tile type, or
+	- an array of row numbers and a tile type
+  If there is an odd number of arguments, the final one is a tile type,
+  and all remaining rows are set to that type.*/
+Map.prototype.setRows = function() {
+	var args = Array.prototype.slice.call(arguments);
+	var remainingRows = []; //Rows not set yet, in the event of 
+	var rowArray, tileType;
+	for (var i = this.ROWS - 1; i >= 0; i--) {
+		remainingRows.splice(0,0,i);
+	};
+	while(args.length > 1){
+		if (args[0].constructor = Number)
+			rowArray = [args.splice(0,1)[0]];
+		else
+			rowArray = args.splice(0,1)[0];
+		tileType = args.splice(0,1)[0];
+		for (var i = rowArray.length - 1; i >= 0; i--) {
+			this.setRow(rowArray[i],tileType);
+			remainingRows.splice(remainingRows.indexOf(rowArray[i]),1);
+		};
+	}
+	if(tileType = args[0]) {
+		while (remainingRows.length > 0) 
+			this.setRow(remainingRows.pop(),tileType);
+	}
+};
 Map.prototype.setRow = function(rowNumber, tileType) {
+	console.log(rowNumber,tileType);
 	if (tileType === this.STONE) {
 		if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
 			this.roadRowNumbers.push(rowNumber);
