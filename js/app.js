@@ -349,8 +349,8 @@ EnemyHandler.prototype.setState = function(state) {
 		case game.PRE_GAME:
 			this.moveable = true;
 			this.hidden = false;
-			this.setSpeeds(80,90);
-			this.setSpawnIntervalAndVariance(1.5,0.25);
+			this.setSpeeds(200,300);
+			this.setSpawnIntervalAndVariance(2,0.25);
 			break;
 		case game.PRE_GAME_INSTRUCTIONS:
 			this.moveable = false;
@@ -375,9 +375,8 @@ EnemyHandler.prototype.setState = function(state) {
 	}
 };
 EnemyHandler.prototype.setSpawnIntervalAndVariance = function(spawnInterval,spawnVariance) {
-	this.spawnInterval = spawnInterval;
-	this.spawnVariance = spawnVariance;
-	this.timeUntilSpawn = Math.min(this.timeUntilSpawn, spawnInterval);
+	if (this.timeUntilSpawn > (this.spawnInterval = spawnInterval) * ((this.spawnVariance = spawnVariance) + 1))
+		this.newTimeUntilSpawn();
 };
 EnemyHandler.prototype.setSpeeds = function(lowerSpeedLimit,upperSpeedLimit,changeActiveEnemies) {
 	this.lowerSpeedLimit = lowerSpeedLimit;
@@ -442,7 +441,6 @@ EnemyHandler.prototype.getNewEnemy = function() {
 	return newEnemy;
 };
 EnemyHandler.prototype.spawnNewEnemy = function() {
-	this.timeUntilSpawn = Math.random() * this.spawnVariance * 2 - this.spawnVariance + this.spawnInterval;
 	var enemyObjectWithRetireTime = this.getNewEnemy();
 	var nakedEnemy = enemyObjectWithRetireTime.enemy;
 	var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
@@ -472,6 +470,12 @@ EnemyHandler.prototype.spawnNewEnemy = function() {
 
 	enemyObjectWithRetireTime.retireTime = retireTime;
 	this.activeEnemies.push(enemyObjectWithRetireTime);
+
+	this.newTimeUntilSpawn();
+};
+EnemyHandler.prototype.newTimeUntilSpawn = function() {
+	this.timeUntilSpawn = this.spawnInterval * (this.spawnVariance * (2 * Math.random() - 1) + 1);
+	console.log(this.timeUntilSpawn);
 };
 EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
 	var entryTimes = [];
