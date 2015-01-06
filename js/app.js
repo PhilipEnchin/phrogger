@@ -63,7 +63,6 @@ Game.prototype.handleInput = function(keyString) {
 Game.prototype.setLevel = function(newLevel) {
 	this.level = newLevel;
 
-	//
 	switch (newLevel) {
 		case 1:
 			map.setRows(
@@ -180,7 +179,6 @@ Map.prototype.setRows = function() {
 	}
 };
 Map.prototype.setRow = function(rowNumber, tileType) {
-	console.log(rowNumber,tileType);
 	if (tileType === this.STONE) {
 		if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
 			this.roadRowNumbers.push(rowNumber);
@@ -600,7 +598,6 @@ Player.prototype.setPosition = function(x,y) {
 			break;
 		case map.WATER:
 			this.die();
-			//Fall through...
 		case map.GRASS:
 			this.collisionTime = enemyHandler.collisionTimeForCoordinates();
 			break;
