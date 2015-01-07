@@ -350,7 +350,7 @@ EnemyHandler.prototype.setState = function(state) {
 			this.moveable = true;
 			this.hidden = false;
 			this.setSpeeds(200,300);
-			this.setSpawnIntervalAndVariance(2,0.25);
+			this.setSpawnIntervalAndVariance(0.3,0.5);
 			break;
 		case game.PRE_GAME_INSTRUCTIONS:
 			this.moveable = false;
@@ -454,9 +454,16 @@ EnemyHandler.prototype.spawnNewEnemy = function() {
 	}
 
 	if (rowOfEnemies.length > 0){
-		var leftMostEnemyInRowExitCompletion = rowOfEnemies[rowOfEnemies.length-1].entryTimes[map.COLS+1];
+		var leftMostEnemyEntryTimes = rowOfEnemies[rowOfEnemies.length-1].entryTimes;
+		var leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[map.COLS+1];
 		var newEnemyExitBegin = entryTimes[map.COLS];
 		if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
+			this.spawnNewEnemy();
+			return;
+		}
+		var leftMostEnemyInRowSecondColumnEntry = leftMostEnemyEntryTimes[1];
+		var newEnemyFirstColumnEntry = entryTimes[0];
+		if (newEnemyFirstColumnEntry < leftMostEnemyInRowSecondColumnEntry) {
 			this.spawnNewEnemy();
 			return;
 		}
@@ -475,7 +482,6 @@ EnemyHandler.prototype.spawnNewEnemy = function() {
 };
 EnemyHandler.prototype.newTimeUntilSpawn = function() {
 	this.timeUntilSpawn = this.spawnInterval * (this.spawnVariance * (2 * Math.random() - 1) + 1);
-	console.log(this.timeUntilSpawn);
 };
 EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
 	var entryTimes = [];
