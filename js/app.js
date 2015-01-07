@@ -344,13 +344,14 @@ EnemyHandler.prototype.init = function() {
 	this.spawnX = map.pixelCoordinatesForBoardCoordinates(0,0).x - map.COL_WIDTH;
 	this.retireX = map.pixelCoordinatesForBoardCoordinates(map.COLS-1,0).x + map.COL_WIDTH;
 };
+EnemyHandler.prototype.maxSpawnAttempts = 10;
 EnemyHandler.prototype.setState = function(state) {
 	switch (state) {
 		case game.PRE_GAME:
 			this.moveable = true;
 			this.hidden = false;
 			this.setSpeeds(200,300);
-			this.setSpawnIntervalAndVariance(0.3,0.5);
+			this.setSpawnIntervalAndVariance(0.2,0.25);
 			break;
 		case game.PRE_GAME_INSTRUCTIONS:
 			this.moveable = false;
@@ -440,44 +441,48 @@ EnemyHandler.prototype.getNewEnemy = function() {
 	newEnemy.enemy.init(this.spawnX, yCoordinate, this.lowerSpeedLimit, this.upperSpeedLimit);
 	return newEnemy;
 };
-EnemyHandler.prototype.spawnNewEnemy = function() {
-	var enemyObjectWithRetireTime = this.getNewEnemy();
-	var nakedEnemy = enemyObjectWithRetireTime.enemy;
-	var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
-	var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
-	var rowIndex = nakedEnemy.y;
-	var retireTime = entryTimes[map.COLS+1];
-	var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
-	if (rowOfEnemies === undefined) {
-		rowOfEnemies = [];
-		this.activeEnemiesByRow[rowIndex] = rowOfEnemies;
-	}
-
-	if (rowOfEnemies.length > 0){
-		var leftMostEnemyEntryTimes = rowOfEnemies[rowOfEnemies.length-1].entryTimes;
-		var leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[map.COLS+1];
-		var newEnemyExitBegin = entryTimes[map.COLS];
-		if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
-			this.spawnNewEnemy();
-			return;
+EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
+	if((attemptIndex = attemptIndex || 0) < this.maxSpawnAttempts) {
+		console.log("attempt " + (attemptIndex+1));
+		var enemyObjectWithRetireTime = this.getNewEnemy();
+		var nakedEnemy = enemyObjectWithRetireTime.enemy;
+		var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
+		var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
+		var rowIndex = nakedEnemy.y;
+		var retireTime = entryTimes[map.COLS+1];
+		var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
+		if (rowOfEnemies === undefined) {
+			rowOfEnemies = [];
+			this.activeEnemiesByRow[rowIndex] = rowOfEnemies;
 		}
-		var leftMostEnemyInRowSecondColumnEntry = leftMostEnemyEntryTimes[1];
-		var newEnemyFirstColumnEntry = entryTimes[0];
-		if (newEnemyFirstColumnEntry < leftMostEnemyInRowSecondColumnEntry) {
-			this.spawnNewEnemy();
-			return;
+	
+		if (rowOfEnemies.length > 0){
+			var leftMostEnemyEntryTimes = rowOfEnemies[rowOfEnemies.length-1].entryTimes;
+			var leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[map.COLS+1];
+			var newEnemyExitBegin = entryTimes[map.COLS];
+			if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
+				this.spawnNewEnemy(attemptIndex+1);
+				return;
+			}
+			var leftMostEnemyInRowSecondColumnEntry = leftMostEnemyEntryTimes[1];
+			var newEnemyFirstColumnEntry = entryTimes[0];
+			if (newEnemyFirstColumnEntry < leftMostEnemyInRowSecondColumnEntry) {
+				this.spawnNewEnemy(attemptIndex+1);
+				return;
+			}
 		}
+		if (this.potentialCollisionLocation.rowIndex === rowIndex)
+			player.newEnemyInRow(entryTimes[this.potentialCollisionLocation.column]);
+	
+	
+		//Push new enemy onto the appropriate row. Order here is guaranteed already.
+		this.activeEnemiesByRow[rowIndex].push(enemyObjectWithEntryAndExitTimes);
+	
+		enemyObjectWithRetireTime.retireTime = retireTime;
+		this.activeEnemies.push(enemyObjectWithRetireTime);
 	}
-	if (this.potentialCollisionLocation.rowIndex === rowIndex)
-		player.newEnemyInRow(entryTimes[this.potentialCollisionLocation.column]);
-
-
-	//Push new enemy onto the appropriate row. Order here is guaranteed already.
-	this.activeEnemiesByRow[rowIndex].push(enemyObjectWithEntryAndExitTimes);
-
-	enemyObjectWithRetireTime.retireTime = retireTime;
-	this.activeEnemies.push(enemyObjectWithRetireTime);
-
+	else
+		console.log("give up...")
 	this.newTimeUntilSpawn();
 };
 EnemyHandler.prototype.newTimeUntilSpawn = function() {
