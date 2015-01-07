@@ -187,8 +187,8 @@ Map.prototype.setRow = function(rowNumber, tileType) {
 		}
 	} else {
 		var rowArrayIndex = this.roadRowNumbers.indexOf(rowNumber);
-		if (rowArrayIndex !== -1) {
-			this.roadRowNumbers.splice(rowArrayIndex,1);
+		if (rowArrayIndex !== -1) { //This row is going from road to something else
+			enemyHandler.deleteEnemiesInRow(this.roadRowNumbers.splice(rowArrayIndex,1)[0]);
 		}
 	}
 	for (var col = this.COLS-1; col >= 0; col--) {
@@ -304,6 +304,7 @@ var Enemy = function() {
 	this.x; //| X and Y     |
 	this.y; //| coordinates |
 	this.speed; //Speed, in pixels per second
+	this.hidden;
 }
 Enemy.prototype.PIXEL_ADJUST = -20; //Adjustment in bug's vertical location so it looks like it's on the road
 Enemy.prototype.EDGE_ADJUST_RIGHT = 5; //Adjustment in bug's right (leading) side for collision detection
@@ -312,7 +313,7 @@ Enemy.prototype.init = function(x, y, lowerSpeedLimit, upperSpeedLimit) {
 	this.speed = Math.random() * (upperSpeedLimit - lowerSpeedLimit) + lowerSpeedLimit;
 	this.x = x;
 	this.y = y + this.PIXEL_ADJUST;
-	return this;
+	this.hidden = false;
 };
 // Update the enemy's position
 Enemy.prototype.update = function(dt,now) {
@@ -321,7 +322,8 @@ Enemy.prototype.update = function(dt,now) {
 
 // Draw the enemy on the screen
 Enemy.prototype.render = function() {
-	ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+	if (!this.hidden)
+		ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
 /* A system for dealing with the evil bugs! */
@@ -430,6 +432,15 @@ EnemyHandler.prototype.update = function(dt,now) {
 		this.timePaused += dt;
 	}
 };
+EnemyHandler.prototype.deleteEnemiesInRow = function(rowNumber) {
+	var rowIndex = map.pixelCoordinatesForBoardCoordinates(0,rowNumber).y + Enemy.prototype.PIXEL_ADJUST;
+	var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
+	if (rowOfEnemies !== undefined)
+		rowOfEnemies.forEach(function(enemyObject){
+			//Technically this just hides the enemy, but the collisions won't be checked since they aren't on road anymore
+			enemyObject.enemy.hidden = true;
+		});
+};
 EnemyHandler.prototype.getNewEnemy = function() {
 	var newEnemy;
 	if (!(newEnemy = this.retiredEnemies.pop()))
@@ -443,7 +454,6 @@ EnemyHandler.prototype.getNewEnemy = function() {
 };
 EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
 	if((attemptIndex = attemptIndex || 0) < this.maxSpawnAttempts) {
-		console.log("attempt " + (attemptIndex+1));
 		var enemyObjectWithRetireTime = this.getNewEnemy();
 		var nakedEnemy = enemyObjectWithRetireTime.enemy;
 		var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
@@ -481,8 +491,6 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
 		enemyObjectWithRetireTime.retireTime = retireTime;
 		this.activeEnemies.push(enemyObjectWithRetireTime);
 	}
-	else
-		console.log("give up...")
 	this.newTimeUntilSpawn();
 };
 EnemyHandler.prototype.newTimeUntilSpawn = function() {
