@@ -85,6 +85,7 @@ Game.prototype.decrementTimer = function(dt){
 Game.prototype.update = function(dt,now) {
 	enemyHandler.update(dt,now);
 	player.update(dt,now);
+	map.update(dt,now);
 
 	switch (this.state) {
 		case this.PRE_LEVEL: this.decrementTimer(dt);
@@ -101,6 +102,10 @@ var Map = function() {
 	this.tileTypes = []; //2D array of tile-types
 	this.tileCoordinates = []; //2D array of tile coordinates, for speedy access!
 	this.roadRowNumbers = []; //Array of row indices where road is found
+	this.pendingTileChanges = { //Object that stores tiles that will be changed via animation
+		status: null, //Status (constants defined below)
+		changes: [] //Objects containing change information
+	};
 };
 Map.prototype.ROWS = 6;
 Map.prototype.COLS = 5;
@@ -110,6 +115,9 @@ Map.prototype.WATER = 0; // \
 Map.prototype.STONE = 1; // |--Corresponds with image array indices
 Map.prototype.GRASS = 2; // /
 Map.prototype.IMAGE_ARRAY = ['images/water-block.png','images/stone-block.png','images/grass-block.png'];
+Map.prototype.PENDING_CONTAINS_NEW_CHANGES = 0;
+Map.prototype.PENDING_READY = 1;
+Map.prototype.PENDING_EMPTY = 2;
 /* Initialize top row to water, the rest to grass */
 Map.prototype.init = function() {
 	var row, col;
@@ -133,6 +141,7 @@ Map.prototype.init = function() {
 			this.tileTypes[col].push(rowTypes[row]);
 		}
 	}
+	this.pendingTileChanges.status = this.PENDING_EMPTY;
 };
 Map.prototype.setState = function(state) {
 	switch (state) {
@@ -188,11 +197,70 @@ Map.prototype.setRow = function(rowNumber, tileType) {
 	} else {
 		var rowArrayIndex = this.roadRowNumbers.indexOf(rowNumber);
 		if (rowArrayIndex !== -1) { //This row is going from road to something else
-			enemyHandler.deleteEnemiesInRow(this.roadRowNumbers.splice(rowArrayIndex,1)[0]);
+			/*enemyHandler.deleteEnemiesInRow(*/this.roadRowNumbers.splice(rowArrayIndex,1);/*[0]);*/
 		}
 	}
 	for (var col = this.COLS-1; col >= 0; col--) {
-		this.tileTypes[col][rowNumber] = tileType;
+		this.setTile(col,rowNumber,tileType);
+	}
+};
+Map.prototype.setTile = function(colNumber, rowNumber, tileType) {
+	switch (game.state) {
+		case game.PLAY:
+		case game.PRE_GAME:
+			this.tileTypes[colNumber][rowNumber] = tileType;
+			break;
+		default:
+			if (this.tileTypes[colNumber][rowNumber] != tileType)
+				this.addTileChangeToPending(colNumber,rowNumber,tileType);
+	}
+};
+Map.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType) {
+	this.pendingTileChanges.changes.push({
+		location: {
+			column: colNumber,
+			row: rowNumber
+		},
+		tileType: tileType,
+		time: Math.random()
+	});
+	this.pendingTileChanges.status = this.PENDING_CONTAINS_NEW_CHANGES;
+};
+Map.prototype.update = function(dt,now) {
+	var changes;
+	switch (this.pendingTileChanges.status) {
+		case this.PENDING_EMPTY: break;
+		case this.PENDING_CONTAINS_NEW_CHANGES:
+			changes = this.pendingTileChanges.changes;
+			changes.sort(function(a,b){
+				return a.time-b.time;
+			});
+			//Use the randomly generated values as delta-time, and replace those with total time
+			var previousValue = 0;
+			var totalTime = changes[changes.length-1].time;
+			changes.forEach(function(change){
+				previousValue = change.time += previousValue;
+			});
+			totalTime += previousValue;
+			console.log(previousValue, totalTime);
+			//Scale the time to fit the time remaining
+			console.log("now:  " + now);
+			changes.forEach(function(change){
+				change.time *= game.timeRemaining * 9 / totalTime / 10;
+				change.time += now;
+				console.log("time: " + change.time);
+			});
+			this.pendingTileChanges.status = this.PENDING_READY;
+		case this.PENDING_READY:
+			changes = this.pendingTileChanges.changes;
+			var change, location;
+			while (changes.length > 0 && now >= changes[0].time) {
+				change = changes.splice(0,1)[0];
+				location = change.location;
+				this.tileTypes[location.column][location.row] = change.tileType;
+			}
+			if (changes.length === 0)
+				this.pendingTileChanges.status = this.PENDING_EMPTY;
 	}
 };
 Map.prototype.randomRoadYCoordinate = function() {
@@ -432,7 +500,7 @@ EnemyHandler.prototype.update = function(dt,now) {
 		this.timePaused += dt;
 	}
 };
-EnemyHandler.prototype.deleteEnemiesInRow = function(rowNumber) {
+/*EnemyHandler.prototype.deleteEnemiesInRow = function(rowNumber) {
 	var rowIndex = map.pixelCoordinatesForBoardCoordinates(0,rowNumber).y + Enemy.prototype.PIXEL_ADJUST;
 	var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
 	if (rowOfEnemies !== undefined)
@@ -440,7 +508,7 @@ EnemyHandler.prototype.deleteEnemiesInRow = function(rowNumber) {
 			//Technically this just hides the enemy, but the collisions won't be checked since they aren't on road anymore
 			enemyObject.enemy.hidden = true;
 		});
-};
+};*/
 EnemyHandler.prototype.getNewEnemy = function() {
 	var newEnemy;
 	if (!(newEnemy = this.retiredEnemies.pop()))
