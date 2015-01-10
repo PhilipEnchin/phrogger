@@ -273,6 +273,7 @@ Map.prototype.update = function(dt,now) {
 Map.prototype.randomRoadYCoordinate = function() {
 	return this.pixelCoordinatesForBoardCoordinates(0,this.roadRowNumbers[Math.floor(Math.random()*this.roadRowNumbers.length)]).y;
 };
+/*
 Map.prototype.randomRoadCoordinates = function() {
 	var coordinates = this.pixelCoordinatesForBoardCoordinates(Math.floor(Math.random()*this.COLS),0);
 	coordinates.y = this.randomRoadYCoordinate();
@@ -289,6 +290,30 @@ Map.prototype.randomCoordinatesInRows = function() {
 		rowNumber = args[Math.floor(Math.random()*args.length)];
 	return this.pixelCoordinatesForBoardCoordinates(Math.floor(Math.random()*this.COLS),rowNumber);
 };
+*/
+Map.prototype.randomRoadBoardLocation = function() {
+	return {
+		column: Math.floor(Math.random()*map.COLS),
+		row: this.roadRowNumbers[Math.floor(Math.random()*this.roadRowNumbers.length)]
+	};
+};
+Map.prototype.randomBoardLocationInRows = function() {
+	var args = Array.prototype.slice.call(arguments);
+	var rowNumber
+	if (args.length === 0)
+		rowNumber = Math.floor(Math.random()*this.ROWS);
+	else if (args[0].constructor === Array)
+		rowNumber = args[0][Math.floor(Math.random()*args.length)];
+	else
+		rowNumber = args[Math.floor(Math.random()*args.length)];
+	return {
+		column: Math.floor(Math.random()*this.COLS),
+		row: rowNumber
+	};
+};
+Map.prototype.playerCanMoveHere = function(x,y) {
+	return mapAccessories.playerCanMoveHere(x,y) && x < this.COLS && x >= 0 && y < this.ROWS && y >= 0;
+};
 Map.prototype.render = function() {
 	var coordinates;
 	for (var row = 0; row < this.ROWS; row++) {
@@ -302,27 +327,42 @@ Map.prototype.render = function() {
 
 var MapAccessories = function() {
 	this.accessories = [];
+	this.rockAccessory;
+	this.keyAccessory;
 	this.hidden = true;
 }
 MapAccessories.prototype.KEY = 0;
 MapAccessories.prototype.ROCK = 1;
 MapAccessories.prototype.IMAGE_ARRAY = ['images/Key.png','images/Rock.png'];
-MapAccessories.prototype.ROCK_PIXEL_ADJUST = -20;
-MapAccessories.prototype.KEY_PIXEL_ADJUST = -30;
+MapAccessories.prototype.ROCK_PIXEL_ADJUST = -25;
+MapAccessories.prototype.KEY_PIXEL_ADJUST = -15;
 MapAccessories.prototype.placeKeyAndRock = function() {
-	var rockObject = {
+	var rockLocation = map.randomBoardLocationInRows(0);
+	map.setTile(rockLocation.column,rockLocation.row,map.GRASS);
+	this.rockAccessory = {
 		accessoryType: this.ROCK,
-		coordinates: map.randomCoordinatesInRows(0),
-		linkedObject: null
+		location: rockLocation,
+		coordinates: map.pixelCoordinatesForBoardCoordinates(rockLocation.column,rockLocation.row),
 	};
-	rockObject.coordinates.y += this.ROCK_PIXEL_ADJUST;
-	var keyObject = {
+	this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
+	var keyLocation = map.randomRoadBoardLocation();
+	this.keyAccessory = {
 		accessoryType: this.KEY,
-		coordinates: map.randomRoadCoordinates(),
-		linkedObject: rockObject
+		location: keyLocation,
+		coordinates: map.pixelCoordinatesForBoardCoordinates(keyLocation.column,keyLocation.row),
 	};
-	keyObject.coordinates.y += this.KEY_PIXEL_ADJUST;
-	this.accessories.splice(0,0,keyObject,rockObject);
+	this.keyAccessory.coordinates.y += this.KEY_PIXEL_ADJUST;
+	this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
+};
+MapAccessories.prototype.playerCanMoveHere = function(x,y) {
+	if (this.rockAccessory && this.rockAccessory.location.column === x && this.rockAccessory.location.row === y)
+		return false;
+	else if (this.keyAccessory.location.column === x && this.keyAccessory.location.row === y){
+		this.accessories.splice(this.accessories.indexOf(this.rockAccessory),1);
+		this.accessories.splice(this.accessories.indexOf(this.keyAccessory),1);
+		this.rockAccessory = null;
+	}
+	return true;
 };
 MapAccessories.prototype.setState = function(state) {
 	switch(state) {
@@ -338,9 +378,10 @@ MapAccessories.prototype.setState = function(state) {
 	}
 };
 MapAccessories.prototype.render = function() {
-	this.accessories.forEach(function(accessoryObject){
-		ctx.drawImage(Resources.get(this.IMAGE_ARRAY[accessoryObject.accessoryType]),accessoryObject.coordinates.x,accessoryObject.coordinates.y);
-	},this);
+	if (!this.hidden)
+		this.accessories.forEach(function(accessoryObject){
+			ctx.drawImage(Resources.get(this.IMAGE_ARRAY[accessoryObject.accessoryType]),accessoryObject.coordinates.x,accessoryObject.coordinates.y);
+		},this);
 };
 /* Heads up display strings */
 var gameTitle = 'PHROGGER';
@@ -740,9 +781,9 @@ Player.prototype.render = function() {
 		ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 Player.prototype.setPosition = function(x,y) {
-	if (!isNaN(x))
+	if (x !== undefined)
 		this.column = Math.min(Math.max(x,0),map.COLS-1);
-	if (!isNaN(y))
+	if (y !== undefined)
 		this.row = Math.min(Math.max(y,0),map.ROWS-1);
 	var coordinates = map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
 	this.x = coordinates.x;
@@ -783,7 +824,14 @@ Player.prototype.handleInput = function(keyString) {
 };
 //Handle player movement
 Player.prototype.move = function(directionString) {
-	if (directionString === 'left') {
+	var x = this.column, y = this.row;
+	switch(directionString) {
+		case 'left': x--; break;
+		case 'right': x++; break;
+		case 'up': y--; break;
+		case 'down': y++; break;
+	}
+	/*if (directionString === 'left') {
 		this.column = Math.max(0, this.column-1);
 	} else if (directionString === 'right') {
 		this.column = Math.min(map.COLS-1, this.column+1);
@@ -791,8 +839,9 @@ Player.prototype.move = function(directionString) {
 		this.row = Math.max(0, this.row-1);
 	} else if (directionString === 'down') {
 		this.row = Math.min(map.ROWS-1, this.row+1);
-	}
-	this.setPosition();
+	}*/
+	if(map.playerCanMoveHere(x,y))
+		this.setPosition(x,y);
 };
 
 var map = new Map();
