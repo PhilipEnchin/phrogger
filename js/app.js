@@ -27,6 +27,7 @@ Game.prototype.setState = function(state) {
 	map.setState(state);
 	enemyHandler.setState(state);
 	player.setState(state);
+	mapAccessories.setState(state)
 
 	switch (state) {
 		case this.PRE_GAME:
@@ -69,6 +70,8 @@ Game.prototype.setLevel = function(newLevel) {
 				0,map.WATER,
 				1,map.STONE,
 				map.GRASS);
+			enemyHandler.setSpeeds(200,400);
+			enemyHandler.setSpawnIntervalAndVariance(0.4,0.8)
 	}
 };
 Game.prototype.getEnemySpeedArray = function() {
@@ -94,6 +97,7 @@ Game.prototype.update = function(dt,now) {
 Game.prototype.render = function() {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 	map.render();
+	mapAccessories.render();
 	player.render();
 	enemyHandler.render();
 	hud.render();
@@ -106,7 +110,7 @@ var Map = function() {
 		status: null, //Status (constants defined below)
 		changes: [] //Objects containing change information
 	};
-};
+}
 Map.prototype.ROWS = 6;
 Map.prototype.COLS = 5;
 Map.prototype.ROW_HEIGHT = 83;
@@ -157,7 +161,13 @@ Map.prototype.setState = function(state) {
 	}
 };
 Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
-	return this.tileCoordinates[colNumber][rowNumber];
+	var newCoordinates = {};
+	var coordinates = this.tileCoordinates[colNumber][rowNumber];
+	for (var key in coordinates) {
+		if (coordinates.hasOwnProperty(key))
+			newCoordinates[key] = coordinates[key];
+	}
+	return newCoordinates;
 };
 /*Takes an arbitrary number of arguments. Each pair is either:
 	- a row number and tile type, or
@@ -242,13 +252,10 @@ Map.prototype.update = function(dt,now) {
 				previousValue = change.time += previousValue;
 			});
 			totalTime += previousValue;
-			console.log(previousValue, totalTime);
 			//Scale the time to fit the time remaining
-			console.log("now:  " + now);
 			changes.forEach(function(change){
 				change.time *= game.timeRemaining * 9 / totalTime / 10;
 				change.time += now;
-				console.log("time: " + change.time);
 			});
 			this.pendingTileChanges.status = this.PENDING_READY;
 		case this.PENDING_READY:
@@ -266,6 +273,22 @@ Map.prototype.update = function(dt,now) {
 Map.prototype.randomRoadYCoordinate = function() {
 	return this.pixelCoordinatesForBoardCoordinates(0,this.roadRowNumbers[Math.floor(Math.random()*this.roadRowNumbers.length)]).y;
 };
+Map.prototype.randomRoadCoordinates = function() {
+	var coordinates = this.pixelCoordinatesForBoardCoordinates(Math.floor(Math.random()*this.COLS),0);
+	coordinates.y = this.randomRoadYCoordinate();
+	return coordinates;
+};
+Map.prototype.randomCoordinatesInRows = function() {
+	var args = Array.prototype.slice.call(arguments);
+	var rowNumber;
+	if (args.length === 0)
+		rowNumber = Math.floor(Math.random*this.ROWS);
+	else if (args[0].constructor === Array)
+		rowNumber = args[0][Math.floor(Math.random()*args.length)];
+	else
+		rowNumber = args[Math.floor(Math.random()*args.length)];
+	return this.pixelCoordinatesForBoardCoordinates(Math.floor(Math.random()*this.COLS),rowNumber);
+};
 Map.prototype.render = function() {
 	var coordinates;
 	for (var row = 0; row < this.ROWS; row++) {
@@ -277,6 +300,48 @@ Map.prototype.render = function() {
 	};
 };
 
+var MapAccessories = function() {
+	this.accessories = [];
+	this.hidden = true;
+}
+MapAccessories.prototype.KEY = 0;
+MapAccessories.prototype.ROCK = 1;
+MapAccessories.prototype.IMAGE_ARRAY = ['images/Key.png','images/Rock.png'];
+MapAccessories.prototype.ROCK_PIXEL_ADJUST = -20;
+MapAccessories.prototype.KEY_PIXEL_ADJUST = -30;
+MapAccessories.prototype.placeKeyAndRock = function() {
+	var rockObject = {
+		accessoryType: this.ROCK,
+		coordinates: map.randomCoordinatesInRows(0),
+		linkedObject: null
+	};
+	rockObject.coordinates.y += this.ROCK_PIXEL_ADJUST;
+	var keyObject = {
+		accessoryType: this.KEY,
+		coordinates: map.randomRoadCoordinates(),
+		linkedObject: rockObject
+	};
+	keyObject.coordinates.y += this.KEY_PIXEL_ADJUST;
+	this.accessories.splice(0,0,keyObject,rockObject);
+};
+MapAccessories.prototype.setState = function(state) {
+	switch(state) {
+		case game.PRE_LEVEL:
+			this.hidden = true;
+			this.placeKeyAndRock();
+			break;
+		case game.PLAY:
+			this.hidden = false;
+			break;
+		default:
+			this.hidden = true;
+	}
+};
+MapAccessories.prototype.render = function() {
+	this.accessories.forEach(function(accessoryObject){
+		ctx.drawImage(Resources.get(this.IMAGE_ARRAY[accessoryObject.accessoryType]),accessoryObject.coordinates.x,accessoryObject.coordinates.y);
+	},this);
+};
 /* Heads up display strings */
 var gameTitle = 'PHROGGER';
 var gameInstructions = ['Use arrow keys to get across the road','Press P to pause','','When you\'re ready, hit the spacebar'];
@@ -420,12 +485,12 @@ EnemyHandler.prototype.setState = function(state) {
 		case game.PRE_GAME:
 			this.moveable = true;
 			this.hidden = false;
-			this.setSpeeds(200,300);
-			this.setSpawnIntervalAndVariance(0.2,0.25);
+			this.setSpeeds(200,500);
+			this.setSpawnIntervalAndVariance(0.3,0.5);
 			break;
 		case game.PRE_GAME_INSTRUCTIONS:
-			this.moveable = false;
-			this.hidden = true;
+			this.moveable = true;
+			this.hidden = false;
 			break;
 		case game.PRE_LEVEL:
 			this.moveable = true;
@@ -731,6 +796,7 @@ Player.prototype.move = function(directionString) {
 };
 
 var map = new Map();
+var mapAccessories = new MapAccessories();
 var enemyHandler = new EnemyHandler();
 var hud = new HeadsUp();
 var player = new Player();
