@@ -13,6 +13,7 @@ Game.prototype.PLAY = 3; //Player can play!
 Game.prototype.PAUSE_MENU = 4; //Menu when paused
 Game.prototype.GAME_OVER = 5; //For when the game is finished, before going back to PRE_GAME
 Game.prototype.DIED = 6; //When player has just died...
+Game.prototype.WIN_LEVEL = 7; //Player has beat level!
 /* Initializer */
 Game.prototype.init = function() {
 	map.init();
@@ -35,6 +36,17 @@ Game.prototype.setState = function(state) {
 			break;
 		case this.PRE_LEVEL:
 			this.timeRemaining = 2.0;
+			break;
+		case this.WIN_LEVEL:
+			this.timeRemaining = 2.0;
+			map.setRows(0,map.WATER);
+			this.setLevel(this.level+1);
+			break;
+		case this.DIED:
+			this.timeRemaining = 3.0;
+			break;
+		case this.GAME_OVER:
+			this.timeRemaining = 3.0;
 			break;
 	}
 };
@@ -70,17 +82,34 @@ Game.prototype.setLevel = function(newLevel) {
 				0,map.WATER,
 				1,map.STONE,
 				map.GRASS);
-			enemyHandler.setSpeeds(200,400);
-			enemyHandler.setSpawnIntervalAndVariance(0.4,0.8)
+			mapAccessories.leftMostRockPosition = 3;
+			mapAccessories.leftMostKeyPosition = 3;
+			enemyHandler.setSpeeds(250,300);
+			enemyHandler.setSpawnIntervalAndVariance(0.75,0.8);
+			break;
+		case 2:
+		case 3:
+			map.setRows(2,map.STONE);
+			break;
+		case 4:
+		case 5:
+			map.setRows(3,map.STONE);
+			break;
 	}
 };
-Game.prototype.getEnemySpeedArray = function() {
-	return[1,10];
+Game.prototype.died = function() {
+	if(--this.lives >= 0)
+		this.setState(this.PRE_LEVEL);
+	else
+		this.setState(this.GAME_OVER);
 };
 Game.prototype.decrementTimer = function(dt){
 	if ((this.timeRemaining -= dt) <= 0) {
 		switch (this.state) {
 			case this.PRE_LEVEL: this.setState(this.PLAY); break;
+			case this.GAME_OVER: this.setState(this.PRE_GAME); break;
+			case this.WIN_LEVEL: this.setState(this.PRE_LEVEL); break;
+			case this.DIED:	this.died(); break;
 			case this.GAME_OVER: this.setState(this.PRE_GAME); break;
 		}
 	}
@@ -90,9 +119,7 @@ Game.prototype.update = function(dt,now) {
 	player.update(dt,now);
 	map.update(dt,now);
 
-	switch (this.state) {
-		case this.PRE_LEVEL: this.decrementTimer(dt);
-	}
+	this.decrementTimer(dt);
 };
 Game.prototype.render = function() {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -150,14 +177,12 @@ Map.prototype.init = function() {
 Map.prototype.setState = function(state) {
 	switch (state) {
 		case game.PRE_GAME:
-			this.setRow(1,map.STONE);
-			this.setRow(2,map.STONE);
-			this.setRow(3,map.STONE);
-			this.setRow(4,map.STONE);
-		case game.PRE_GAME_INSTRUCTIONS:
-		case game.PRE_LEVEL:
-		case game.PLAY:
-		case game.PAUSE_MENU:
+			this.setRows(
+				0,map.WATER,
+				[1,2,3,4],map.STONE,
+				map.GRASS
+			);
+			break;
 	}
 };
 Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
@@ -182,7 +207,7 @@ Map.prototype.setRows = function() {
 		remainingRows.splice(0,0,i);
 	};
 	while(args.length > 1){
-		if (args[0].constructor = Number)
+		if (args[0].constructor === Number)
 			rowArray = [args.splice(0,1)[0]];
 		else
 			rowArray = args.splice(0,1)[0];
@@ -192,7 +217,8 @@ Map.prototype.setRows = function() {
 			remainingRows.splice(remainingRows.indexOf(rowArray[i]),1);
 		};
 	}
-	if(tileType = args[0]) {
+	if (args.length > 0){
+		tileType = args[0];
 		while (remainingRows.length > 0) 
 			this.setRow(remainingRows.pop(),tileType);
 	}
@@ -312,7 +338,13 @@ Map.prototype.randomBoardLocationInRows = function() {
 	};
 };
 Map.prototype.playerCanMoveHere = function(x,y) {
-	return mapAccessories.playerCanMoveHere(x,y) && x < this.COLS && x >= 0 && y < this.ROWS && y >= 0;
+	if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLS && x >= 0 && y < this.ROWS && y >= 0){
+		if (y === 0){
+			game.setState(game.WIN_LEVEL);
+		}
+		return true;
+	}
+	return false;
 };
 Map.prototype.render = function() {
 	var coordinates;
@@ -330,6 +362,8 @@ var MapAccessories = function() {
 	this.rockAccessory;
 	this.keyAccessory;
 	this.hidden = true;
+	this.leftMostRockPosition = 0;
+	this.leftMostKeyPosition = 0;
 }
 MapAccessories.prototype.KEY = 0;
 MapAccessories.prototype.ROCK = 1;
@@ -337,19 +371,25 @@ MapAccessories.prototype.IMAGE_ARRAY = ['images/Key.png','images/Rock.png'];
 MapAccessories.prototype.ROCK_PIXEL_ADJUST = -25;
 MapAccessories.prototype.KEY_PIXEL_ADJUST = -15;
 MapAccessories.prototype.placeKeyAndRock = function() {
+	if (this.accessories.indexOf(this.rockAccessory) !== -1 && this.accessories.indexOf(this.keyAccessory) !== -1 )
+		return;
 	var rockLocation = map.randomBoardLocationInRows(0);
-	map.setTile(rockLocation.column,rockLocation.row,map.GRASS);
+	while (rockLocation.column < this.leftMostRockPosition)
+		rockLocation = map.randomBoardLocationInRows(0);
+	map.setTile(rockLocation.column,rockLocation.row,map.STONE);
 	this.rockAccessory = {
 		accessoryType: this.ROCK,
 		location: rockLocation,
-		coordinates: map.pixelCoordinatesForBoardCoordinates(rockLocation.column,rockLocation.row),
+		coordinates: map.pixelCoordinatesForBoardCoordinates(rockLocation.column,rockLocation.row)
 	};
 	this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
 	var keyLocation = map.randomRoadBoardLocation();
+	while (keyLocation.column < this.leftMostKeyPosition)
+		keyLocation = map.randomRoadBoardLocation();
 	this.keyAccessory = {
 		accessoryType: this.KEY,
 		location: keyLocation,
-		coordinates: map.pixelCoordinatesForBoardCoordinates(keyLocation.column,keyLocation.row),
+		coordinates: map.pixelCoordinatesForBoardCoordinates(keyLocation.column,keyLocation.row)
 	};
 	this.keyAccessory.coordinates.y += this.KEY_PIXEL_ADJUST;
 	this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
@@ -371,8 +411,14 @@ MapAccessories.prototype.setState = function(state) {
 			this.placeKeyAndRock();
 			break;
 		case game.PLAY:
+		case game.DIED:
 			this.hidden = false;
 			break;
+		case game.GAME_OVER:
+			this.hidden = true;
+			this.rockAccessory = null;
+			this.keyAccessory = null;
+			this.accessories = [];
 		default:
 			this.hidden = true;
 	}
@@ -385,11 +431,12 @@ MapAccessories.prototype.render = function() {
 };
 /* Heads up display strings */
 var gameTitle = 'PHROGGER';
-var gameInstructions = ['Use arrow keys to get across the road','Press P to pause','','When you\'re ready, hit the spacebar'];
+var gameInstructions = ['Use arrow keys to get across the road','Don\'t forget to grab the key!','Press P to pause','','When you\'re ready, hit the spacebar'];
 var levelPrefix = 'LEVEL: ';
 var livesPrefix = 'LIVES: ';
 var TITLE_TEXT_SIZE = 80;
 var PAUSED_TEXT_SIZE = 36;
+var WIN_LEVEL_TEXT_SIZE = 28;
 var PRE_LEVEL_TEXT_SIZE = 48;
 var LEVEL_TEXT_SIZE = 16;
 var LIVES_TEXT_SIZE = 16;
@@ -420,6 +467,8 @@ HeadsUp.prototype.setState = function(state) {
 			this.bigText = levelPrefix + game.level;
 			this.instructionText = livesPrefix + game.lives;
 			this.bigTextSize = PRE_LEVEL_TEXT_SIZE;
+			this.levelText = '';
+			this.livesText = '';
 			break;
 		case game.PLAY:
 			this.levelText = levelPrefix + game.level;
@@ -430,6 +479,18 @@ HeadsUp.prototype.setState = function(state) {
 		case game.PAUSE_MENU:
 			this.bigText = 'PAUSED';
 			this.bigTextSize = PAUSED_TEXT_SIZE;
+			break;
+		case game.WIN_LEVEL:
+			var winTextArray = ['Nicely done!','You rock!','Ka-Blamo'];
+			this.bigText = winTextArray[Math.floor(Math.random()*winTextArray.length)];
+			break;
+		case game.DIED:
+			var dieTextArray = ['You died','You expired','You perished','Kicked the bucket','Croaked','Bought it','Bought the farm','Checked out early'];
+			this.bigText = dieTextArray[Math.floor(Math.random()*dieTextArray.length)];
+			break;
+		case game.GAME_OVER:
+			this.bigText = 'Game over';
+			this.instructionText = 'So sad';
 			break;
 	}
 };
@@ -756,6 +817,7 @@ Player.prototype.setState = function(state) {
 		case game.PRE_LEVEL:
 			this.hidden = false;
 			this.moveable = false;
+			this.setPosition((map.COLS-1)/2,map.ROWS-1);
 			break;
 		case game.PLAY:
 			this.collisionDetectionOn = true;
@@ -767,6 +829,14 @@ Player.prototype.setState = function(state) {
 			this.hidden = true;
 			this.moveable = false;
 			break;
+		case game.DIED:
+			this.collisionDetectionOn = false;
+			this.hidden = false;
+			this.moveable = false;
+		case game.WIN_LEVEL:
+			this.collisionDetectionOn = false;
+			this.moveable = false;
+			this.hidden = false;
 	}
 };
 // Update the player's position
@@ -831,15 +901,6 @@ Player.prototype.move = function(directionString) {
 		case 'up': y--; break;
 		case 'down': y++; break;
 	}
-	/*if (directionString === 'left') {
-		this.column = Math.max(0, this.column-1);
-	} else if (directionString === 'right') {
-		this.column = Math.min(map.COLS-1, this.column+1);
-	} else if (directionString === 'up') {
-		this.row = Math.max(0, this.row-1);
-	} else if (directionString === 'down') {
-		this.row = Math.min(map.ROWS-1, this.row+1);
-	}*/
 	if(map.playerCanMoveHere(x,y))
 		this.setPosition(x,y);
 };
