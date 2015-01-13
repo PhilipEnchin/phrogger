@@ -14,6 +14,7 @@ Game.prototype.PAUSE_MENU = 4; //Menu when paused
 Game.prototype.GAME_OVER = 5; //For when the game is finished, before going back to PRE_GAME
 Game.prototype.DIED = 6; //When player has just died...
 Game.prototype.WIN_LEVEL = 7; //Player has beat level!
+Game.prototype.REINCARNATE = 8; //Player is back at start of level after death
 /* Initializer */
 Game.prototype.init = function() {
 	map.init();
@@ -80,20 +81,52 @@ Game.prototype.setLevel = function(newLevel) {
 		case 1:
 			map.setRows(
 				0,map.WATER,
-				1,map.STONE,
+				2,map.STONE,
 				map.GRASS);
-			mapAccessories.leftMostRockPosition = 3;
-			mapAccessories.leftMostKeyPosition = 3;
+			mapAccessories.leftMostRockPosition = 0;
+			mapAccessories.leftMostKeyPosition = 0;
 			enemyHandler.setSpeeds(250,300);
 			enemyHandler.setSpawnIntervalAndVariance(0.75,0.8);
 			break;
 		case 2:
+			map.setRows(
+				1,map.STONE,
+				2,map.GRASS
+			);
+			mapAccessories.leftMostRockPosition = 3;
+			mapAccessories.leftMostKeyPosition = 2;
+			break;
 		case 3:
-			map.setRows(2,map.STONE);
+			map.setRows(3,map.STONE);
+			enemyHandler.setSpawnIntervalAndVariance(0.4,0.6);
+			enemyHandler.setSpeeds(225,325);
 			break;
 		case 4:
+			map.setRows(4,map.STONE);
+			mapAccessories.leftMostRockPosition = 3;
+			enemyHandler.setSpawnIntervalAndVariance(0.25,0.4);
+			break;
 		case 5:
-			map.setRows(3,map.STONE);
+			map.setRows(
+				2,map.STONE,
+				3,map.GRASS);
+			break;
+		case 6:
+			map.setRows(
+				1,map.GRASS,
+				3,map.STONE
+			);
+			mapAccessories.leftMostRockPosition = 0;
+			break;
+		case 7:
+			map.setRows(
+				1,map.STONE,
+				4,map.GRASS
+			);
+			mapAccessories.leftMostKeyPosition = 3;
+			break;
+		case 8:
+			map.setRows(4,map.STONE);
 			break;
 	}
 };
@@ -339,9 +372,8 @@ Map.prototype.randomBoardLocationInRows = function() {
 };
 Map.prototype.playerCanMoveHere = function(x,y) {
 	if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLS && x >= 0 && y < this.ROWS && y >= 0){
-		if (y === 0){
+		if (y === 0 && this.tileTypes[x][y] !== this.WATER)
 			game.setState(game.WIN_LEVEL);
-		}
 		return true;
 	}
 	return false;
@@ -543,7 +575,7 @@ var Enemy = function() {
 }
 Enemy.prototype.PIXEL_ADJUST = -20; //Adjustment in bug's vertical location so it looks like it's on the road
 Enemy.prototype.EDGE_ADJUST_RIGHT = 5; //Adjustment in bug's right (leading) side for collision detection
-Enemy.prototype.EDGE_ADJUST_LEFT = 4; //Adjustment in bug's left (trailing) side for collision detection
+Enemy.prototype.EDGE_ADJUST_LEFT = 36; //Adjustment in bug's left (trailing) side for collision detection
 Enemy.prototype.init = function(x, y, lowerSpeedLimit, upperSpeedLimit) {
 	this.speed = Math.random() * (upperSpeedLimit - lowerSpeedLimit) + lowerSpeedLimit;
 	this.x = x;
@@ -800,8 +832,8 @@ var Player = function() {
 	this.collisionDetectionOn = false;
 };
 Player.prototype.PIXEL_ADJUST = -15; //Adjustment in player's vertical location so it appears to be on the tile
-Player.prototype.EDGE_ADJUST_RIGHT = 19; //Adjustment in player's right side for collision detection
-Player.prototype.EDGE_ADJUST_LEFT = 20; //Adjustment in player's left side for collision detection
+Player.prototype.EDGE_ADJUST_RIGHT = 29; //Adjustment in player's right side for collision detection
+Player.prototype.EDGE_ADJUST_LEFT = 30; //Adjustment in player's left side for collision detection
 Player.prototype.init = function() {
 	this.setPosition(this.column, this.row);
 };
