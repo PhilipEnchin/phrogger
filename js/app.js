@@ -4,8 +4,12 @@ var Game = function() {
 	this.state; //Keep track of the state of the game, constants below
 	this.lives; //Lives remaining
 	this.level; //Level number (starts at 1)
+	this.highScore; //High score - pulled from cookie in init()
+	this.distanceToHighScore; //highScore minus current level - positive if under, negative if over, zero if tied
+	this.highScoreCookieExpiry; //Expiry for cookie when set
 };
 /* Game state contants */
+Game.prototype.HIGH_SCORE_COOKIE_KEY = 'highScore';
 Game.prototype.PRE_GAME = 0;//For showing title screen
 Game.prototype.PRE_GAME_INSTRUCTIONS = 1; //For showing the instructions before the game starts
 Game.prototype.PRE_LEVEL = 2; //For showing the level, before play begins
@@ -21,6 +25,18 @@ Game.prototype.init = function() {
 	enemyHandler.init();
 	player.init();
 
+	var expiry = new Date();
+	expiry.setFullYear(expiry.getFullYear() + 15);
+	this.highScoreCookieExpiry = expiry.toUTCString();
+
+	var cookieString = document.cookie;
+	var highScoreKeyIndex = cookieString.indexOf(this.HIGH_SCORE_COOKIE_KEY);
+	if (highScoreKeyIndex >= 0) {
+		this.highScore = parseInt(cookieString.substring(cookieString.indexOf('=',highScoreKeyIndex) + 1));
+	} else {
+		this.highScore = 0;
+	}
+
 	this.setState(this.PRE_GAME);
 };
 Game.prototype.setState = function(state) {
@@ -34,6 +50,7 @@ Game.prototype.setState = function(state) {
 	switch (state) {
 		case this.PRE_GAME:
 			this.lives = 2;
+			this.distanceToHighScore = this.highScore + 1;
 			break;
 		case this.PRE_LEVEL:
 		case this.REINCARNATE:
@@ -45,9 +62,6 @@ Game.prototype.setState = function(state) {
 			this.setLevel(this.level+1);
 			break;
 		case this.DIED:
-			this.timeRemaining = 3.0;
-			break;
-		case this.GAME_OVER:
 			this.timeRemaining = 3.0;
 			break;
 	}
@@ -73,9 +87,15 @@ Game.prototype.handleInput = function(keyString) {
 				this.setLevel(1);
 				this.setState(this.PRE_LEVEL);
 			}
+			else if (this.state === this.GAME_OVER)
+				this.setState(this.PRE_GAME);
 	}
 };
 Game.prototype.setLevel = function(newLevel) {
+	if (--this.distanceToHighScore < 0)
+		document.cookie = this.HIGH_SCORE_COOKIE_KEY + '=' + (++this.highScore) + '; expires=' + this.highScoreCookieExpiry;
+	console.log(this.highScore,this.distanceToHighScore);
+
 	this.level = newLevel;
 
 	switch (newLevel) {
@@ -146,10 +166,8 @@ Game.prototype.decrementTimer = function(dt){
 		switch (this.state) {
 			case this.PRE_LEVEL:
 			case this.REINCARNATE: this.setState(this.PLAY); break;
-			case this.GAME_OVER: this.setState(this.PRE_GAME); break;
 			case this.WIN_LEVEL: this.setState(this.PRE_LEVEL); break;
 			case this.DIED:	this.died(); break;
-			case this.GAME_OVER: this.setState(this.PRE_GAME); break;
 		}
 	}
 };
@@ -524,7 +542,11 @@ HeadsUp.prototype.setState = function(state) {
 			this.livesText = '';
 			this.bigText = gameTitle;
 			this.bigTextSize = TITLE_TEXT_SIZE;
-			this.instructionText = ['Press spacebar to begin','','High score?'];
+			this.instructionText = [
+				'Press spacebar to begin',
+				'',
+				(game.highScore > 0) ? 'High score: Level ' + game.highScore : ''
+			];
 			break;
 		case game.PRE_GAME_INSTRUCTIONS:
 			this.bigText = '';
@@ -558,7 +580,13 @@ HeadsUp.prototype.setState = function(state) {
 			break;
 		case game.GAME_OVER:
 			this.bigText = 'Game over';
-			this.instructionText = 'So sad';
+			if (game.distanceToHighScore < 0)
+				this.instructionText = ['You beat your high score!','','New high score:','Level ' + game.highScore];
+			else if (game.distanceToHighScore === 0 && game.highScore > 0)
+				this.instructionText = ['You tied your high score!','','Give it another try!'];
+			else
+				this.instructionText = ['So sad'];
+			this.instructionText.splice(100,0,'','Press spacebar to continue');
 			break;
 	}
 };
