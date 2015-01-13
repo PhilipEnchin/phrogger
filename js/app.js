@@ -137,6 +137,10 @@ Game.prototype.died = function() {
 	else
 		this.setState(this.GAME_OVER);
 };
+Game.prototype.extraLife = function() {
+	this.lives++;
+	hud.extraLife();
+};
 Game.prototype.decrementTimer = function(dt){
 	if ((this.timeRemaining -= dt) <= 0) {
 		switch (this.state) {
@@ -395,42 +399,63 @@ var MapAccessories = function() {
 	this.accessories = [];
 	this.rockAccessory;
 	this.keyAccessory;
+	this.heartAccessory;
 	this.hidden = true;
 	this.leftMostRockPosition = 0;
 	this.leftMostKeyPosition = 0;
 }
 MapAccessories.prototype.KEY = 0;
 MapAccessories.prototype.ROCK = 1;
-MapAccessories.prototype.IMAGE_ARRAY = ['images/Key.png','images/Rock.png'];
+MapAccessories.prototype.HEART = 2;
+MapAccessories.prototype.IMAGE_ARRAY = ['images/Key.png','images/Rock.png','images/Heart.png'];
 MapAccessories.prototype.ROCK_PIXEL_ADJUST = -25;
 MapAccessories.prototype.KEY_PIXEL_ADJUST = -15;
-MapAccessories.prototype.placeKeyAndRock = function() {
-	if (this.accessories.indexOf(this.rockAccessory) !== -1 && this.accessories.indexOf(this.keyAccessory) !== -1 )
+MapAccessories.prototype.PROBABILITY_OF_EXTRA_LIFE = 1/20;
+MapAccessories.prototype.placeAccessories = function() {
+	if (this.accessories.indexOf(this.rockAccessory) !== -1 && this.accessories.indexOf(this.keyAccessory) !== -1)
 		return;
+	//Rock
+	this.accessories = [];
 	var rockLocation = map.randomBoardLocationInRows(0);
 	while (rockLocation.column < this.leftMostRockPosition)
 		rockLocation = map.randomBoardLocationInRows(0);
 	map.setTile(rockLocation.column,rockLocation.row,map.STONE);
-	this.rockAccessory = {
-		accessoryType: this.ROCK,
-		location: rockLocation,
-		coordinates: map.pixelCoordinatesForBoardCoordinates(rockLocation.column,rockLocation.row)
-	};
+	this.rockAccessory = this.packageAccessory(this.ROCK,rockLocation);
 	this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
+	//Key
 	var keyLocation = map.randomRoadBoardLocation();
 	while (keyLocation.column < this.leftMostKeyPosition)
 		keyLocation = map.randomRoadBoardLocation();
-	this.keyAccessory = {
-		accessoryType: this.KEY,
-		location: keyLocation,
-		coordinates: map.pixelCoordinatesForBoardCoordinates(keyLocation.column,keyLocation.row)
-	};
+	this.keyAccessory = this.packageAccessory(this.KEY,keyLocation);
 	this.keyAccessory.coordinates.y += this.KEY_PIXEL_ADJUST;
 	this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
+	//Heart
+	if (Math.random() <= this.PROBABILITY_OF_EXTRA_LIFE) {
+		var heartLocation = map.randomRoadBoardLocation();
+		while (heartLocation.column === keyLocation.column && heartLocation.row === keyLocation.row)
+			heartLocation = map.randomRoadBoardLocation();
+		this.heartAccessory = this.packageAccessory(this.HEART,heartLocation);
+		this.accessories.push(this.heartAccessory);
+	}
+};
+MapAccessories.prototype.packageAccessory = function(type,location) {
+	return {
+		accessoryType: type,
+		location: location,
+		coordinates: map.pixelCoordinatesForBoardCoordinates(location.column,location.row)
+	};
 };
 MapAccessories.prototype.playerCanMoveHere = function(x,y) {
+	//Rock
 	if (this.accessories.indexOf(this.rockAccessory) !== -1 && this.rockAccessory.location.column === x && this.rockAccessory.location.row === y)
 		return false;
+	//Heart
+	else if (this.heartAccessory && this.heartAccessory.location.column === x && this.heartAccessory.location.row === y) {
+		this.accessories.splice(this.accessories.indexOf(this.heartAccessory),1);
+		heartAccessory = null;
+		game.extraLife();
+	}
+	//Key
 	else if (this.keyAccessory.location.column === x && this.keyAccessory.location.row === y){
 		this.accessories.splice(this.accessories.indexOf(this.rockAccessory),1);
 		this.accessories.splice(this.accessories.indexOf(this.keyAccessory),1);
@@ -441,15 +466,19 @@ MapAccessories.prototype.setState = function(state) {
 	switch(state) {
 		case game.PRE_LEVEL:
 			this.hidden = true;
-			this.placeKeyAndRock();
+			this.placeAccessories();
 			break;
 		case game.REINCARNATE:
 			this.hidden = true;
 			this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
 			break;
 		case game.PLAY:
+			this.hidden = false;
+			break;
 		case game.DIED:
 			this.hidden = false;
+			this.heartAccessory = null;
+			this.accessories = [];
 			break;
 		case game.GAME_OVER:
 			this.hidden = true;
@@ -532,6 +561,9 @@ HeadsUp.prototype.setState = function(state) {
 			this.instructionText = 'So sad';
 			break;
 	}
+};
+HeadsUp.prototype.extraLife = function() {
+	this.livesText = livesPrefix + game.lives;
 };
 /* Helper function to display text with an outline */
 
