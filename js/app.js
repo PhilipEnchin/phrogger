@@ -36,6 +36,7 @@ Game.prototype.setState = function(state) {
 			this.lives = 2;
 			break;
 		case this.PRE_LEVEL:
+		case this.REINCARNATE:
 			this.timeRemaining = 2.0;
 			break;
 		case this.WIN_LEVEL:
@@ -132,14 +133,15 @@ Game.prototype.setLevel = function(newLevel) {
 };
 Game.prototype.died = function() {
 	if(--this.lives >= 0)
-		this.setState(this.PRE_LEVEL);
+		this.setState(this.REINCARNATE);
 	else
 		this.setState(this.GAME_OVER);
 };
 Game.prototype.decrementTimer = function(dt){
 	if ((this.timeRemaining -= dt) <= 0) {
 		switch (this.state) {
-			case this.PRE_LEVEL: this.setState(this.PLAY); break;
+			case this.PRE_LEVEL:
+			case this.REINCARNATE: this.setState(this.PLAY); break;
 			case this.GAME_OVER: this.setState(this.PRE_GAME); break;
 			case this.WIN_LEVEL: this.setState(this.PRE_LEVEL); break;
 			case this.DIED:	this.died(); break;
@@ -427,12 +429,11 @@ MapAccessories.prototype.placeKeyAndRock = function() {
 	this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
 };
 MapAccessories.prototype.playerCanMoveHere = function(x,y) {
-	if (this.rockAccessory && this.rockAccessory.location.column === x && this.rockAccessory.location.row === y)
+	if (this.accessories.indexOf(this.rockAccessory) !== -1 && this.rockAccessory.location.column === x && this.rockAccessory.location.row === y)
 		return false;
 	else if (this.keyAccessory.location.column === x && this.keyAccessory.location.row === y){
 		this.accessories.splice(this.accessories.indexOf(this.rockAccessory),1);
 		this.accessories.splice(this.accessories.indexOf(this.keyAccessory),1);
-		this.rockAccessory = null;
 	}
 	return true;
 };
@@ -441,6 +442,10 @@ MapAccessories.prototype.setState = function(state) {
 		case game.PRE_LEVEL:
 			this.hidden = true;
 			this.placeKeyAndRock();
+			break;
+		case game.REINCARNATE:
+			this.hidden = true;
+			this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
 			break;
 		case game.PLAY:
 		case game.DIED:
@@ -451,6 +456,7 @@ MapAccessories.prototype.setState = function(state) {
 			this.rockAccessory = null;
 			this.keyAccessory = null;
 			this.accessories = [];
+			break;
 		default:
 			this.hidden = true;
 	}
@@ -489,13 +495,14 @@ HeadsUp.prototype.setState = function(state) {
 			this.livesText = '';
 			this.bigText = gameTitle;
 			this.bigTextSize = TITLE_TEXT_SIZE;
-			this.instructionText = 'Press spacebar to begin';
+			this.instructionText = ['Press spacebar to begin','','High score?'];
 			break;
 		case game.PRE_GAME_INSTRUCTIONS:
 			this.bigText = '';
 			this.instructionText = gameInstructions;
 			break;
 		case game.PRE_LEVEL:
+		case game.REINCARNATE:
 			this.bigText = levelPrefix + game.level;
 			this.instructionText = livesPrefix + game.lives;
 			this.bigTextSize = PRE_LEVEL_TEXT_SIZE;
@@ -627,6 +634,7 @@ EnemyHandler.prototype.setState = function(state) {
 			this.hidden = false;
 			break;
 		case game.PRE_LEVEL:
+		case game.REINCARNATE:
 			this.moveable = true;
 			this.hidden = false;
 			break;
@@ -847,6 +855,7 @@ Player.prototype.setState = function(state) {
 			break;
 		case game.PRE_GAME_INSTRUCTIONS:
 		case game.PRE_LEVEL:
+		case game.REINCARNATE:
 			this.hidden = false;
 			this.moveable = false;
 			this.setPosition((map.COLS-1)/2,map.ROWS-1);
