@@ -92,7 +92,8 @@ Game.prototype.init = function() {
     var cookieString = document.cookie;
     var highScoreKeyIndex = cookieString.indexOf(this.HIGH_SCORE_COOKIE_KEY);
     if (highScoreKeyIndex >= 0) {
-        this.highScore = parseInt(cookieString.substring(cookieString.indexOf('=',highScoreKeyIndex) + 1));
+        var highScoreValueIndex = cookieString.indexOf('=',highScoreKeyIndex)+1;
+        this.highScore = parseInt(cookieString.substring(highScoreValueIndex));
     } else {
         this.highScore = 0;
     }
@@ -168,7 +169,8 @@ Game.prototype.handleInput = function(keyString) {
  */
 Game.prototype.setLevel = function(newLevel) {
     if (--this.distanceToHighScore < 0)
-        document.cookie = this.HIGH_SCORE_COOKIE_KEY + '=' + (++this.highScore) + '; expires=' + this.highScoreCookieExpiry;
+        document.cookie = this.HIGH_SCORE_COOKIE_KEY + '=' + (++this.highScore) +
+            '; expires=' + this.highScoreCookieExpiry;
 
     this.level = newLevel;
 
@@ -311,9 +313,9 @@ var Map = function() {
      * between levels, and the status (an enum) of that animation.
      * @type {Object.<string, number|Array.<Object.<string, Object.<string,number>|number>>}
      */
-    this.pendingTileChanges = { //Object that stores tiles that will be changed via animation
-        status: null, //Status (constants defined below)
-        changes: [] //Objects containing change information
+    this.pendingTileChanges = {
+        status: null,
+        changes: []
     };
 };
 /** @const */ Map.prototype.ROWS_COUNT = 6;
@@ -355,7 +357,8 @@ Map.prototype.init = function() {
         else
             rowTypes.push(this.Tile.GRASS);
     }
-    for (col = 0; col < this.COLUMN_COUNT; col++) { //Initialize tileTypes and tileCoordinates grids
+    //Initialize tileTypes and tileCoordinates grids
+    for (col = 0; col < this.COLUMN_COUNT; col++) { 
         this.tileCoordinates.push([]);
         this.tileTypes.push([]);
         var colPixel = col * this.COL_WIDTH_PIXELS;
@@ -450,7 +453,7 @@ Map.prototype.setRow = function(rowNumber, tileType) {
     } else {
         var rowArrayIndex = this.roadRowNumbers.indexOf(rowNumber);
         if (rowArrayIndex !== -1) { //This row is going from road to something else
-            /*enemyHandler.deleteEnemiesInRow(*/this.roadRowNumbers.splice(rowArrayIndex,1);/*[0]);*/
+            this.roadRowNumbers.splice(rowArrayIndex,1);
         }
     }
     for (var col = this.COLUMN_COUNT-1; col >= 0; col--) {
@@ -512,7 +515,8 @@ Map.prototype.update = function(dt,now) {
             changes.sort(function(a,b){
                 return a.time-b.time;
             });
-            //Use the randomly generated values as delta-time, and replace those with total time
+            //Use the randomly generated values as delta-time, and replace those
+            //with corresponding system time
             var previousValue = 0;
             var totalTime = changes[changes.length-1].time;
             changes.forEach(function(change){
@@ -544,7 +548,9 @@ Map.prototype.update = function(dt,now) {
  * @return {number} A vertical pixel coordinate corresponding with a road.
  */
 Map.prototype.randomRoadYCoordinate = function() {
-    return this.pixelCoordinatesForBoardCoordinates(0,this.roadRowNumbers[Math.floor(Math.random()*this.roadRowNumbers.length)]).y;
+    var roadRowIndex = Math.floor(Math.random()*this.roadRowNumbers.length);
+    var rowIndex = this.roadRowNumbers[roadRowIndex];
+    return this.pixelCoordinatesForBoardCoordinates(0,rowIndex).y;
 };
 /**
  * @return {Object.<string, number>} An object that contains randomly generated
@@ -587,7 +593,8 @@ Map.prototype.randomBoardLocationInRows = function(var_args) {
  * @return {boolean} Whether the move is legal.
  */
 Map.prototype.playerCanMoveHere = function(x,y) {
-    if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLUMN_COUNT && x >= 0 && y < this.ROWS_COUNT && y >= 0){
+    if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLUMN_COUNT &&
+        x >= 0 && y < this.ROWS_COUNT && y >= 0) {
         if (y === 0 && this.tileTypes[x][y] !== this.Tile.WATER)
             game.setState(game.State.WIN_LEVEL);
         return true;
@@ -598,11 +605,12 @@ Map.prototype.playerCanMoveHere = function(x,y) {
  * Renders the game board.
  */
 Map.prototype.render = function() {
-    var coordinates;
+    var coordinates, image;
     for (var row = 0; row < this.ROWS_COUNT; row++) {
         for (var col = 0; col < this.COLUMN_COUNT; col++) {
             coordinates = this.tileCoordinates[col][row];
-            ctx.drawImage(Resources.get(this.IMAGE_URL_ARRAY[this.tileTypes[col][row]]), coordinates.x, coordinates.y);
+            image = Resources.get(this.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
+            ctx.drawImage(image, coordinates.x, coordinates.y);
         };
     };
 };
@@ -637,12 +645,13 @@ MapAccessories.prototype.IMAGE_URL_ARRAY = [
 ];
 /** @const */ MapAccessories.prototype.ROCK_PIXEL_ADJUST = -25;
 /** @const */ MapAccessories.prototype.KEY_PIXEL_ADJUST = -15;
-/** @const */ MapAccessories.prototype.PROBABILITY_OF_EXTRA_LIFE = 1/1;
+/** @const */ MapAccessories.prototype.PROBABILITY_OF_EXTRA_LIFE = 1/20;
 /**
  * Places accessories on game board before a level begins.
  */
 MapAccessories.prototype.placeAccessories = function() {
-    if (this.accessories.indexOf(this.rockAccessory) !== -1 && this.accessories.indexOf(this.keyAccessory) !== -1)
+    if (this.accessories.indexOf(this.rockAccessory) !== -1 &&
+        this.accessories.indexOf(this.keyAccessory) !== -1)
         return;
     //Rock
     this.accessories = [];
@@ -662,7 +671,8 @@ MapAccessories.prototype.placeAccessories = function() {
     //Heart
     if (Math.random() <= this.PROBABILITY_OF_EXTRA_LIFE) {
         var heartLocation = map.randomRoadBoardLocation();
-        while (heartLocation.column === keyLocation.column && heartLocation.row === keyLocation.row)
+        while (heartLocation.column === keyLocation.column &&
+            heartLocation.row === keyLocation.row)
             heartLocation = map.randomRoadBoardLocation();
         this.heartAccessory = this.packageAccessory(this.Type.HEART,heartLocation);
         this.accessories.push(this.heartAccessory);
@@ -694,16 +704,20 @@ MapAccessories.prototype.packageAccessory = function(type,location) {
  */
 MapAccessories.prototype.playerCanMoveHere = function(x,y) {
     //Rock
-    if (this.accessories.indexOf(this.rockAccessory) !== -1 && this.rockAccessory.location.column === x && this.rockAccessory.location.row === y)
+    if (this.accessories.indexOf(this.rockAccessory) !== -1 &&
+        this.rockAccessory.location.column === x &&
+        this.rockAccessory.location.row === y)
         return false;
     //Heart
-    else if (this.heartAccessory && this.heartAccessory.location.column === x && this.heartAccessory.location.row === y) {
+    else if (this.heartAccessory && this.heartAccessory.location.column === x &&
+        this.heartAccessory.location.row === y) {
         this.accessories.splice(this.accessories.indexOf(this.heartAccessory),1);
         this.heartAccessory = null;
         game.extraLife();
     }
     //Key
-    else if (this.keyAccessory.location.column === x && this.keyAccessory.location.row === y){
+    else if (this.keyAccessory.location.column === x &&
+        this.keyAccessory.location.row === y) {
         this.accessories.splice(this.accessories.indexOf(this.rockAccessory),1);
         this.accessories.splice(this.accessories.indexOf(this.keyAccessory),1);
     }
@@ -746,10 +760,14 @@ MapAccessories.prototype.setState = function(state) {
  * Renders all active map accessories.
  */
 MapAccessories.prototype.render = function() {
-    if (!this.hidden)
+    if (!this.hidden) {
+        var image, coordinates;
         this.accessories.forEach(function(accessoryObject){
-            ctx.drawImage(Resources.get(this.IMAGE_URL_ARRAY[accessoryObject.accessoryType]),accessoryObject.coordinates.x,accessoryObject.coordinates.y);
+            image = Resources.get(this.IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
+            coordinates = accessoryObject.coordinates;
+            ctx.drawImage(image,coordinates.x,coordinates.y);
         },this);
+    }
 };
 /**
  * Object representing the heads-up display - lives remaining, level number,
@@ -757,11 +775,11 @@ MapAccessories.prototype.render = function() {
  * @constructor
  */
 var HeadsUp = function() {
-    this.levelText; //Bottom left corner
-    this.livesText; //Bottom right corner
-    this.bigText; //Front and center, for introducing levels, etc.
-    this.bigTextSize; //The size of the "big" text for game title, level titles, etc.
-    this.instructionText; //Instructions
+    /** @type {string} */ this.levelText;
+    /** @type {string} */ this.livesText;
+    /** @type {string} */ this.bigText;
+    /** @type {string} */ this.bigTextSize;
+    /** @type {string} */ this.instructionText;
 };
 /** @const */ HeadsUp.prototype.GAME_TITLE = 'PHROGGER';
 /** @const */ HeadsUp.prototype.GAME_INSTRUCTIONS = [
@@ -789,17 +807,20 @@ HeadsUp.prototype.LEVEL_X = 0;
  * Y position of HUD level text.
  * @const
  */
-HeadsUp.prototype.LEVEL_Y = (Map.prototype.ROWS_COUNT + 1) * Map.prototype.ROW_HEIGHT_PIXELS + 25;
+HeadsUp.prototype.LEVEL_Y = (Map.prototype.ROWS_COUNT + 1) * 
+    Map.prototype.ROW_HEIGHT_PIXELS + 25;
 /**
  * X position of HUD lives text.
  * @const
  */
-HeadsUp.prototype.LIVES_X = Map.prototype.COLUMN_COUNT * Map.prototype.COL_WIDTH_PIXELS;
+HeadsUp.prototype.LIVES_X = Map.prototype.COLUMN_COUNT *
+    Map.prototype.COL_WIDTH_PIXELS;
 /**
  * Y position of HUD lives text.
  * @const
  */
-HeadsUp.prototype.LIVES_Y = (Map.prototype.ROWS_COUNT + 1) * Map.prototype.ROW_HEIGHT_PIXELS + 25;
+HeadsUp.prototype.LIVES_Y = (Map.prototype.ROWS_COUNT + 1) *
+    Map.prototype.ROW_HEIGHT_PIXELS + 25;
 HeadsUp.prototype.TYPEFACE = 'Impact';
 /**
  * Sets constants that can't be set until after engine.js is loaded.
@@ -840,7 +861,7 @@ HeadsUp.prototype.setState = function(state) {
             this.instructionText = [
                 'Press spacebar to begin',
                 '',
-                (game.highScore > 0) ? 'High score: Level ' + game.highScore : ''
+                (game.highScore > 0) ? 'High score: Level '+game.highScore : ''
             ];
             break;
         case game.State.INSTRUCTIONS:
@@ -867,23 +888,37 @@ HeadsUp.prototype.setState = function(state) {
             break;
         case game.State.WIN_LEVEL:
             var winTextArray = ['Nicely done!','You rock!','Ka-Blamo'];
-            this.bigText = winTextArray[Math.floor(Math.random()*winTextArray.length)];
+            this.bigText = winTextArray[Math.floor(Math.random() * 
+                winTextArray.length)];
             break;
         case game.State.DIED   :
-            var dieTextArray = ['You died','You expired','You perished','Kicked the bucket','Croaked','Bought it','Bought the farm','Checked out early'];
+            var dieTextArray = ['You died','You expired','You perished',
+                'Kicked the bucket','Croaked','Bought it','Bought the farm',
+                'Checked out early'];
             this.bigText = dieTextArray[Math.floor(Math.random()*dieTextArray.length)];
             break;
         case game.State.GAME_OVER:
             this.bigText = 'Game over';
-            if (game.distanceToHighScore < 0 && -game.distanceToHighScore !== game.highScore)
-                this.instructionText = ['You beat your high score!','','New high score:','Level ' + game.highScore];
+            if (game.distanceToHighScore < 0 &&
+                -game.distanceToHighScore !== game.highScore)
+                this.instructionText = [
+                    'You beat your high score!',
+                    '',
+                    'New high score:',
+                    'Level ' + game.highScore];
             else if (game.distanceToHighScore < 0)
-                this.instructionText = ['You set your first high score!','','High Score: Level ' + game.highScore];
+                this.instructionText = [
+                'You set your first high score!',
+                '',
+                'High Score: Level ' + game.highScore];
             else if (game.distanceToHighScore === 0 && game.highScore > 0)
-                this.instructionText = ['You tied your high score!','','Give it another try!'];
+                this.instructionText = [
+                    'You tied your high score!',
+                    '',
+                    'Give it another try!'];
             else
                 this.instructionText = ['So sad'];
-            this.instructionText.splice(100,0,'','Press spacebar to continue');
+            this.instructionText.splice(1000,0,'','Press spacebar to continue');
             break;
     }
 };
@@ -898,22 +933,29 @@ HeadsUp.prototype.extraLife = function() {
  */
 HeadsUp.prototype.render = function() {
     if (this.bigText){
-        this.renderText(this.bigText,this.BIG_TEXT_X,this.BIG_TEXT_Y,this.TITLE_TEXT_SIZE,this.TYPEFACE,'center');
+        this.renderText(this.bigText,this.BIG_TEXT_X,this.BIG_TEXT_Y,
+            this.TITLE_TEXT_SIZE,this.TYPEFACE,'center');
     }
     if (this.instructionText){
         if(this.instructionText.constructor == Array){
             for (var i = this.instructionText.length - 1; i >= 0; i--) {
-                this.renderText(this.instructionText[i],this.INSTRUCTIONS_X,this.INSTRUCTION_LINE_HEIGHT*i + this.INSTRUCTIONS_Y,this.INSTRUCTION_TEXT_SIZE,this.TYPEFACE,'center');
+                this.renderText(this.instructionText[i],this.INSTRUCTIONS_X,
+                    this.INSTRUCTION_LINE_HEIGHT*i + this.INSTRUCTIONS_Y,
+                    this.INSTRUCTION_TEXT_SIZE,this.TYPEFACE,'center');
             }
         } else {
-            this.renderText(this.instructionText,this.INSTRUCTIONS_X,this.INSTRUCTIONS_Y,this.INSTRUCTION_TEXT_SIZE,this.TYPEFACE,'center');
+            this.renderText(this.instructionText,this.INSTRUCTIONS_X,
+                this.INSTRUCTIONS_Y,this.INSTRUCTION_TEXT_SIZE,this.TYPEFACE,
+                'center');
         }
     }
     if (this.levelText){
-        this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,this.LEVEL_TEXT_SIZE,this.TYPEFACE,'left');
+        this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,
+            this.LEVEL_TEXT_SIZE,this.TYPEFACE,'left');
     }
     if (this.livesText){
-        this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,this.LIVES_TEXT_SIZE,this.TYPEFACE,'right');
+        this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,
+            this.LIVES_TEXT_SIZE,this.TYPEFACE,'right');
     }
 };
 /**
@@ -959,7 +1001,7 @@ var Enemy = function() {
  * @param {number} upperSpeedLimit
  */
 Enemy.prototype.init = function(x, y, lowerSpeedLimit, upperSpeedLimit) {
-    this.speed = Math.random() * (upperSpeedLimit - lowerSpeedLimit) + lowerSpeedLimit;
+    this.speed = Math.random()*(upperSpeedLimit-lowerSpeedLimit) + lowerSpeedLimit;
     this.x = x;
     this.y = y + this.PIXEL_ADJUST;
     this.hidden = false;
@@ -1050,8 +1092,10 @@ var EnemyHandler = function(){
 };
 /** Initializes spawnX and retireX, which require the map to be initialized */
 EnemyHandler.prototype.init = function() {
-    this.spawnX = map.pixelCoordinatesForBoardCoordinates(0,0).x - map.COL_WIDTH_PIXELS;
-    this.retireX = map.pixelCoordinatesForBoardCoordinates(map.COLUMN_COUNT-1,0).x + map.COL_WIDTH_PIXELS;
+    this.spawnX = map.pixelCoordinatesForBoardCoordinates(0,0).x -
+        map.COL_WIDTH_PIXELS;
+    this.retireX = map.pixelCoordinatesForBoardCoordinates(map.COLUMN_COUNT-1,0).x +
+        map.COL_WIDTH_PIXELS;
 };
 /**
  * Maximum number of attempts at spawning an enemy until giving up. Remember, an
@@ -1100,8 +1144,10 @@ EnemyHandler.prototype.setState = function(state) {
  * @param {number} spawnInterval New spawn interval.
  * @param {number} spawnVariance New spawn variance.
  */
-EnemyHandler.prototype.setSpawnIntervalAndVariance = function(spawnInterval,spawnVariance) {
-    if (this.timeUntilSpawn > (this.spawnInterval = spawnInterval) * ((this.spawnVariance = spawnVariance) + 1))
+EnemyHandler.prototype.setSpawnIntervalAndVariance = function(spawnInterval,
+    spawnVariance) {
+    if (this.timeUntilSpawn > (this.spawnInterval = spawnInterval) *
+        ((this.spawnVariance = spawnVariance) + 1))
         this.newTimeUntilSpawn();
 };
 /**
@@ -1121,12 +1167,14 @@ EnemyHandler.prototype.setSpeeds = function(lowerSpeedLimit,upperSpeedLimit) {
  */
 EnemyHandler.prototype.update = function(dt,now) {
     if (this.moveable) {
-        if (this.timePaused > 0) { //If the game has been paused, add that time onto the active enemies
+        //If the game has been paused, add that time onto the active enemies
+        if (this.timePaused > 0) {
             this.activeEnemies.forEach(function(enemyObject){
                 enemyObject.retireTime += this.timePaused;
             }, this);
             map.roadRowNumbers.forEach(function(i){
-                var rowIndex = map.pixelCoordinatesForBoardCoordinates(0,i).y + Enemy.prototype.PIXEL_ADJUST;
+                var rowIndex = map.pixelCoordinatesForBoardCoordinates(0,i).y +
+                    Enemy.prototype.PIXEL_ADJUST;
                 if (this.activeEnemiesByRow[rowIndex] !== undefined) {
                     this.activeEnemiesByRow[rowIndex].forEach(function(enemyObject){
                         for (var i = enemyObject.entryTimes.length - 1; i >= 0; i--) {
@@ -1143,9 +1191,11 @@ EnemyHandler.prototype.update = function(dt,now) {
 
         }
         var retiredEnemy;
-        while (this.activeEnemies.length > 0 && now >= this.activeEnemies[0].retireTime) {
-            //This will result in some enemies that are not retired immediately when they leave the visible area,
-            //but it avoids the overhead of sorting the enemy objects within this.activeEnemies
+        while (this.activeEnemies.length > 0 &&
+            now >= this.activeEnemies[0].retireTime) {
+            //This will result in some enemies that are not retired immediately 
+            //when they leave the visible area, but it avoids the overhead of 
+            //constantly sorting the enemy objects within this.activeEnemies
             retiredEnemy = this.activeEnemies.splice(0,1)[0];
             this.retiredEnemies.push(retiredEnemy);
             this.activeEnemiesByRow[retiredEnemy.enemy.y].splice(0,1);
@@ -1153,7 +1203,7 @@ EnemyHandler.prototype.update = function(dt,now) {
         for (var i = this.activeEnemies.length - 1; i >= 0; i--) {
             this.activeEnemies[i].enemy.update(dt,now);
         }
-        if ( (this.timeUntilSpawn -= dt) <= 0 ) { //Spawn a new enemy if the time is right
+        if ( (this.timeUntilSpawn -= dt) <= 0 ) {
             this.spawnNewEnemy();
         }
     } else {
@@ -1174,7 +1224,8 @@ EnemyHandler.prototype.getNewEnemy = function() {
             retireTime: null
         };
     var yCoordinate = map.randomRoadYCoordinate();
-    newEnemy.enemy.init(this.spawnX, yCoordinate, this.lowerSpeedLimit, this.upperSpeedLimit);
+    newEnemy.enemy.init(this.spawnX, yCoordinate, this.lowerSpeedLimit,
+        this.upperSpeedLimit);
     return newEnemy;
 };
 /**
@@ -1192,7 +1243,8 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
     if((attemptIndex = attemptIndex || 0) < this.MAX_SPAWN_ATTEMPTS) {
         var enemyObjectWithRetireTime = this.getNewEnemy();
         var nakedEnemy = enemyObjectWithRetireTime.enemy;
-        var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
+        var enemyObjectWithEntryAndExitTimes =
+            this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
         var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
         var rowIndex = nakedEnemy.y;
         var retireTime = entryTimes[map.COLUMN_COUNT+1];
@@ -1203,8 +1255,10 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
         }
     
         if (rowOfEnemies.length > 0){
-            var leftMostEnemyEntryTimes = rowOfEnemies[rowOfEnemies.length-1].entryTimes;
-            var leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[map.COLUMN_COUNT+1];
+            var leftMostEnemyEntryTimes =
+                rowOfEnemies[rowOfEnemies.length-1].entryTimes;
+            var leftMostEnemyInRowExitCompletion =
+                leftMostEnemyEntryTimes[map.COLUMN_COUNT+1];
             var newEnemyExitBegin = entryTimes[map.COLUMN_COUNT];
             if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
                 this.retiredEnemies.push(enemyObjectWithRetireTime);
@@ -1233,7 +1287,8 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
 };
 /** Randomly generates a new timeUntilSpawn */
 EnemyHandler.prototype.newTimeUntilSpawn = function() {
-    this.timeUntilSpawn = this.spawnInterval * (this.spawnVariance * (2 * Math.random() - 1) + 1);
+    this.timeUntilSpawn = this.spawnInterval * (this.spawnVariance *
+        (2 * Math.random() - 1) + 1);
 };
 /**
  * Puts the Enemy object inside another object with entry and exit times.
@@ -1244,12 +1299,16 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
     var entryTimes = [];
     var exitTimes = [];
     var secondsPerColumn = map.COL_WIDTH_PIXELS / enemy.speed;
-    var secondsPerEntryEdgeAdjustWidth = (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
-    var secondsPerExitEdgeAdjustWidth = (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed; 
+    var secondsPerEntryEdgeAdjustWidth =
+        (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
+    var secondsPerExitEdgeAdjustWidth =
+        (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed; 
     var now = Date.now() / 1000;
     for (var col = map.COLUMN_COUNT + 1; col >= 0; col--) {
-        entryTimes.splice(0, 0, col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
-        exitTimes.splice(0, 0, (col+2) * secondsPerColumn - secondsPerExitEdgeAdjustWidth + now);
+        entryTimes.splice(0, 0,
+            col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
+        exitTimes.splice(0, 0, 
+            (col+2) * secondsPerColumn - secondsPerExitEdgeAdjustWidth + now);
     };
     return {
         enemy: enemy,
@@ -1271,7 +1330,8 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
         this.potentialCollisionLocation.rowIndex = null;
         return null;
     }
-    var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y + Enemy.prototype.PIXEL_ADJUST;
+    var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y + 
+        Enemy.prototype.PIXEL_ADJUST;
 
     this.potentialCollisionLocation.column = x;
     this.potentialCollisionLocation.rowIndex = rowIndex;
@@ -1378,7 +1438,8 @@ Player.prototype.setState = function(state) {
  * @param {number} now System time an invocation.
  */
 Player.prototype.update = function(dt,now) {
-    if (this.collisionDetectionOn && this.collisionTime && now > this.collisionTime) {
+    if (this.collisionDetectionOn && this.collisionTime &&
+        now > this.collisionTime) {
         this.die();
     }
 };
@@ -1397,13 +1458,15 @@ Player.prototype.setPosition = function(x,y) {
         this.column = Math.min(Math.max(x,0),map.COLUMN_COUNT-1);
     if (y !== undefined)
         this.row = Math.min(Math.max(y,0),map.ROWS_COUNT-1);
-    var coordinates = map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
+    var coordinates =
+        map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
     this.x = coordinates.x;
     this.y = coordinates.y + this.PIXEL_ADJUST;
 
     switch (map.tileTypes[this.column][this.row]) {
         case map.Tile.STONE:
-            this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column,this.row);
+            this.collisionTime = 
+                enemyHandler.collisionTimeForCoordinates(this.column,this.row);
             break;
         case map.Tile.WATER:
             this.die();
@@ -1470,8 +1533,7 @@ var mapAccessories = new MapAccessories();
 var enemyHandler = new EnemyHandler();
 var hud = new HeadsUp();
 var player = new Player();
-var game = new Game(); //Game object - keeps track of game state, deals with settings for levels, etc.
-// game.init();
+var game = new Game();
 
 // Listens for key presses. Sends recognized keys to Game.handleInput()
 document.addEventListener('keydown', function(e) {
