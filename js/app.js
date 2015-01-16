@@ -1,29 +1,94 @@
-/* Game state */
+/**
+ * @fileoverview Aside from the main loop (which is in engine.js), this file
+ * contains everything needed to run "Phrogger". All the game-related classes are
+ * here. They're declared, and their constructors are called.
+ */
+
+/**
+ * The Game class saves data related to the state of the game, such as the level,
+ * the current high score, how many lives are remaining, etc. It's used as a hub
+ * of sorts for the game as a whole. For example, all keyboard input is routed
+ * through Game, and Game.init() calls init() methods on other classes.
+ * @constructor
+ */
 var Game = function() {
-    this.timeRemaining = 0; //Time remaining for showing titles for levels, etc.
-    this.state; //Keep track of the state of the game, constants below
-    this.lives; //Lives remaining
-    this.level; //Level number (starts at 1)
-    this.highScore; //High score - pulled from cookie in init()
-    this.distanceToHighScore; //highScore minus current level - positive if under, negative if over, zero if tied
-    this.highScoreCookieExpiry; //Expiry for cookie when set
+    /**
+     * Time remaining for showing titles for levels, etc. The timer is active as
+     * long as this.timeRemaining > 0.
+     * @type {number}
+     */
+    this.timeRemaining = 0;
+    /**
+     * The state of the game, constants below.
+     * @type {number}
+     */
+    this.state;
+    /**
+     * Lives remaining. (When there's 0, the player can still play, à la video
+     * game norm.)
+     * @type {number}
+     */
+    this.lives;
+    /**
+     * Current level. Starts at 1.
+     * @type {number}
+     */
+    this.level;
+    /**
+     * High score. Pulled from cookie, if it exists, otherwise it starts at 0.
+     * This will always be the higher of the last level passed and the current
+     * high score. The cookie is also updated alongside this variable.
+     * @type {number}
+     */
+    this.highScore;
+    /**
+     * This is always the high score minus the last level passed. As a result,
+     * it's positive before the high score is beaten, zero when it's tied, and
+     * negative when the player has set a new high score. This is used when the
+     * game is over in order to present the appropriate message regarding the
+     * player's high score.
+     * @type {number}
+     */
+    this.distanceToHighScore;
+    /**
+     * The expiry date for the cookie.
+     * @type {number}
+     */
+    this.highScoreCookieExpiry;
 };
-/* Game state contants */
-Game.prototype.HIGH_SCORE_COOKIE_KEY = 'highScore';
-Game.prototype.PRE_GAME = 0;//For showing title screen
-Game.prototype.PRE_GAME_INSTRUCTIONS = 1; //For showing the instructions before the game starts
-Game.prototype.PRE_LEVEL = 2; //For showing the level, before play begins
-Game.prototype.PLAY = 3; //Player can play!
-Game.prototype.PAUSE_MENU = 4; //Menu when paused
-Game.prototype.GAME_OVER = 5; //For when the game is finished, before going back to PRE_GAME
-Game.prototype.DIED = 6; //When player has just died...
-Game.prototype.WIN_LEVEL = 7; //Player has beat level!
-Game.prototype.REINCARNATE = 8; //Player is back at start of level after death
-/* Initializer */
+/** @const */ Game.prototype.HIGH_SCORE_COOKIE_KEY = 'highScore';
+// /** @const */ Game.prototype.STATE_TITLE = 0;
+// /** @const */ Game.prototype.STATE_INSTRUCTIONS = 1;
+// /** @const */ Game.prototype.STATE_LEVEL_TITLE = 2;
+// /** @const */ Game.prototype.STATE_PLAY = 3;
+// /** @const */ Game.prototype.STATE_PAUSED = 4;
+// /** @const */ Game.prototype.STATE_GAME_OVER = 5;
+// /** @const */ Game.prototype.STATE_DIED = 6;
+// /** @const */ Game.prototype.STATE_WIN_LEVEL = 7;
+// /** @const */ Game.prototype.STATE_REINCARNATE = 8;
+/**
+ * Enum for possible game states.
+ * @enum {number}
+ */
+Game.prototype.State = {
+    TITLE: 0, //Title screen
+    INSTRUCTIONS: 1, //Instructions displayed after title screen
+    LEVEL_TITLE: 2, //Level title screen (as in, LEVEL 1. FIGHT!)
+    PLAY: 3,
+    PAUSED: 4,
+    GAME_OVER: 5,
+    DIED: 6, //Player just died
+    WIN_LEVEL: 7, //Player has just passed level
+    REINCARNATE: 8 //Like LEVEL_TITLE, but with small differences
+};
+/**
+ * Initializes the objects that need initializing, and initiates the game.
+ */
 Game.prototype.init = function() {
     map.init();
     enemyHandler.init();
     player.init();
+    hud.init();
 
     var expiry = new Date();
     expiry.setFullYear(expiry.getFullYear() + 15);
@@ -37,8 +102,13 @@ Game.prototype.init = function() {
         this.highScore = 0;
     }
 
-    this.setState(this.PRE_GAME);
+    this.setState(this.State.TITLE);
 };
+/**
+ * Used to set the state of the game. Also passes on the state change to any
+ * object that needs it.
+ * @param {number} A game state constant.
+ */
 Game.prototype.setState = function(state) {
     this.state = state;
     hud.setState(state);
@@ -48,24 +118,29 @@ Game.prototype.setState = function(state) {
     mapAccessories.setState(state)
 
     switch (state) {
-        case this.PRE_GAME:
+        case this.State.TITLE:
             this.lives = 2;
             this.distanceToHighScore = this.highScore + 1;
             break;
-        case this.PRE_LEVEL:
-        case this.REINCARNATE:
+        case this.State.LEVEL_TITLE:
+        case this.State.REINCARNATE:
             this.timeRemaining = 2.0;
             break;
-        case this.WIN_LEVEL:
+        case this.State.WIN_LEVEL:
             this.timeRemaining = 2.0;
-            map.setRows(0,map.WATER);
+            map.setRows(0,map.WATER_TILE);
             this.setLevel(this.level+1);
             break;
-        case this.DIED:
+        case this.State.DIED:
             this.timeRemaining = 3.0;
             break;
     }
 };
+/**
+ * Handles the input passed on from the listener added to document. Sends the
+ * input to the appropriate object, and takes care of other state or level changes.
+ * @param {string} String specifying the input from keyboard.
+ */
 Game.prototype.handleInput = function(keyString) {
     switch (keyString) {
         case 'up':
@@ -75,22 +150,27 @@ Game.prototype.handleInput = function(keyString) {
             player.handleInput(keyString);
             break;
         case 'pause':
-            if (this.state === this.PLAY)
-                this.setState(this.PAUSE_MENU);
-            else if (this.state === this.PAUSE_MENU)
-                this.setState(this.PLAY);
+            if (this.state === this.State.PLAY)
+                this.setState(this.State.PAUSED);
+            else if (this.state === this.State.PAUSED)
+                this.setState(this.State.PLAY);
             break;
         case 'space':
-            if (this.state === this.PRE_GAME)
-                this.setState(this.PRE_GAME_INSTRUCTIONS);
-            else if (this.state === this.PRE_GAME_INSTRUCTIONS) {
+            if (this.state === this.State.TITLE)
+                this.setState(this.State.INSTRUCTIONS);
+            else if (this.state === this.State.INSTRUCTIONS) {
                 this.setLevel(1);
-                this.setState(this.PRE_LEVEL);
+                this.setState(this.State.LEVEL_TITLE);
             }
-            else if (this.state === this.GAME_OVER)
-                this.setState(this.PRE_GAME);
+            else if (this.state === this.State.GAME_OVER)
+                this.setState(this.State.TITLE);
     }
 };
+/**
+ * Sets any parameters to do with changing levels. Also updates the high score
+ * (and accompanying cookie) if needed.
+ *  @param {number} The new level
+ */
 Game.prototype.setLevel = function(newLevel) {
     if (--this.distanceToHighScore < 0)
         document.cookie = this.HIGH_SCORE_COOKIE_KEY + '=' + (++this.highScore) + '; expires=' + this.highScoreCookieExpiry;
@@ -100,9 +180,9 @@ Game.prototype.setLevel = function(newLevel) {
     switch (newLevel) {
         case 1:
             map.setRows(
-                0,map.WATER,
-                2,map.STONE,
-                map.GRASS);
+                0,map.WATER_TILE,
+                2,map.STONE_TILE,
+                map.GRASS_TILE);
             mapAccessories.leftMostRockPosition = 0;
             mapAccessories.leftMostKeyPosition = 3;
             enemyHandler.setSpeeds(250,300);
@@ -110,73 +190,92 @@ Game.prototype.setLevel = function(newLevel) {
             break;
         case 2:
             map.setRows(
-                1,map.STONE,
-                2,map.GRASS
+                1,map.STONE_TILE,
+                2,map.GRASS_TILE
             );
             mapAccessories.leftMostRockPosition = 3;
             mapAccessories.leftMostKeyPosition = 2;
             break;
         case 3:
-            map.setRows(3,map.STONE);
+            map.setRows(3,map.STONE_TILE);
             enemyHandler.setSpawnIntervalAndVariance(0.4,0.6);
             enemyHandler.setSpeeds(225,325);
             break;
         case 4:
-            map.setRows(4,map.STONE);
+            map.setRows(4,map.STONE_TILE);
             mapAccessories.leftMostRockPosition = 3;
             enemyHandler.setSpawnIntervalAndVariance(0.25,0.4);
             break;
         case 5:
             map.setRows(
-                2,map.STONE,
-                3,map.GRASS);
+                2,map.STONE_TILE,
+                3,map.GRASS_TILE);
             break;
         case 6:
             map.setRows(
-                1,map.GRASS,
-                3,map.STONE
+                1,map.GRASS_TILE,
+                3,map.STONE_TILE
             );
             mapAccessories.leftMostRockPosition = 0;
             break;
         case 7:
             map.setRows(
-                1,map.STONE,
-                4,map.GRASS
+                1,map.STONE_TILE,
+                4,map.GRASS_TILE
             );
             mapAccessories.leftMostKeyPosition = 3;
             break;
         case 8:
-            map.setRows(4,map.STONE);
+            map.setRows(4,map.STONE_TILE);
             break;
     }
 };
+/**
+ * Decreases the number of lives and initiates the next state, depending on the
+ * number of lives remaining.
+ */
 Game.prototype.died = function() {
     if(--this.lives >= 0)
-        this.setState(this.REINCARNATE);
+        this.setState(this.State.REINCARNATE);
     else
-        this.setState(this.GAME_OVER);
+        this.setState(this.State.GAME_OVER);
 };
+/**
+ * Adds a life and calls HeadsUp.extraLife() in order to update the HUD
+ */
 Game.prototype.extraLife = function() {
     this.lives++;
     hud.extraLife();
 };
+/**
+ * Decrements the timer and takes the appropriate action if the timer has run out.
+ */
 Game.prototype.decrementTimer = function(dt){
     if ((this.timeRemaining -= dt) <= 0) {
         switch (this.state) {
-            case this.PRE_LEVEL:
-            case this.REINCARNATE: this.setState(this.PLAY); break;
-            case this.WIN_LEVEL: this.setState(this.PRE_LEVEL); break;
-            case this.DIED: this.died(); break;
+            case this.State.LEVEL_TITLE:
+            case this.State.REINCARNATE: this.setState(this.State.PLAY); break;
+            case this.State.WIN_LEVEL: this.setState(this.State.LEVEL_TITLE); break;
+            case this.State.DIED   : this.died(); break;
         }
     }
 };
+/**
+ * Forwards the update command to other objects, and decrements timer if the
+ * timer is active.
+ */
 Game.prototype.update = function(dt,now) {
     enemyHandler.update(dt,now);
     player.update(dt,now);
     map.update(dt,now);
 
-    this.decrementTimer(dt);
+    if (this.timeRemaining > 0)
+        this.decrementTimer(dt);
 };
+/**
+ * Begins the rendering sequence by clearing the screen, then calling render()
+ * methods in other objects.
+ */
 Game.prototype.render = function() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
     map.render();
@@ -185,6 +284,14 @@ Game.prototype.render = function() {
     enemyHandler.render();
     hud.render();
 };
+/**
+ * The Map class deals with anything relating to the game board. It has methods
+ * for returning coordinates to any tile on the board, rendering the board, as
+ * well as returning randomly generated coordinates. It stores and deals with
+ * data for which tiles are which types, which rows are roads, as well as the
+ * animation used for transitioning from one map to another.
+ * @constructor
+ */
 var Map = function() {
     this.tileTypes = []; //2D array of tile-types
     this.tileCoordinates = []; //2D array of tile coordinates, for speedy access!
@@ -194,35 +301,35 @@ var Map = function() {
         changes: [] //Objects containing change information
     };
 };
-Map.prototype.ROWS = 6;
-Map.prototype.COLS = 5;
-Map.prototype.ROW_HEIGHT = 83;
-Map.prototype.COL_WIDTH = 101;
-Map.prototype.WATER = 0; // \
-Map.prototype.STONE = 1; // |--Corresponds with image array indices
-Map.prototype.GRASS = 2; // /
-Map.prototype.IMAGE_ARRAY = ['images/water-block.png','images/stone-block.png','images/grass-block.png'];
-Map.prototype.PENDING_CONTAINS_NEW_CHANGES = 0;
-Map.prototype.PENDING_READY = 1;
-Map.prototype.PENDING_EMPTY = 2;
+/** @const */ Map.prototype.ROWS_COUNT = 6;
+/** @const */ Map.prototype.COLUMN_COUNT = 5;
+/** @const */ Map.prototype.ROW_HEIGHT_PIXELS = 83;
+/** @const */ Map.prototype.COL_WIDTH_PIXELS = 101;
+/** @const */ Map.prototype.WATER_TILE = 0; // \
+/** @const */ Map.prototype.STONE_TILE = 1; // |--Corresponds with image array indices
+/** @const */ Map.prototype.GRASS_TILE = 2; // /
+/** @const */ Map.prototype.IMAGE_URL_ARRAY = ['images/water-block.png','images/stone-block.png','images/grass-block.png'];
+/** @const */ Map.prototype.PENDING_CONTAINS_NEW_CHANGES = 0;
+/** @const */ Map.prototype.PENDING_READY = 1;
+/** @const */ Map.prototype.PENDING_EMPTY = 2;
 /* Initialize top row to water, the rest to grass */
 Map.prototype.init = function() {
     var row, col;
     var rowTypes = [];
-    for (row = 0; row < this.ROWS; row++) {
+    for (row = 0; row < this.ROWS_COUNT; row++) {
         if (row === 0)
-            rowTypes.push(this.WATER);
+            rowTypes.push(this.WATER_TILE);
         else
-            rowTypes.push(this.GRASS);
+            rowTypes.push(this.GRASS_TILE);
     }
-    for (col = 0; col < this.COLS; col++) { //Initialize tileTypes and tileCoordinates grids
+    for (col = 0; col < this.COLUMN_COUNT; col++) { //Initialize tileTypes and tileCoordinates grids
         this.tileCoordinates.push([]);
         this.tileTypes.push([]);
-        var colPixel = col * this.COL_WIDTH;
-        for (row = 0; row < this.ROWS; row++) {
+        var colPixel = col * this.COL_WIDTH_PIXELS;
+        for (row = 0; row < this.ROWS_COUNT; row++) {
             var coordinates = {
-                x: col * this.COL_WIDTH,
-                y: row * this.ROW_HEIGHT
+                x: col * this.COL_WIDTH_PIXELS,
+                y: row * this.ROW_HEIGHT_PIXELS
             };
             this.tileCoordinates[col].push(coordinates);
             this.tileTypes[col].push(rowTypes[row]);
@@ -232,11 +339,11 @@ Map.prototype.init = function() {
 };
 Map.prototype.setState = function(state) {
     switch (state) {
-        case game.PRE_GAME:
+        case game.State.TITLE:
             this.setRows(
-                0,map.WATER,
-                [1,2,3,4],map.STONE,
-                map.GRASS
+                0,map.WATER_TILE,
+                [1,2,3,4],map.STONE_TILE,
+                map.GRASS_TILE
             );
             break;
     }
@@ -255,11 +362,11 @@ Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumbe
     - an array of row numbers and a tile type
   If there is an odd number of arguments, the final one is a tile type,
   and all remaining rows are set to that type.*/
-Map.prototype.setRows = function() {
+Map.prototype.setRows = function(var_args) {
     var args = Array.prototype.slice.call(arguments);
     var remainingRows = []; //Rows not set yet, in the event of 
     var rowArray, tileType;
-    for (var i = this.ROWS - 1; i >= 0; i--) {
+    for (var i = this.ROWS_COUNT - 1; i >= 0; i--) {
         remainingRows.splice(0,0,i);
     };
     while(args.length > 1){
@@ -280,7 +387,7 @@ Map.prototype.setRows = function() {
     }
 };
 Map.prototype.setRow = function(rowNumber, tileType) {
-    if (tileType === this.STONE) {
+    if (tileType === this.STONE_TILE) {
         if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
             this.roadRowNumbers.push(rowNumber);
         } else {
@@ -292,14 +399,14 @@ Map.prototype.setRow = function(rowNumber, tileType) {
             /*enemyHandler.deleteEnemiesInRow(*/this.roadRowNumbers.splice(rowArrayIndex,1);/*[0]);*/
         }
     }
-    for (var col = this.COLS-1; col >= 0; col--) {
+    for (var col = this.COLUMN_COUNT-1; col >= 0; col--) {
         this.setTile(col,rowNumber,tileType);
     }
 };
 Map.prototype.setTile = function(colNumber, rowNumber, tileType) {
     switch (game.state) {
-        case game.PLAY:
-        case game.PRE_GAME:
+        case game.State.PLAY:
+        case game.State.TITLE:
             this.tileTypes[colNumber][rowNumber] = tileType;
             break;
         default:
@@ -357,39 +464,38 @@ Map.prototype.randomRoadYCoordinate = function() {
 };
 Map.prototype.randomRoadBoardLocation = function() {
     return {
-        column: Math.floor(Math.random()*map.COLS),
+        column: Math.floor(Math.random()*map.COLUMN_COUNT),
         row: this.roadRowNumbers[Math.floor(Math.random()*this.roadRowNumbers.length)]
     };
 };
-Map.prototype.randomBoardLocationInRows = function() {
+Map.prototype.randomBoardLocationInRows = function(var_args) {
     var args = Array.prototype.slice.call(arguments);
     var rowNumber
     if (args.length === 0)
-        rowNumber = Math.floor(Math.random()*this.ROWS);
+        rowNumber = Math.floor(Math.random()*this.ROWS_COUNT);
     else if (args[0].constructor === Array)
         rowNumber = args[0][Math.floor(Math.random()*args.length)];
     else
         rowNumber = args[Math.floor(Math.random()*args.length)];
     return {
-        column: Math.floor(Math.random()*this.COLS),
+        column: Math.floor(Math.random()*this.COLUMN_COUNT),
         row: rowNumber
     };
 };
 Map.prototype.playerCanMoveHere = function(x,y) {
-    if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLS && x >= 0 && y < this.ROWS && y >= 0){
-        if (y === 0 && this.tileTypes[x][y] !== this.WATER)
-            game.setState(game.WIN_LEVEL);
+    if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLUMN_COUNT && x >= 0 && y < this.ROWS_COUNT && y >= 0){
+        if (y === 0 && this.tileTypes[x][y] !== this.WATER_TILE)
+            game.setState(game.State.WIN_LEVEL);
         return true;
     }
     return false;
 };
 Map.prototype.render = function() {
     var coordinates;
-    for (var row = 0; row < this.ROWS; row++) {
-        for (var col = 0; col < this.COLS; col++) {
-            //ctx.drawImage(Resources.get(rowImages[row]), col * this.COL_WIDTH, row * this.ROW_HEIGHT);
+    for (var row = 0; row < this.ROWS_COUNT; row++) {
+        for (var col = 0; col < this.COLUMN_COUNT; col++) {
             coordinates = this.tileCoordinates[col][row];
-            ctx.drawImage(Resources.get(this.IMAGE_ARRAY[this.tileTypes[col][row]]), coordinates.x, coordinates.y);
+            ctx.drawImage(Resources.get(this.IMAGE_URL_ARRAY[this.tileTypes[col][row]]), coordinates.x, coordinates.y);
         };
     };
 };
@@ -406,7 +512,7 @@ var MapAccessories = function() {
 MapAccessories.prototype.KEY = 0;
 MapAccessories.prototype.ROCK = 1;
 MapAccessories.prototype.HEART = 2;
-MapAccessories.prototype.IMAGE_ARRAY = ['images/Key.png','images/Rock.png','images/Heart.png'];
+MapAccessories.prototype.IMAGE_URL_ARRAY = ['images/Key.png','images/Rock.png','images/Heart.png'];
 MapAccessories.prototype.ROCK_PIXEL_ADJUST = -25;
 MapAccessories.prototype.KEY_PIXEL_ADJUST = -15;
 MapAccessories.prototype.PROBABILITY_OF_EXTRA_LIFE = 1/20;
@@ -418,7 +524,7 @@ MapAccessories.prototype.placeAccessories = function() {
     var rockLocation = map.randomBoardLocationInRows(0);
     while (rockLocation.column < this.leftMostRockPosition)
         rockLocation = map.randomBoardLocationInRows(0);
-    map.setTile(rockLocation.column,rockLocation.row,map.STONE);
+    map.setTile(rockLocation.column,rockLocation.row,map.STONE_TILE);
     this.rockAccessory = this.packageAccessory(this.ROCK,rockLocation);
     this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
     //Key
@@ -463,23 +569,23 @@ MapAccessories.prototype.playerCanMoveHere = function(x,y) {
 };
 MapAccessories.prototype.setState = function(state) {
     switch(state) {
-        case game.PRE_LEVEL:
+        case game.State.LEVEL_TITLE:
             this.hidden = true;
             this.placeAccessories();
             break;
-        case game.REINCARNATE:
+        case game.State.REINCARNATE:
             this.hidden = true;
             this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
             break;
-        case game.PLAY:
+        case game.State.PLAY:
             this.hidden = false;
             break;
-        case game.DIED:
+        case game.State.DIED   :
             this.hidden = false;
             this.heartAccessory = null;
             this.accessories = [];
             break;
-        case game.GAME_OVER:
+        case game.State.GAME_OVER:
             this.hidden = true;
             this.rockAccessory = null;
             this.keyAccessory = null;
@@ -489,10 +595,10 @@ MapAccessories.prototype.setState = function(state) {
             this.hidden = true;
     }
 };
-MapAccessories.prototype.render = function() {
+MapAccessories.prototype.render = function(URL_) {
     if (!this.hidden)
         this.accessories.forEach(function(accessoryObject){
-            ctx.drawImage(Resources.get(this.IMAGE_ARRAY[accessoryObject.accessoryType]),accessoryObject.coordinates.x,accessoryObject.coordinates.y);
+            ctx.drawImage(Resources.get(this.IMAGE_URL_ARRAY[accessoryObject.accessoryType]),accessoryObject.coordinates.x,accessoryObject.coordinates.y);
         },this);
 };
 /* Heads up display - lives remaining, level number...*/
@@ -504,7 +610,13 @@ var HeadsUp = function() {
     this.instructionText; //Instructions
 };
 HeadsUp.prototype.GAME_TITLE = 'PHROGGER';
-HeadsUp.prototype.GAME_INSTRUCTIONS = ['Use arrow keys to get across the road','Don\'t forget to grab the key!','Press P to pause','','When you\'re ready, hit the spacebar'];
+HeadsUp.prototype.GAME_INSTRUCTIONS = [
+    'Use arrow keys to get across the road',
+    'Don\'t forget to grab the key!',
+    'Press P to pause',
+    '',
+    'When you\'re ready, hit the spacebar'
+];
 HeadsUp.prototype.levelPrefix = 'LEVEL: ';
 HeadsUp.prototype.livesPrefix = 'LIVES: ';
 HeadsUp.prototype.TITLE_TEXT_SIZE = 80;
@@ -514,18 +626,21 @@ HeadsUp.prototype.LEVEL_TEXT_SIZE = 16;
 HeadsUp.prototype.LIVES_TEXT_SIZE = 16;
 HeadsUp.prototype.INSTRUCTION_TEXT_SIZE = 20;
 HeadsUp.prototype.INSTRUCTION_LINE_HEIGHT = 24;
-HeadsUp.prototype.BIG_TEXT_X = 505/2;
-HeadsUp.prototype.BIG_TEXT_Y = 606/2 - 20;
-HeadsUp.prototype.INSTRUCTIONS_X = 505/2;
-HeadsUp.prototype.INSTRUCTIONS_Y = 606/2 + 20;
 HeadsUp.prototype.LEVEL_X = 0;
-HeadsUp.prototype.LEVEL_Y = (Map.prototype.ROWS + 1) * Map.prototype.ROW_HEIGHT + 25;
-HeadsUp.prototype.LIVES_X = Map.prototype.COLS * Map.prototype.COL_WIDTH;
-HeadsUp.prototype.LIVES_Y = (Map.prototype.ROWS + 1) * Map.prototype.ROW_HEIGHT + 25;
+HeadsUp.prototype.LEVEL_Y = (Map.prototype.ROWS_COUNT + 1) * Map.prototype.ROW_HEIGHT_PIXELS + 25;
+HeadsUp.prototype.LIVES_X = Map.prototype.COLUMN_COUNT * Map.prototype.COL_WIDTH_PIXELS;
+HeadsUp.prototype.LIVES_Y = (Map.prototype.ROWS_COUNT + 1) * Map.prototype.ROW_HEIGHT_PIXELS + 25;
 HeadsUp.prototype.TYPEFACE = 'Impact';
+HeadsUp.prototype.init = function() {
+    //These all need to be set here so we can use canvas.width/height
+    this.BIG_TEXT_X = canvas.width/2;
+    this.BIG_TEXT_Y = canvas.height/2 - 20;
+    this.INSTRUCTIONS_X = canvas.width/2;
+    this.INSTRUCTIONS_Y = canvas.height/2 + 20;
+};
 HeadsUp.prototype.setState = function(state) {
     switch (state) {
-        case game.PRE_GAME:
+        case game.State.TITLE:
             this.levelText = '';
             this.livesText = '';
             this.bigText = this.GAME_TITLE;
@@ -536,37 +651,37 @@ HeadsUp.prototype.setState = function(state) {
                 (game.highScore > 0) ? 'High score: Level ' + game.highScore : ''
             ];
             break;
-        case game.PRE_GAME_INSTRUCTIONS:
+        case game.State.INSTRUCTIONS:
             this.bigText = '';
             this.instructionText = this.GAME_INSTRUCTIONS;
             break;
-        case game.PRE_LEVEL:
-        case game.REINCARNATE:
+        case game.State.LEVEL_TITLE:
+        case game.State.REINCARNATE:
             this.bigText = this.levelPrefix + game.level;
             this.instructionText = this.livesPrefix + game.lives;
             this.bigTextSize = this.PRE_LEVEL_TEXT_SIZE;
             this.levelText = '';
             this.livesText = '';
             break;
-        case game.PLAY:
+        case game.State.PLAY:
             this.levelText = this.levelPrefix + game.level;
             this.livesText = this.livesPrefix + game.lives;
             this.bigText = '';
             this.instructionText = '';
             break;
-        case game.PAUSE_MENU:
+        case game.State.PAUSED:
             this.bigText = 'PAUSED';
             this.bigTextSize = this.PAUSED_TEXT_SIZE;
             break;
-        case game.WIN_LEVEL:
+        case game.State.WIN_LEVEL:
             var winTextArray = ['Nicely done!','You rock!','Ka-Blamo'];
             this.bigText = winTextArray[Math.floor(Math.random()*winTextArray.length)];
             break;
-        case game.DIED:
+        case game.State.DIED   :
             var dieTextArray = ['You died','You expired','You perished','Kicked the bucket','Croaked','Bought it','Bought the farm','Checked out early'];
             this.bigText = dieTextArray[Math.floor(Math.random()*dieTextArray.length)];
             break;
-        case game.GAME_OVER:
+        case game.State.GAME_OVER:
             this.bigText = 'Game over';
             if (game.distanceToHighScore < 0 && -game.distanceToHighScore !== game.highScore)
                 this.instructionText = ['You beat your high score!','','New high score:','Level ' + game.highScore];
@@ -657,36 +772,36 @@ var EnemyHandler = function(){
     this.timePaused = 0; //Used to keep a running total of how much time the game is paused, to adjust retirement, entry and collision times.
 };
 EnemyHandler.prototype.init = function() {
-    this.spawnX = map.pixelCoordinatesForBoardCoordinates(0,0).x - map.COL_WIDTH;
-    this.retireX = map.pixelCoordinatesForBoardCoordinates(map.COLS-1,0).x + map.COL_WIDTH;
+    this.spawnX = map.pixelCoordinatesForBoardCoordinates(0,0).x - map.COL_WIDTH_PIXELS;
+    this.retireX = map.pixelCoordinatesForBoardCoordinates(map.COLUMN_COUNT-1,0).x + map.COL_WIDTH_PIXELS;
 };
 EnemyHandler.prototype.maxSpawnAttempts = 10;
 EnemyHandler.prototype.setState = function(state) {
     switch (state) {
-        case game.PRE_GAME:
+        case game.State.TITLE:
             this.moveable = true;
             this.hidden = false;
             this.setSpeeds(200,500);
             this.setSpawnIntervalAndVariance(0.3,0.5);
             break;
-        case game.PRE_GAME_INSTRUCTIONS:
+        case game.State.INSTRUCTIONS:
             this.moveable = true;
             this.hidden = false;
             break;
-        case game.PRE_LEVEL:
-        case game.REINCARNATE:
+        case game.State.LEVEL_TITLE:
+        case game.State.REINCARNATE:
             this.moveable = true;
             this.hidden = false;
             break;
-        case game.PLAY:
+        case game.State.PLAY:
             this.moveable = true;
             this.hidden = false;
             break;
-        case game.PAUSE_MENU:
+        case game.State.PAUSED:
             this.moveable = false;
             this.hidden = true;
             break;
-        case game.DIED:
+        case game.State.DIED   :
             this.moveable = false;
             this.hidden = false;
             break;
@@ -765,7 +880,7 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
         var enemyObjectWithEntryAndExitTimes = this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
         var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
         var rowIndex = nakedEnemy.y;
-        var retireTime = entryTimes[map.COLS+1];
+        var retireTime = entryTimes[map.COLUMN_COUNT+1];
         var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
         if (rowOfEnemies === undefined) {
             rowOfEnemies = [];
@@ -774,8 +889,8 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
     
         if (rowOfEnemies.length > 0){
             var leftMostEnemyEntryTimes = rowOfEnemies[rowOfEnemies.length-1].entryTimes;
-            var leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[map.COLS+1];
-            var newEnemyExitBegin = entryTimes[map.COLS];
+            var leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[map.COLUMN_COUNT+1];
+            var newEnemyExitBegin = entryTimes[map.COLUMN_COUNT];
             if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
                 this.spawnNewEnemy(attemptIndex+1);
                 return;
@@ -805,11 +920,11 @@ EnemyHandler.prototype.newTimeUntilSpawn = function() {
 EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
     var entryTimes = [];
     var exitTimes = [];
-    var secondsPerColumn = map.COL_WIDTH / enemy.speed;
+    var secondsPerColumn = map.COL_WIDTH_PIXELS / enemy.speed;
     var secondsPerEntryEdgeAdjustWidth = (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
     var secondsPerExitEdgeAdjustWidth = (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed; 
     var now = Date.now() / 1000;
-    for (var col = map.COLS + 1; col >= 0; col--) {
+    for (var col = map.COLUMN_COUNT + 1; col >= 0; col--) {
         entryTimes.splice(0, 0, col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
         exitTimes.splice(0, 0, (col+2) * secondsPerColumn - secondsPerExitEdgeAdjustWidth + now);
     };
@@ -878,34 +993,34 @@ Player.prototype.init = function() {
 };
 Player.prototype.setState = function(state) {
     switch (state) {
-        case game.PRE_GAME:
+        case game.State.TITLE:
             this.hidden = false;
             this.moveable = false;
-            this.setPosition((map.COLS-1)/2,map.ROWS-1);
+            this.setPosition((map.COLUMN_COUNT-1)/2,map.ROWS_COUNT-1);
             this.collisionDetectionOn = false;
             break;
-        case game.PRE_GAME_INSTRUCTIONS:
-        case game.PRE_LEVEL:
-        case game.REINCARNATE:
+        case game.State.INSTRUCTIONS:
+        case game.State.LEVEL_TITLE:
+        case game.State.REINCARNATE:
             this.hidden = false;
             this.moveable = false;
-            this.setPosition((map.COLS-1)/2,map.ROWS-1);
+            this.setPosition((map.COLUMN_COUNT-1)/2,map.ROWS_COUNT-1);
             break;
-        case game.PLAY:
+        case game.State.PLAY:
             this.collisionDetectionOn = true;
             this.hidden = false;
             this.moveable = true;
             break;
-        case game.PAUSE_MENU:
+        case game.State.PAUSED:
             this.collisionDetectionOn = false;
             this.hidden = true;
             this.moveable = false;
             break;
-        case game.DIED:
+        case game.State.DIED   :
             this.collisionDetectionOn = false;
             this.hidden = false;
             this.moveable = false;
-        case game.WIN_LEVEL:
+        case game.State.WIN_LEVEL:
             this.collisionDetectionOn = false;
             this.moveable = false;
             this.hidden = false;
@@ -924,20 +1039,20 @@ Player.prototype.render = function() {
 };
 Player.prototype.setPosition = function(x,y) {
     if (x !== undefined)
-        this.column = Math.min(Math.max(x,0),map.COLS-1);
+        this.column = Math.min(Math.max(x,0),map.COLUMN_COUNT-1);
     if (y !== undefined)
-        this.row = Math.min(Math.max(y,0),map.ROWS-1);
+        this.row = Math.min(Math.max(y,0),map.ROWS_COUNT-1);
     var coordinates = map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
     this.x = coordinates.x;
     this.y = coordinates.y + this.PIXEL_ADJUST;
 
     switch (map.tileTypes[this.column][this.row]) {
-        case map.STONE:
+        case map.STONE_TILE:
             this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column,this.row);
             break;
-        case map.WATER:
+        case map.WATER_TILE:
             this.die();
-        case map.GRASS:
+        case map.GRASS_TILE:
             this.collisionTime = enemyHandler.collisionTimeForCoordinates();
             break;
     }
@@ -951,7 +1066,7 @@ Player.prototype.addPauseTimeToCollision = function(timePaused) {
         this.collisionTime += timePaused;
 };
 Player.prototype.die = function() {
-    game.setState(game.DIED);
+    game.setState(game.State.DIED);
 };
 // Handle keyboard input for the movement of the player
 Player.prototype.handleInput = function(keyString) {
@@ -983,19 +1098,17 @@ var enemyHandler = new EnemyHandler();
 var hud = new HeadsUp();
 var player = new Player();
 var game = new Game(); //Game object - keeps track of game state, deals with settings for levels, etc.
-game.init(); //Initializes the game, as well as the associated objects (player, map, etc.)
+// game.init();
 
-
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
+/* Listens for key presses. Sends recognized keys to Game.handleInput() */
 document.addEventListener('keydown', function(e) {
     var allowedKeys = {
-        32: 'space',
-        37: 'left',
-        38: 'up',
-        39: 'right',
-        40: 'down',
-        80: 'pause',
+        32: 'space', //spacebar
+        37: 'left', //left arrow
+        38: 'up', //up arrow
+        39: 'right', //right arrow
+        40: 'down', //down arrow
+        80: 'pause', //P key
     };
     var keyString = allowedKeys[e.keyCode];
     if (keyString !== undefined)
