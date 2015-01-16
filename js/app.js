@@ -214,6 +214,7 @@ Game.prototype.setLevel = function(newLevel) {
                 3,map.Tile.STONE
             );
             mapAccessories.leftMostRockPosition = 0;
+            enemyHandler.setSpawnIntervalAndVariance(0.4,0.4);
             break;
         case 7:
             map.setRows(
@@ -225,6 +226,11 @@ Game.prototype.setLevel = function(newLevel) {
         case 8:
             map.setRows(4,map.Tile.STONE);
             break;
+        default:
+            enemyHandler.setSpawnIntervalAndVariance(
+            enemyHandler.spawnInterval * 0.98, enemyHandler.spawnVariance * 0.99);
+            enemyHandler.setSpeeds(enemyHandler.lowerSpeedLimit * 1.04,
+                enemyHandler.upperSpeedLimit * 1.06);
     }
 };
 /**
