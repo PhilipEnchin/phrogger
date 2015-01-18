@@ -72,7 +72,7 @@ Game.prototype.State = {
     PLAY: 3,
     PAUSED: 4,
     GAME_OVER: 5,
-    DIED: 6, //Player just died
+    DIED: 6, //Player just died (next state will be REINCARNATE or GAME_OVER)
     WIN_LEVEL: 7, //Player has just passed level
     REINCARNATE: 8 //Like LEVEL_TITLE, but with small differences
 };
@@ -85,16 +85,18 @@ Game.prototype.init = function() {
     player.init();
     hud.init();
 
+    //Initialize high score cookie expiry (15 years off, rather permanent)
     var expiry = new Date();
     expiry.setFullYear(expiry.getFullYear() + 15);
     this.highScoreCookieExpiry = expiry.toUTCString();
 
+    //Read cookie and store current high score
     var cookieString = document.cookie;
     var highScoreKeyIndex = cookieString.indexOf(this.HIGH_SCORE_COOKIE_KEY);
-    if (highScoreKeyIndex >= 0) {
+    if (highScoreKeyIndex >= 0) {//High score exists already
         var highScoreValueIndex = cookieString.indexOf('=',highScoreKeyIndex)+1;
         this.highScore = parseInt(cookieString.substring(highScoreValueIndex));
-    } else {
+    } else { //High score doesn't yet exist, initialize at zero
         this.highScore = 0;
     }
 
@@ -128,7 +130,7 @@ Game.prototype.setState = function(state) {
             this.setLevel(this.level+1);
             break;
         case this.State.DIED:
-            this.timeRemaining = 3.0;
+            this.timeRemaining = 1.0;
             break;
     }
 };
@@ -168,12 +170,14 @@ Game.prototype.handleInput = function(keyString) {
  *  @param {number} newLevel The new level
  */
 Game.prototype.setLevel = function(newLevel) {
+    //Update high score related variables (and the high score cookie) as needed
     if (--this.distanceToHighScore < 0)
         document.cookie = this.HIGH_SCORE_COOKIE_KEY + '=' + (++this.highScore) +
             '; expires=' + this.highScoreCookieExpiry;
 
     this.level = newLevel;
 
+    //Set game parameters per level
     switch (newLevel) {
         case 1:
             map.setRows(
@@ -201,7 +205,7 @@ Game.prototype.setLevel = function(newLevel) {
         case 4:
             map.setRows(4,map.Tile.STONE);
             mapAccessories.leftMostRockPosition = 3;
-            enemyHandler.setSpawnIntervalAndVariance(0.25,0.4);
+            enemyHandler.setSpawnIntervalAndVariance(0.35,0.4);
             break;
         case 5:
             map.setRows(
@@ -221,16 +225,23 @@ Game.prototype.setLevel = function(newLevel) {
                 1,map.Tile.STONE,
                 4,map.Tile.GRASS
             );
+            mapAccessories.leftMostRockPosition = 2
             mapAccessories.leftMostKeyPosition = 3;
             break;
         case 8:
             map.setRows(4,map.Tile.STONE);
             break;
-        default:
+        default: //Level 9 and onward, make the game just a little faster
             enemyHandler.setSpawnIntervalAndVariance(
             enemyHandler.spawnInterval * 0.98, enemyHandler.spawnVariance * 0.99);
-            enemyHandler.setSpeeds(enemyHandler.lowerSpeedLimit * 1.04,
-                enemyHandler.upperSpeedLimit * 1.06);
+            enemyHandler.setSpeeds(
+                enemyHandler.lowerSpeedLimit * 1.04,
+                enemyHandler.upperSpeedLimit * 1.06
+            );
+            //Move leftmost key and rock positions left (more difficult)
+            if (newLevel === 12) mapAccessories.leftMostKeyPosition = 2;
+            else if (newLevel === 15) mapAccessories.leftMostKeyPosition = 1;
+            else if (newLevel === 18) mapAccessories.leftMostRockPosition = 1;
     }
 };
 /**
@@ -238,9 +249,9 @@ Game.prototype.setLevel = function(newLevel) {
  * number of lives remaining.
  */
 Game.prototype.died = function() {
-    if(--this.lives >= 0)
+    if(--this.lives >= 0) //At least one more life available
         this.setState(this.State.REINCARNATE);
-    else
+    else //No more lives, game over.
         this.setState(this.State.GAME_OVER);
 };
 /**
@@ -251,7 +262,7 @@ Game.prototype.extraLife = function() {
     hud.extraLife();
 };
 /**
- * Decrements the timer and takes the appropriate action if the timer has run out.
+ * Decrements the timer and takes the appropriate action if the timer runs out.
  */
 Game.prototype.decrementTimer = function(dt){
     if ((this.timeRemaining -= dt) <= 0) {
@@ -274,7 +285,7 @@ Game.prototype.update = function(dt,now) {
     player.update(dt,now);
     map.update(dt,now);
 
-    if (this.timeRemaining > 0)
+    if (this.timeRemaining > 0) //If timer is active...
         this.decrementTimer(dt);
 };
 /**
@@ -282,12 +293,12 @@ Game.prototype.update = function(dt,now) {
  * methods in other objects.
  */
 Game.prototype.render = function() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    map.render();
-    mapAccessories.render();
-    player.render();
-    enemyHandler.render();
-    hud.render();
+    ctx.clearRect(0,0,canvas.width,canvas.height); //Clear background
+    map.render(); //Render map
+    mapAccessories.render(); //Render map accessores (rock, key, heart)
+    player.render(); //Render player
+    enemyHandler.render(); //Render all enemies
+    hud.render(); //Render all text
 };
 /**
  * The Map class deals with anything relating to the game board. It has methods
@@ -347,9 +358,9 @@ Map.prototype.IMAGE_URL_ARRAY = [
  * @enum {number}
  */
 Map.prototype.AnimationState = {
-    CONTAINS_NEW_CHANGES: 0,
-    ANIMATE: 1,
-    NOTHING_TO_ANIMATE: 2
+    CONTAINS_NEW_CHANGES: 0, //Queues new animation sequence
+    ANIMATE: 1, //Animation in progess
+    NOTHING_TO_ANIMATE: 2 //Animation complete
 };
 /**
  * Initializes game board, and caches coordinates of each tile.
@@ -357,13 +368,14 @@ Map.prototype.AnimationState = {
 Map.prototype.init = function() {
     var row, col;
     var rowTypes = [];
+    //Store row types in a temporary array
     for (row = 0; row < this.ROWS_COUNT; row++) {
         if (row === 0)
             rowTypes.push(this.Tile.WATER);
         else
             rowTypes.push(this.Tile.GRASS);
     }
-    //Initialize tileTypes and tileCoordinates grids
+    //Initialize tileTypes (using array from above) and tileCoordinates grids
     for (col = 0; col < this.COLUMN_COUNT; col++) { 
         this.tileCoordinates.push([]);
         this.tileTypes.push([]);
@@ -377,6 +389,7 @@ Map.prototype.init = function() {
             this.tileTypes[col].push(rowTypes[row]);
         }
     }
+
     this.pendingTileChanges.status = this.AnimationState.NOTHING_TO_ANIMATE;
 };
 /**
@@ -404,7 +417,8 @@ Map.prototype.setState = function(state) {
 Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
     var newCoordinates = {};
     var coordinates = this.tileCoordinates[colNumber][rowNumber];
-    for (var key in coordinates) {
+    //Make a copy of the coordinates object to prevent accidental manipulation
+    for (var key in coordinates) { 
         if (coordinates.hasOwnProperty(key))
             newCoordinates[key] = coordinates[key];
     }
@@ -421,25 +435,26 @@ Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumbe
  */
 Map.prototype.setRows = function(var_args) {
     var args = Array.prototype.slice.call(arguments);
-    var remainingRows = []; //Rows not set yet, in the event of 
+    var remainingRows = []; //Stores rows not yet set in this invocation
     var rowArray, tileType;
     for (var i = this.ROWS_COUNT - 1; i >= 0; i--) {
         remainingRows.splice(0,0,i);
     };
-    while(args.length > 1){
-        if (args[0].constructor === Number)
-            rowArray = [args.splice(0,1)[0]];
-        else
-            rowArray = args.splice(0,1)[0];
-        tileType = args.splice(0,1)[0];
+    while(args.length > 1){ //If there is at least one pair remaining in args
+        if (args[0].constructor === Number) //If the first arg is a number
+            rowArray = [args.splice(0,1)[0]]; //Place in an array, then save
+        else //If the first arg is an array
+            rowArray = args.splice(0,1)[0]; //Save as is
+        tileType = args.splice(0,1)[0]; //Next arg is tile type
+        //Step through rows specified and change those rows
         for (var i = rowArray.length - 1; i >= 0; i--) {
             this.setRow(rowArray[i],tileType);
             remainingRows.splice(remainingRows.indexOf(rowArray[i]),1);
         };
     }
-    if (args.length > 0){
-        tileType = args[0];
-        while (remainingRows.length > 0) 
+    if (args.length > 0){ //If the last arg is not part of a pair...
+        tileType = args[0]; //The arg is a tile type
+        while (remainingRows.length > 0) //Change remaining rows to that type
             this.setRow(remainingRows.pop(),tileType);
     }
 };
@@ -450,18 +465,19 @@ Map.prototype.setRows = function(var_args) {
  * @param {tileType} tileType The type of tile
  */
 Map.prototype.setRow = function(rowNumber, tileType) {
-    if (tileType === this.Tile.STONE) {
+    if (tileType === this.Tile.STONE) { //If row is set to be a road...
         if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
-            this.roadRowNumbers.push(rowNumber);
+            this.roadRowNumbers.push(rowNumber); //Remember this row is a road
         } else {
-            return; //Road is already set up in this row
+            return; //This row is already a road. Do nothing.
         }
-    } else {
+    } else { //This row is going to be non-road. Un-remember this row is a road
         var rowArrayIndex = this.roadRowNumbers.indexOf(rowNumber);
         if (rowArrayIndex !== -1) { //This row is going from road to something else
             this.roadRowNumbers.splice(rowArrayIndex,1);
         }
     }
+    //Set tiles in this row
     for (var col = this.COLUMN_COUNT-1; col >= 0; col--) {
         this.setTile(col,rowNumber,tileType);
     }
@@ -481,7 +497,7 @@ Map.prototype.setTile = function(colNumber, rowNumber, tileType) {
         case game.State.TITLE:
             this.tileTypes[colNumber][rowNumber] = tileType;
             break;
-        default:
+        default: //If the state isn't specified above, animate this change
             if (this.tileTypes[colNumber][rowNumber] != tileType)
                 this.addTileChangeToPending(colNumber,rowNumber,tileType);
     }
@@ -495,12 +511,12 @@ Map.prototype.setTile = function(colNumber, rowNumber, tileType) {
  */
 Map.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType) {
     this.pendingTileChanges.changes.push({
-        location: {
+        location: { //The location on the game board
             column: colNumber,
             row: rowNumber
         },
-        tileType: tileType,
-        time: Math.random()
+        tileType: tileType, //The type of tile
+        time: Math.random() //A randomly generated time (processed in update())
     });
     this.pendingTileChanges.status = this.AnimationState.CONTAINS_NEW_CHANGES;
 };
@@ -513,13 +529,13 @@ Map.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType) 
  * @param {number} now The system time at the moment of invocation
  */
 Map.prototype.update = function(dt,now) {
-    var changes;
+    var changes; //Array of upcoming tile changes
     switch (this.pendingTileChanges.status) {
         case this.AnimationState.NOTHING_TO_ANIMATE: break;
         case this.AnimationState.CONTAINS_NEW_CHANGES:
             changes = this.pendingTileChanges.changes;
-            changes.sort(function(a,b){
-                return a.time-b.time;
+            changes.sort(function(a,b){ //Sort by random times in ascening order
+                return a.time-b.time; //So animation goes from fast to slow
             });
             //Use the randomly generated values as delta-time, and replace those
             //with corresponding system time
@@ -529,7 +545,7 @@ Map.prototype.update = function(dt,now) {
                 previousValue = change.time += previousValue;
             });
             totalTime += previousValue;
-            //Scale the time to fit the time remaining
+            //Scale the time to fit the time alotted for the animation
             changes.forEach(function(change){
                 change.time *= game.timeRemaining * 9 / totalTime / 10;
                 change.time += now;
@@ -538,13 +554,15 @@ Map.prototype.update = function(dt,now) {
         case this.AnimationState.ANIMATE:
             changes = this.pendingTileChanges.changes;
             var change, location;
+            //Animate changes that are to be complete at this time
             while (changes.length > 0 && now >= changes[0].time) {
                 change = changes.splice(0,1)[0];
                 location = change.location;
                 this.tileTypes[location.column][location.row] = change.tileType;
             }
-            if (changes.length === 0)
-                this.pendingTileChanges.status = this.AnimationState.NOTHING_TO_ANIMATE;
+            if (changes.length === 0) //No tile changes left, finish animation
+                this.pendingTileChanges.status =
+                    this.AnimationState.NOTHING_TO_ANIMATE;
     }
 };
 /**
@@ -565,7 +583,8 @@ Map.prototype.randomRoadYCoordinate = function() {
 Map.prototype.randomRoadBoardLocation = function() {
     return {
         column: Math.floor(Math.random()*map.COLUMN_COUNT),
-        row: this.roadRowNumbers[Math.floor(Math.random()*this.roadRowNumbers.length)]
+        row: this.roadRowNumbers[
+            Math.floor(Math.random()*this.roadRowNumbers.length)]
     };
 };
 /**
@@ -577,12 +596,13 @@ Map.prototype.randomRoadBoardLocation = function() {
 Map.prototype.randomBoardLocationInRows = function(var_args) {
     var args = Array.prototype.slice.call(arguments);
     var rowNumber
-    if (args.length === 0)
+    if (args.length === 0) //No rows provided, use all possible rows
         rowNumber = Math.floor(Math.random()*this.ROWS_COUNT);
-    else if (args[0].constructor === Array)
+    else if (args[0].constructor === Array) //Rows in an array
         rowNumber = args[0][Math.floor(Math.random()*args.length)];
-    else
+    else //Rows are specified in individual arguments
         rowNumber = args[Math.floor(Math.random()*args.length)];
+
     return {
         column: Math.floor(Math.random()*this.COLUMN_COUNT),
         row: rowNumber
@@ -599,13 +619,16 @@ Map.prototype.randomBoardLocationInRows = function(var_args) {
  * @return {boolean} Whether the move is legal.
  */
 Map.prototype.playerCanMoveHere = function(x,y) {
+    //If mapAccessories says player can move here, and the player isn't trying
+    //to move off the game board...
     if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLUMN_COUNT &&
         x >= 0 && y < this.ROWS_COUNT && y >= 0) {
+        //If the player is hitting the top row and isn't drowning, level is won!
         if (y === 0 && this.tileTypes[x][y] !== this.Tile.WATER)
             game.setState(game.State.WIN_LEVEL);
-        return true;
+        return true; //Move is legal
     }
-    return false;
+    return false; //Move is illegal
 };
 /**
  * Renders the game board.
@@ -627,12 +650,27 @@ Map.prototype.render = function() {
  * @constructor
  */
 var MapAccessories = function() {
+    /**
+     * An array of all active accessories
+     * @type {Array.<Object<string, number | Object.<string, Object.<string, number>>>>}
+     */
     this.accessories = [];
+    /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
     this.rockAccessory;
+    /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
     this.keyAccessory;
+    /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
     this.heartAccessory;
-    this.hidden = true;
+    /** @type{boolean} */ this.hidden = true;
+    /**
+     * The leftmost column number where the rock might end up in a given level.
+     * @type {number}
+     */
     this.leftMostRockPosition = 0;
+    /**
+     * The leftmost column number where the key might end up in a given level.
+     * @type {number}
+     */
     this.leftMostKeyPosition = 0;
 };
 /**
@@ -656,10 +694,11 @@ MapAccessories.prototype.IMAGE_URL_ARRAY = [
  * Places accessories on game board before a level begins.
  */
 MapAccessories.prototype.placeAccessories = function() {
+    //If rock and key are already placed, don't place them again!
     if (this.accessories.indexOf(this.rockAccessory) !== -1 &&
         this.accessories.indexOf(this.keyAccessory) !== -1)
         return;
-    //Rock
+    //Rock...
     this.accessories = [];
     var rockLocation = map.randomBoardLocationInRows(0);
     while (rockLocation.column < this.leftMostRockPosition)
@@ -667,14 +706,17 @@ MapAccessories.prototype.placeAccessories = function() {
     map.setTile(rockLocation.column,rockLocation.row,map.Tile.STONE);
     this.rockAccessory = this.packageAccessory(this.Type.ROCK,rockLocation);
     this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
-    //Key
+    //Key...
     var keyLocation = map.randomRoadBoardLocation();
     while (keyLocation.column < this.leftMostKeyPosition)
         keyLocation = map.randomRoadBoardLocation();
     this.keyAccessory = this.packageAccessory(this.Type.KEY,keyLocation);
     this.keyAccessory.coordinates.y += this.KEY_PIXEL_ADJUST;
+
+    //Add rock and key to accessories array
     this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
-    //Heart
+    
+    //Heart...
     if (Math.random() <= this.PROBABILITY_OF_EXTRA_LIFE) {
         var heartLocation = map.randomRoadBoardLocation();
         while (heartLocation.column === keyLocation.column &&
@@ -695,9 +737,10 @@ MapAccessories.prototype.placeAccessories = function() {
  */
 MapAccessories.prototype.packageAccessory = function(type,location) {
     return {
-        accessoryType: type,
-        location: location,
-        coordinates: map.pixelCoordinatesForBoardCoordinates(location.column,location.row)
+        accessoryType: type, //Accessory type
+        location: location, //Board location
+        coordinates: //Pixel coordinates
+            map.pixelCoordinatesForBoardCoordinates(location.column,location.row)
     };
 };
 /**
@@ -709,25 +752,25 @@ MapAccessories.prototype.packageAccessory = function(type,location) {
  * @return {boolean} Whether the move is legal, looking only at map accessories.
  */
 MapAccessories.prototype.playerCanMoveHere = function(x,y) {
-    //Rock
+    //Player can't occupy the same space as the rock
     if (this.accessories.indexOf(this.rockAccessory) !== -1 &&
         this.rockAccessory.location.column === x &&
         this.rockAccessory.location.row === y)
-        return false;
-    //Heart
+        return false; //Move is illegal
+    //Player can collect heart for an extra life, then it disappears
     else if (this.heartAccessory && this.heartAccessory.location.column === x &&
         this.heartAccessory.location.row === y) {
         this.accessories.splice(this.accessories.indexOf(this.heartAccessory),1);
         this.heartAccessory = null;
         game.extraLife();
     }
-    //Key
+    //Player can collect key to make rock go away, then it disappears
     else if (this.keyAccessory.location.column === x &&
         this.keyAccessory.location.row === y) {
         this.accessories.splice(this.accessories.indexOf(this.rockAccessory),1);
         this.accessories.splice(this.accessories.indexOf(this.keyAccessory),1);
     }
-    return true;
+    return true; //Move is legal
 };
 /**
  * Changes settings in the MapAccessories object as a result of a change in game
@@ -987,12 +1030,12 @@ HeadsUp.prototype.renderText = function(text,x,y,textSize,typeface,alignment) {
 var Enemy = function() {
     /** @type {number} */ this.x;
     /** @type {number} */ this.y;
+    /** @type {boolean} */ this.hidden;
     /**
      * Speed, in pixels per second
      * @type {number}
      */
     this.speed;
-    /** @type {boolean} */ this.hidden;
 };
 /** @const */ Enemy.prototype.SPRITE = 'images/enemy-bug.png';
 /** @const */ Enemy.prototype.PIXEL_ADJUST = -20;
@@ -1152,6 +1195,8 @@ EnemyHandler.prototype.setState = function(state) {
  */
 EnemyHandler.prototype.setSpawnIntervalAndVariance = function(spawnInterval,
     spawnVariance) {
+    //If the next spawn is so far away that it doesn't fit into the new
+    //parameters, generate it again.
     if (this.timeUntilSpawn > (this.spawnInterval = spawnInterval) *
         ((this.spawnVariance = spawnVariance) + 1))
         this.newTimeUntilSpawn();
@@ -1175,9 +1220,11 @@ EnemyHandler.prototype.update = function(dt,now) {
     if (this.moveable) {
         //If the game has been paused, add that time onto the active enemies
         if (this.timePaused > 0) {
+            //Add paused time to retire time
             this.activeEnemies.forEach(function(enemyObject){
                 enemyObject.retireTime += this.timePaused;
             }, this);
+            //Add paused time to tile entries and exits (for collisions)
             map.roadRowNumbers.forEach(function(i){
                 var rowIndex = map.pixelCoordinatesForBoardCoordinates(0,i).y +
                     Enemy.prototype.PIXEL_ADJUST;
@@ -1192,23 +1239,30 @@ EnemyHandler.prototype.update = function(dt,now) {
                     }, this);
                 }
             }, this);
+            //Add paused time to current upcoming collision
             player.addPauseTimeToCollision(this.timePaused);
-            this.timePaused = 0;
+            this.timePaused = 0; //Reset paused time to zero
 
         }
         var retiredEnemy;
+        /* This loop will result in some enemies that aren't retired immediately
+           as they move offscreen, in the case of an enemy that was generated
+           later, but reached the right side of the screen first, but doing it
+           this way avoids the overhead of sorting the enemies in by retire time
+           every time a new enemy is generated*/
         while (this.activeEnemies.length > 0 &&
             now >= this.activeEnemies[0].retireTime) {
-            //This will result in some enemies that are not retired immediately 
-            //when they leave the visible area, but it avoids the overhead of 
-            //constantly sorting the enemy objects within this.activeEnemies
             retiredEnemy = this.activeEnemies.splice(0,1)[0];
             this.retiredEnemies.push(retiredEnemy);
             this.activeEnemiesByRow[retiredEnemy.enemy.y].splice(0,1);
         }
+
+        //Update remaining active enemies
         for (var i = this.activeEnemies.length - 1; i >= 0; i--) {
             this.activeEnemies[i].enemy.update(dt,now);
         }
+
+        //Spawn a new enemy if the time until spawn has reached zero.
         if ( (this.timeUntilSpawn -= dt) <= 0 ) {
             this.spawnNewEnemy();
         }
@@ -1231,7 +1285,7 @@ EnemyHandler.prototype.getNewEnemy = function() {
         };
     var yCoordinate = map.randomRoadYCoordinate();
     newEnemy.enemy.init(this.spawnX, yCoordinate, this.lowerSpeedLimit,
-        this.upperSpeedLimit);
+        this.upperSpeedLimit); //Initialize (or reinitialize) enemy
     return newEnemy;
 };
 /**
@@ -1246,39 +1300,58 @@ EnemyHandler.prototype.getNewEnemy = function() {
  *     Note: This argument is not required! Yay!
  */
 EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
+    //Quick check to make sure we haven't attempted this spawn too many times
     if((attemptIndex = attemptIndex || 0) < this.MAX_SPAWN_ATTEMPTS) {
         var enemyObjectWithRetireTime = this.getNewEnemy();
-        var nakedEnemy = enemyObjectWithRetireTime.enemy;
+        var nakedEnemy = enemyObjectWithRetireTime.enemy; //Unpackaged Enemy
         var enemyObjectWithEntryAndExitTimes =
             this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
         var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
-        var rowIndex = nakedEnemy.y;
+        var rowIndex = nakedEnemy.y; //For activeEnemiesByRow...
         var retireTime = entryTimes[map.COLUMN_COUNT+1];
         var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
+
+        //Creates the row if this is the first enemy in that row.
         if (rowOfEnemies === undefined) {
             rowOfEnemies = [];
             this.activeEnemiesByRow[rowIndex] = rowOfEnemies;
         }
-    
+        
+        //If this is not the only active enemy in this row, we need to make sure
+        //it won't overlap another enemy.
         if (rowOfEnemies.length > 0){
-            var leftMostEnemyEntryTimes =
+            //Entry times for leftmost enemy in row
+            var leftMostEnemyEntryTimes = 
                 rowOfEnemies[rowOfEnemies.length-1].entryTimes;
+            //The moment when the leftmost enemy will be completely offscreen
             var leftMostEnemyInRowExitCompletion =
                 leftMostEnemyEntryTimes[map.COLUMN_COUNT+1];
+            //The moment when the new enemy will begin to exit the screen
             var newEnemyExitBegin = entryTimes[map.COLUMN_COUNT];
+            //If the new enemy begins to exit before the existing any is gone,
+            //then we have potential for overlap. Retire that enemy and attempt
+            //another spawn.
             if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
                 this.retiredEnemies.push(enemyObjectWithRetireTime);
                 this.spawnNewEnemy(attemptIndex+1);
                 return;
             }
+            //The moment the leftmost enemy begins exiting the first column
             var leftMostEnemyInRowSecondColumnEntry = leftMostEnemyEntryTimes[1];
+            //The moment when the new enemy begins entering the first column
             var newEnemyFirstColumnEntry = entryTimes[0];
+            //If the new enemy begins to enter the screen before the leftmost
+            //enemy is out of that space, we have potential for overlap. Retire
+            //that enemy and attempt another spawn.
             if (newEnemyFirstColumnEntry < leftMostEnemyInRowSecondColumnEntry) {
                 this.retiredEnemies.push(enemyObjectWithRetireTime);
                 this.spawnNewEnemy(attemptIndex+1);
                 return;
             }
         }
+
+        //If the player, in its current location, could be run over by this new
+        //enemy, call newEnemyInRow() on player to let it know.
         if (this.potentialCollisionLocation.rowIndex === rowIndex)
             player.newEnemyInRow(entryTimes[this.potentialCollisionLocation.column]);
     
@@ -1286,10 +1359,12 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
         //Push new enemy onto the appropriate row. Order here is guaranteed already.
         this.activeEnemiesByRow[rowIndex].push(enemyObjectWithEntryAndExitTimes);
     
+        //Update retire time in packaged enemy, then push onto activeEnemies
         enemyObjectWithRetireTime.retireTime = retireTime;
         this.activeEnemies.push(enemyObjectWithRetireTime);
     }
-    this.newTimeUntilSpawn();
+
+    this.newTimeUntilSpawn(); //Generate next spawn time
 };
 /** Randomly generates a new timeUntilSpawn */
 EnemyHandler.prototype.newTimeUntilSpawn = function() {
@@ -1304,11 +1379,15 @@ EnemyHandler.prototype.newTimeUntilSpawn = function() {
 EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
     var entryTimes = [];
     var exitTimes = [];
+    //Seconds required to traverse a single column
     var secondsPerColumn = map.COL_WIDTH_PIXELS / enemy.speed;
+    //Seconds by which to adjust entry times based on visual edges of sprites
     var secondsPerEntryEdgeAdjustWidth =
         (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
+    //Same, buf for exit times
     var secondsPerExitEdgeAdjustWidth =
         (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed; 
+
     var now = Date.now() / 1000;
     for (var col = map.COLUMN_COUNT + 1; col >= 0; col--) {
         entryTimes.splice(0, 0,
@@ -1316,10 +1395,11 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
         exitTimes.splice(0, 0, 
             (col+2) * secondsPerColumn - secondsPerExitEdgeAdjustWidth + now);
     };
+
     return {
-        enemy: enemy,
-        entryTimes: entryTimes,
-        exitTimes: exitTimes
+        enemy: enemy, //Enemy object
+        entryTimes: entryTimes, //Array of entry times by column
+        exitTimes: exitTimes //Array of exit times by column
     };
 };
 /**
@@ -1331,11 +1411,12 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
  *     one, undefined.
  */
 EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
-    if(x === undefined) {
+    if(x === undefined) { //Clear collision location. No upcoming collion.
         this.potentialCollisionLocation.column = null;
         this.potentialCollisionLocation.rowIndex = null;
         return null;
     }
+
     var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y + 
         Enemy.prototype.PIXEL_ADJUST;
 
@@ -1343,10 +1424,10 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
     this.potentialCollisionLocation.rowIndex = rowIndex;
 
     var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
-    if (rowOfEnemies === undefined)
+    if (rowOfEnemies === undefined) //No row? No collisions.
         return;
     
-    var enemyObject;
+    var enemyObject; //Packaged with entry and exit times
     var columnEntry; 
     var columnExit;
     var now = Date.now() / 1000;
@@ -1355,14 +1436,14 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
         enemyObject = rowOfEnemies[i];
         columnEntry = enemyObject.entryTimes[x];
         columnExit = enemyObject.exitTimes[x];
-        if (columnEntry > now){
-            return columnEntry;
-        } else if (columnExit > now) {
+        if (columnEntry > now){ //Enemy not yet at this column.
+            return columnEntry; //Return this time as the next collision
+        } else if (columnExit > now) { //Enemy is still in this column
             player.die();
             return;
         }
     }
-    return;
+    return; //No possible collision in this row with current active enemies
 };
 /** Renders all active enemies */
 EnemyHandler.prototype.render = function() {
@@ -1439,7 +1520,8 @@ Player.prototype.setState = function(state) {
     }
 };
 /**
- * Detects a collision, if collision detection is on.
+ * Detects a collision, if collision detection is on. Kills player if there's
+ * been a collision. So sad.
  * @param {number} dt Time elapsed since last update.
  * @param {number} now System time an invocation.
  */
@@ -1460,23 +1542,23 @@ Player.prototype.render = function() {
  * @param {number} y Row number.
  */
 Player.prototype.setPosition = function(x,y) {
-    if (x !== undefined)
-        this.column = Math.min(Math.max(x,0),map.COLUMN_COUNT-1);
-    if (y !== undefined)
-        this.row = Math.min(Math.max(y,0),map.ROWS_COUNT-1);
+    //Make sure player isn't moving off screen...
+    this.column = Math.min(Math.max(x,0),map.COLUMN_COUNT-1);
+    this.row = Math.min(Math.max(y,0),map.ROWS_COUNT-1);
+    
     var coordinates =
         map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
     this.x = coordinates.x;
     this.y = coordinates.y + this.PIXEL_ADJUST;
 
     switch (map.tileTypes[this.column][this.row]) {
-        case map.Tile.STONE:
+        case map.Tile.STONE: //Road! Calculate upcoming collisions!
             this.collisionTime = 
                 enemyHandler.collisionTimeForCoordinates(this.column,this.row);
             break;
-        case map.Tile.WATER:
+        case map.Tile.WATER: //Water! Dead :(
             this.die();
-        case map.Tile.GRASS:
+        case map.Tile.GRASS: //Grass! Safe! (Cancel collision)
             this.collisionTime = enemyHandler.collisionTimeForCoordinates();
             break;
     }
@@ -1514,7 +1596,7 @@ Player.prototype.handleInput = function(keyString) {
             case 'left':
             case 'right':
             case 'up':
-            case 'down':    this.move(keyString);   break;
+            case 'down': this.move(keyString);
         }
     }
 };
