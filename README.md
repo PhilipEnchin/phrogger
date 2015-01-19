@@ -1,6 +1,9 @@
-frontend-nanodegree-arcade-game
-===============================
+Phrogger
+========
+By Philip Enchin
+----------------
+To play, clone this repository, then open index.html.
 
-Students should use this rubric: https://www.udacity.com/course/viewer#!/c-ud015/l-3072058665/m-3072588797
+The game controls will are explained when you play.
 
-for self-checking their submission.
+Enjoy!
