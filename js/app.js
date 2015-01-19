@@ -56,6 +56,7 @@ var Game = function() {
      */
     this.highScoreCookieExpiry;
 };
+
 /** 
   * The key string used in the cookie that holds the high score
   * @const 
@@ -76,6 +77,7 @@ Game.prototype.State = {
     WIN_LEVEL: 7, //Player has just passed level
     REINCARNATE: 8 //Like LEVEL_TITLE, but with small differences
 };
+
 /**
  * Initializes the objects that need initializing, and initiates the game.
  */
@@ -102,6 +104,7 @@ Game.prototype.init = function() {
 
     this.setState(this.State.TITLE);
 };
+
 /**
  * Used to set the state of the game. Also passes on the state change to any
  * object that needs it.
@@ -134,6 +137,7 @@ Game.prototype.setState = function(state) {
             break;
     }
 };
+
 /**
  * Handles the input passed on from the listener added to document. Sends the
  * input to the appropriate object, and takes care of other state or level changes.
@@ -164,6 +168,7 @@ Game.prototype.handleInput = function(keyString) {
                 this.setState(this.State.TITLE);
     }
 };
+
 /**
  * Sets any parameters to do with changing levels. Also updates the high score
  * (and accompanying cookie) if needed.
@@ -244,6 +249,7 @@ Game.prototype.setLevel = function(newLevel) {
             else if (newLevel === 18) mapAccessories.leftMostRockPosition = 1;
     }
 };
+
 /**
  * Decreases the number of lives and initiates the next state, depending on the
  * number of lives remaining.
@@ -254,6 +260,7 @@ Game.prototype.died = function() {
     else //No more lives, game over.
         this.setState(this.State.GAME_OVER);
 };
+
 /**
  * Adds a life and calls HeadsUp.extraLife() in order to update the HUD
  */
@@ -261,6 +268,7 @@ Game.prototype.extraLife = function() {
     this.lives++;
     hud.extraLife();
 };
+
 /**
  * Decrements the timer and takes the appropriate action if the timer runs out.
  */
@@ -274,6 +282,7 @@ Game.prototype.decrementTimer = function(dt){
         }
     }
 };
+
 /**
  * Forwards the update command to other objects, and decrements timer if the
  * timer is active.
@@ -288,6 +297,7 @@ Game.prototype.update = function(dt,now) {
     if (this.timeRemaining > 0) //If timer is active...
         this.decrementTimer(dt);
 };
+
 /**
  * Begins the rendering sequence by clearing the screen, then calling render()
  * methods in other objects.
@@ -300,6 +310,9 @@ Game.prototype.render = function() {
     enemyHandler.render(); //Render all enemies
     hud.render(); //Render all text
 };
+
+
+
 /**
  * The Map class deals with anything relating to the game board. It has methods
  * for returning coordinates to any tile on the board, rendering the board, as
@@ -335,15 +348,11 @@ var Map = function() {
         changes: []
     };
 };
+
 /** @const */ Map.prototype.ROWS_COUNT = 6;
 /** @const */ Map.prototype.COLUMN_COUNT = 5;
 /** @const */ Map.prototype.ROW_HEIGHT_PIXELS = 83;
 /** @const */ Map.prototype.COL_WIDTH_PIXELS = 101;
-/**
- * Enum for possible tile types
- * @enum {number}
- */
-Map.prototype.Tile = { WATER: 0, STONE: 1, GRASS: 2 };
 /**
  * Array of image URLs whose indices correspond with the Tile enum above.
  * @const {Array.<string>}
@@ -354,6 +363,11 @@ Map.prototype.IMAGE_URL_ARRAY = [
     'images/grass-block.png'
 ];
 /**
+ * Enum for possible tile types
+ * @enum {number}
+ */
+Map.prototype.Tile = { WATER: 0, STONE: 1, GRASS: 2 };
+/**
  * Enum for possible states of pre-level animation.
  * @enum {number}
  */
@@ -362,6 +376,7 @@ Map.prototype.AnimationState = {
     ANIMATE: 1, //Animation in progess
     NOTHING_TO_ANIMATE: 2 //Animation complete
 };
+
 /**
  * Initializes game board, and caches coordinates of each tile.
  */
@@ -392,6 +407,7 @@ Map.prototype.init = function() {
 
     this.pendingTileChanges.status = this.AnimationState.NOTHING_TO_ANIMATE;
 };
+
 /**
  * Sets up map accordinly when game state is set.
  * @param {number} state The new game state.
@@ -407,6 +423,7 @@ Map.prototype.setState = function(state) {
             break;
     }
 };
+
 /**
  * Returns the pixel coordinates for the column and row corresponding to a tile.
  * @param {number} colNumber The column number, from left to right, starting at
@@ -424,6 +441,7 @@ Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumbe
     }
     return newCoordinates;
 };
+
 /**
  * Takes pairs of arguments. The first of each pair is either a row number or an
  * array of row numbers. The second of each pair is a tile type. Optionally, a
@@ -458,6 +476,7 @@ Map.prototype.setRows = function(var_args) {
             this.setRow(remainingRows.pop(),tileType);
     }
 };
+
 /**
  * Takes a row number and a tile type, and sets that row to that tile type. This
  * method uses Map.prototype.setTile() to actually set the individual tiles.
@@ -482,6 +501,7 @@ Map.prototype.setRow = function(rowNumber, tileType) {
         this.setTile(col,rowNumber,tileType);
     }
 };
+
 /**
  * Takes column and row numbers, and a tile type, and sets that tile. Depending
  * on the game state, this method will either set the tile immediately, or add
@@ -502,6 +522,7 @@ Map.prototype.setTile = function(colNumber, rowNumber, tileType) {
                 this.addTileChangeToPending(colNumber,rowNumber,tileType);
     }
 };
+
 /**
  * Adds this tile change to the upcoming tile change animation.
  * @param {number} colNumber The column number, from left to right, starting at
@@ -520,6 +541,7 @@ Map.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType) 
     });
     this.pendingTileChanges.status = this.AnimationState.CONTAINS_NEW_CHANGES;
 };
+
 /**
  * If the animation state is .CONTAINS_NEW_CHANGES, it completes the processing
  * of the data contained in this.prndingTileChanges and initiates the animation.
@@ -565,6 +587,7 @@ Map.prototype.update = function(dt,now) {
                     this.AnimationState.NOTHING_TO_ANIMATE;
     }
 };
+
 /**
  * Randomly generates a Y coordinate corresponding with a tile on an existing
  * road. Used when an enemy is generated to ensure its location is random but
@@ -576,6 +599,7 @@ Map.prototype.randomRoadYCoordinate = function() {
     var rowIndex = this.roadRowNumbers[roadRowIndex];
     return this.pixelCoordinatesForBoardCoordinates(0,rowIndex).y;
 };
+
 /**
  * @return {Object.<string, number>} An object that contains randomly generated
  *     row and column numbers.
@@ -587,6 +611,7 @@ Map.prototype.randomRoadBoardLocation = function() {
             Math.floor(Math.random()*this.roadRowNumbers.length)]
     };
 };
+
 /**
  * @param {number|Array.<number>} var_args Either a row number or an array of
  *     row numbers
@@ -608,6 +633,7 @@ Map.prototype.randomBoardLocationInRows = function(var_args) {
         row: rowNumber
     };
 };
+
 /**
  * Returns a boolean indicating whether or not the player is able to move to the
  * specified location. (The player cannot if the location is off the edge of the
@@ -630,6 +656,7 @@ Map.prototype.playerCanMoveHere = function(x,y) {
     }
     return false; //Move is illegal
 };
+
 /**
  * Renders the game board.
  */
@@ -643,6 +670,8 @@ Map.prototype.render = function() {
         };
     };
 };
+
+
 
 /**
  * The MapAccessories class deals with objects that can be placed on the map at
@@ -673,6 +702,7 @@ var MapAccessories = function() {
      */
     this.leftMostKeyPosition = 0;
 };
+
 /**
  * Enum for possible accessory types.
  * @enum {number}
@@ -690,6 +720,7 @@ MapAccessories.prototype.IMAGE_URL_ARRAY = [
 /** @const */ MapAccessories.prototype.ROCK_PIXEL_ADJUST = -25;
 /** @const */ MapAccessories.prototype.KEY_PIXEL_ADJUST = -15;
 /** @const */ MapAccessories.prototype.PROBABILITY_OF_EXTRA_LIFE = 1/20;
+
 /**
  * Places accessories on game board before a level begins.
  */
@@ -726,6 +757,7 @@ MapAccessories.prototype.placeAccessories = function() {
         this.accessories.push(this.heartAccessory);
     }
 };
+
 /**
  * Packages the accessory and its location (both board- and pixel-coordinates)
  * into an object.
@@ -743,6 +775,7 @@ MapAccessories.prototype.packageAccessory = function(type,location) {
             map.pixelCoordinatesForBoardCoordinates(location.column,location.row)
     };
 };
+
 /**
  * Returns whether the move is legal, taking into account map accessories, and
  * takes the appropriate action in the case of an accessory whose collection has
@@ -772,6 +805,7 @@ MapAccessories.prototype.playerCanMoveHere = function(x,y) {
     }
     return true; //Move is legal
 };
+
 /**
  * Changes settings in the MapAccessories object as a result of a change in game
  * state
@@ -805,6 +839,7 @@ MapAccessories.prototype.setState = function(state) {
             this.hidden = true;
     }
 };
+
 /**
  * Renders all active map accessories.
  */
@@ -818,6 +853,9 @@ MapAccessories.prototype.render = function() {
         },this);
     }
 };
+
+
+
 /**
  * Object representing the heads-up display - lives remaining, level number,
  * etc. Renders all in-game text to the screen.
@@ -830,6 +868,8 @@ var HeadsUp = function() {
     /** @type {string} */ this.bigTextSize;
     /** @type {string} */ this.instructionText;
 };
+
+/** @const */ HeadsUp.prototype.TYPEFACE = 'Impact';
 /** @const */ HeadsUp.prototype.GAME_TITLE = 'PHROGGER';
 /** @const */ HeadsUp.prototype.GAME_INSTRUCTIONS = [
     'Use arrow keys to get across the road',
@@ -870,7 +910,7 @@ HeadsUp.prototype.LIVES_X = Map.prototype.COLUMN_COUNT *
  */
 HeadsUp.prototype.LIVES_Y = (Map.prototype.ROWS_COUNT + 1) *
     Map.prototype.ROW_HEIGHT_PIXELS + 25;
-HeadsUp.prototype.TYPEFACE = 'Impact';
+
 /**
  * Sets constants that can't be set until after engine.js is loaded.
  */
@@ -896,6 +936,7 @@ HeadsUp.prototype.init = function() {
      */
     this.INSTRUCTIONS_Y = canvas.height/2 + 20;
 };
+
 /**
  * Sets HUD text based on game state.
  * @param {number} state The new game state.
@@ -971,12 +1012,14 @@ HeadsUp.prototype.setState = function(state) {
             break;
     }
 };
+
 /**
  * Updates the lives text on screen when an extra life is achieved.
  */
 HeadsUp.prototype.extraLife = function() {
     this.livesText = this.livesPrefix + game.lives;
 };
+
 /**
  * Renders all non-empty text strings to the screen
  */
@@ -1007,6 +1050,7 @@ HeadsUp.prototype.render = function() {
             this.LIVES_TEXT_SIZE,this.TYPEFACE,'right');
     }
 };
+
 /**
  * Helper method to display text with an outline.
  * @param {string} text The text to be rendered.
@@ -1024,6 +1068,7 @@ HeadsUp.prototype.renderText = function(text,x,y,textSize,typeface,alignment) {
 };
 
 
+
 /**
  * The Enemy object represents an individual enemy (a bug).
  */
@@ -1037,10 +1082,12 @@ var Enemy = function() {
      */
     this.speed;
 };
+
 /** @const */ Enemy.prototype.SPRITE = 'images/enemy-bug.png';
 /** @const */ Enemy.prototype.PIXEL_ADJUST = -20;
 /** @const */ Enemy.prototype.EDGE_ADJUST_RIGHT = 5;
 /** @const */ Enemy.prototype.EDGE_ADJUST_LEFT = 36;
+
 /**
  * Initializes an enemym randomly generating its speed based on the provided
  * speed limits.
@@ -1055,6 +1102,7 @@ Enemy.prototype.init = function(x, y, lowerSpeedLimit, upperSpeedLimit) {
     this.y = y + this.PIXEL_ADJUST;
     this.hidden = false;
 };
+
 /**
  * Update the enemy's position.
  * @param {number} dt Time elapsed since last update
@@ -1069,6 +1117,8 @@ Enemy.prototype.render = function() {
     if (!this.hidden)
         ctx.drawImage(Resources.get(this.SPRITE), this.x, this.y);
 };
+
+
 
 /**
  * A system for dealing with the evil bugs! Takes care of initializing the bugs,
@@ -1139,6 +1189,7 @@ var EnemyHandler = function(){
      */
     this.retireX;
 };
+
 /** Initializes spawnX and retireX, which require the map to be initialized */
 EnemyHandler.prototype.init = function() {
     this.spawnX = map.pixelCoordinatesForBoardCoordinates(0,0).x -
@@ -1146,6 +1197,7 @@ EnemyHandler.prototype.init = function() {
     this.retireX = map.pixelCoordinatesForBoardCoordinates(map.COLUMN_COUNT-1,0).x +
         map.COL_WIDTH_PIXELS;
 };
+
 /**
  * Maximum number of attempts at spawning an enemy until giving up. Remember, an
  * enemy will not spawn when it will overlap with another enemy on screen. If,
@@ -1154,6 +1206,7 @@ EnemyHandler.prototype.init = function() {
  * @const
  */
 EnemyHandler.prototype.MAX_SPAWN_ATTEMPTS = 10;
+
 /**
  * Sets properties and calls methods based on the new game state.
  * @param {number} state The new game state
@@ -1189,6 +1242,7 @@ EnemyHandler.prototype.setState = function(state) {
             break;
     }
 };
+
 /**
  * @param {number} spawnInterval New spawn interval.
  * @param {number} spawnVariance New spawn variance.
@@ -1201,6 +1255,7 @@ EnemyHandler.prototype.setSpawnIntervalAndVariance = function(spawnInterval,
         ((this.spawnVariance = spawnVariance) + 1))
         this.newTimeUntilSpawn();
 };
+
 /**
  * @param {number} lowerSpeedLimit New lower bound for enemy speed
  * @param {number} upperSpeedLimit New upper bound for enemy speed
@@ -1209,6 +1264,7 @@ EnemyHandler.prototype.setSpeeds = function(lowerSpeedLimit,upperSpeedLimit) {
     this.lowerSpeedLimit = lowerSpeedLimit;
     this.upperSpeedLimit = upperSpeedLimit;
 };
+
 /**
  * Updates all Enemy objects, retires them if required, adds new ones if needed,
  * updates this.timePaused if the game is paused, or adds this.timePaused to all
@@ -1270,6 +1326,7 @@ EnemyHandler.prototype.update = function(dt,now) {
         this.timePaused += dt;
     }
 };
+
 /**
  * If a retired enemy is available, returns that enemy. Otherwise, creates a new
  * enemy and returns that. Either way, the enemy returned is packaged in an
@@ -1288,6 +1345,7 @@ EnemyHandler.prototype.getNewEnemy = function() {
         this.upperSpeedLimit); //Initialize (or reinitialize) enemy
     return newEnemy;
 };
+
 /**
  * Takes a limited number of attempts at spawning a new enemy. This method uses
  * this.getNewEnemy() to either create a new enemy, or recycle an old one. If
@@ -1366,11 +1424,13 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
 
     this.newTimeUntilSpawn(); //Generate next spawn time
 };
+
 /** Randomly generates a new timeUntilSpawn */
 EnemyHandler.prototype.newTimeUntilSpawn = function() {
     this.timeUntilSpawn = this.spawnInterval * (this.spawnVariance *
         (2 * Math.random() - 1) + 1);
 };
+
 /**
  * Puts the Enemy object inside another object with entry and exit times.
  * @param {Enemy} enemy The enemy object
@@ -1402,6 +1462,7 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
         exitTimes: exitTimes //Array of exit times by column
     };
 };
+
 /**
  * Detects either an immediate or future collision. If there is an immediate
  * collision, player.die() is called.
@@ -1445,6 +1506,7 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
     }
     return; //No possible collision in this row with current active enemies
 };
+
 /** Renders all active enemies */
 EnemyHandler.prototype.render = function() {
     if (!this.hidden) {
@@ -1453,6 +1515,8 @@ EnemyHandler.prototype.render = function() {
         });
     }
 };
+
+
 
 /**
  * The Player object represents the player on the screen and handles input that
@@ -1469,17 +1533,19 @@ var Player = function() {
      * Time of upcoming collision.
      * @type {number}
      */
-    this.collisionTime;
-    
+    this.collisionTime;    
 };
+
 /** @const */ Player.prototype.SPRITE = 'images/char-boy.png';
 /** @const */ Player.prototype.PIXEL_ADJUST = -15;
 /** @const */ Player.prototype.EDGE_ADJUST_RIGHT = 29;
 /** @const */ Player.prototype.EDGE_ADJUST_LEFT = 30;
+
 /** Initializes player object */
 Player.prototype.init = function() {
     this.setPosition(this.column, this.row);
 };
+
 /**
  * Sets properties and calls methods on player when new game state is set.
  * @param {number} state New game state.
@@ -1519,6 +1585,7 @@ Player.prototype.setState = function(state) {
             this.hidden = false;
     }
 };
+
 /**
  * Detects a collision, if collision detection is on. Kills player if there's
  * been a collision. So sad.
@@ -1531,11 +1598,13 @@ Player.prototype.update = function(dt,now) {
         this.die();
     }
 };
+
 /** Render the player */
 Player.prototype.render = function() {
     if (!this.hidden)
         ctx.drawImage(Resources.get(this.SPRITE), this.x, this.y);
 };
+
 /**
  * Sets the player's position, and updates this.collisionTime.
  * @param {number} x Column number.
@@ -1563,6 +1632,7 @@ Player.prototype.setPosition = function(x,y) {
             break;
     }
 };
+
 /**
  * Is called when a new enemy is generated in the row occupied by the player.
  * Used to set a collision time if there isn't already an upcoming collision.
@@ -1572,6 +1642,7 @@ Player.prototype.newEnemyInRow = function(collisionTime) {
     if (!this.collisionTime)
         this.collisionTime = collisionTime;
 };
+
 /**
  * Is called when the game is unpaused. Adds timePaused to the collision time.
  * @param {number} timePaused The number of seconds for which the game was paused.
@@ -1580,12 +1651,14 @@ Player.prototype.addPauseTimeToCollision = function(timePaused) {
     if (this.collisionTime)
         this.collisionTime += timePaused;
 };
+
 /**
  * Kills the player by setting the game state to .DIED.
  */
 Player.prototype.die = function() {
     game.setState(game.State.DIED);
 };
+
 /**
  * Handles keyboard input for the movement of the player.
  * @param {string} keyString String representing the direction of movement.
@@ -1600,6 +1673,7 @@ Player.prototype.handleInput = function(keyString) {
         }
     }
 };
+
 /**
  * Moves player in the direction specified by directionString
  * @param {string} directionString String specifying the direction of movement.
@@ -1616,6 +1690,7 @@ Player.prototype.move = function(directionString) {
         this.setPosition(x,y);
 };
 
+//Declare all game objects here! They'll be initialized in engine.js
 var map = new Map();
 var mapAccessories = new MapAccessories();
 var enemyHandler = new EnemyHandler();
