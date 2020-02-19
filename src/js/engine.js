@@ -1,5 +1,6 @@
 import Resources from './resources';
 import game from './app';
+import '../style.css';
 
 var doc = document,
     win = window,
