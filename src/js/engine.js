@@ -1,56 +1,58 @@
-var Engine = (function(global) {
-    var doc = global.document,
-        win = global.window,
-        canvas = doc.createElement('canvas'),
-        ctx = canvas.getContext('2d'),
-        lastTime;
+import Resources from './resources';
+import game from './app';
 
-    canvas.width = 505;
-    canvas.height = 606;
-    doc.body.appendChild(canvas);
+var doc = document,
+    win = window,
+    canvas = doc.createElement('canvas'),
+    ctx = canvas.getContext('2d'),
+    lastTime;
 
-    /* Game loop
-     */
-    function main() {
-        var now = Date.now() / 1000;
-        var dt = (now - lastTime);
+canvas.width = 505;
+canvas.height = 606;
+doc.body.appendChild(canvas);
 
-        game.update(dt,now);
-        game.render();
+/* Game loop
+    */
+function main() {
+    var now = Date.now() / 1000;
+    var dt = (now - lastTime);
 
-        lastTime = now;
+    game.update(dt,now);
+    game.render();
 
-        win.requestAnimationFrame(main);
-    };
+    lastTime = now;
 
-    /* Sets up lastTime (needed in loop) and initiates the loop. Also sets the
-     * fill and strokeStyles for all rendered text in the game (white with black
-     * outline), then initializes the game.
-     */
-    function init() {
-        lastTime = Date.now() / 1000;
-        
-        ctx.fillStyle = 'white';
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 1;
+    win.requestAnimationFrame(main);
+};
 
-        game.init(); //Initializes the game, as well as the associated objects (player, map, etc.)
+/* Sets up lastTime (needed in loop) and initiates the loop. Also sets the
+    * fill and strokeStyles for all rendered text in the game (white with black
+    * outline), then initializes the game.
+    */
+function init() {
+    lastTime = Date.now() / 1000;
 
-        main();
-    }
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
 
-    Resources.load([ //Load image assets using resources.js
-        'images/stone-block.png',
-        'images/water-block.png',
-        'images/grass-block.png',
-        'images/enemy-bug.png',
-        'images/char-boy.png',
-        'images/Rock.png',
-        'images/Key.png',
-        'images/Heart.png'
-    ]);
-    Resources.onReady(init);
+    game.init(); //Initializes the game, as well as the associated objects (player, map, etc.)
 
-    global.ctx = ctx;
-    global.canvas = canvas;
-})(this);
+    main();
+}
+
+console.log(Resources)
+Resources.load([ //Load image assets using resources.js
+    'images/stone-block.png',
+    'images/water-block.png',
+    'images/grass-block.png',
+    'images/enemy-bug.png',
+    'images/char-boy.png',
+    'images/Rock.png',
+    'images/Key.png',
+    'images/Heart.png'
+]);
+Resources.onReady(init);
+
+global.ctx = ctx;
+global.canvas = canvas;

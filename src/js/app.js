@@ -11,6 +11,9 @@
  * through Game, and Game.init() calls init() methods on other classes.
  * @constructor
  */
+
+import Resources from './resources';
+
 var Game = function() {
     /**
      * Time remaining for showing titles for levels, etc. The timer is active as
@@ -57,10 +60,10 @@ var Game = function() {
     this.highScoreCookieExpiry;
 };
 
-/** 
+/**
   * The key string used in the cookie that holds the high score
-  * @const 
-  */ 
+  * @const
+  */
 Game.prototype.HIGH_SCORE_COOKIE_KEY = 'highScore';
 /**
  * Enum for possible game states.
@@ -391,7 +394,7 @@ Map.prototype.init = function() {
             rowTypes.push(this.Tile.GRASS);
     }
     //Initialize tileTypes (using array from above) and tileCoordinates grids
-    for (col = 0; col < this.COLUMN_COUNT; col++) { 
+    for (col = 0; col < this.COLUMN_COUNT; col++) {
         this.tileCoordinates.push([]);
         this.tileTypes.push([]);
         var colPixel = col * this.COL_WIDTH_PIXELS;
@@ -435,7 +438,7 @@ Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumbe
     var newCoordinates = {};
     var coordinates = this.tileCoordinates[colNumber][rowNumber];
     //Make a copy of the coordinates object to prevent accidental manipulation
-    for (var key in coordinates) { 
+    for (var key in coordinates) {
         if (coordinates.hasOwnProperty(key))
             newCoordinates[key] = coordinates[key];
     }
@@ -746,7 +749,7 @@ MapAccessories.prototype.placeAccessories = function() {
 
     //Add rock and key to accessories array
     this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
-    
+
     //Heart...
     if (Math.random() <= this.PROBABILITY_OF_EXTRA_LIFE) {
         var heartLocation = map.randomRoadBoardLocation();
@@ -896,7 +899,7 @@ HeadsUp.prototype.LEVEL_X = 0;
  * Y position of HUD level text.
  * @const
  */
-HeadsUp.prototype.LEVEL_Y = (Map.prototype.ROWS_COUNT + 1) * 
+HeadsUp.prototype.LEVEL_Y = (Map.prototype.ROWS_COUNT + 1) *
     Map.prototype.ROW_HEIGHT_PIXELS + 25;
 /**
  * X position of HUD lives text.
@@ -978,7 +981,7 @@ HeadsUp.prototype.setState = function(state) {
             break;
         case game.State.WIN_LEVEL:
             var winTextArray = ['Nicely done!','You rock!','Ka-Blamo'];
-            this.bigText = winTextArray[Math.floor(Math.random() * 
+            this.bigText = winTextArray[Math.floor(Math.random() *
                 winTextArray.length)];
             break;
         case game.State.DIED   :
@@ -1374,12 +1377,12 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
             rowOfEnemies = [];
             this.activeEnemiesByRow[rowIndex] = rowOfEnemies;
         }
-        
+
         //If this is not the only active enemy in this row, we need to make sure
         //it won't overlap another enemy.
         if (rowOfEnemies.length > 0){
             //Entry times for leftmost enemy in row
-            var leftMostEnemyEntryTimes = 
+            var leftMostEnemyEntryTimes =
                 rowOfEnemies[rowOfEnemies.length-1].entryTimes;
             //The moment when the leftmost enemy will be completely offscreen
             var leftMostEnemyInRowExitCompletion =
@@ -1412,11 +1415,11 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
         //enemy, call newEnemyInRow() on player to let it know.
         if (this.potentialCollisionLocation.rowIndex === rowIndex)
             player.newEnemyInRow(entryTimes[this.potentialCollisionLocation.column]);
-    
-    
+
+
         //Push new enemy onto the appropriate row. Order here is guaranteed already.
         this.activeEnemiesByRow[rowIndex].push(enemyObjectWithEntryAndExitTimes);
-    
+
         //Update retire time in packaged enemy, then push onto activeEnemies
         enemyObjectWithRetireTime.retireTime = retireTime;
         this.activeEnemies.push(enemyObjectWithRetireTime);
@@ -1446,13 +1449,13 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
         (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
     //Same, buf for exit times
     var secondsPerExitEdgeAdjustWidth =
-        (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed; 
+        (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed;
 
     var now = Date.now() / 1000;
     for (var col = map.COLUMN_COUNT + 1; col >= 0; col--) {
         entryTimes.splice(0, 0,
             col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
-        exitTimes.splice(0, 0, 
+        exitTimes.splice(0, 0,
             (col+2) * secondsPerColumn - secondsPerExitEdgeAdjustWidth + now);
     };
 
@@ -1478,7 +1481,7 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
         return null;
     }
 
-    var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y + 
+    var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y +
         Enemy.prototype.PIXEL_ADJUST;
 
     this.potentialCollisionLocation.column = x;
@@ -1487,9 +1490,9 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
     var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
     if (rowOfEnemies === undefined) //No row? No collisions.
         return;
-    
+
     var enemyObject; //Packaged with entry and exit times
-    var columnEntry; 
+    var columnEntry;
     var columnExit;
     var now = Date.now() / 1000;
 
@@ -1533,7 +1536,7 @@ var Player = function() {
      * Time of upcoming collision.
      * @type {number}
      */
-    this.collisionTime;    
+    this.collisionTime;
 };
 
 /** @const */ Player.prototype.SPRITE = 'images/char-boy.png';
@@ -1614,7 +1617,7 @@ Player.prototype.setPosition = function(x,y) {
     //Make sure player isn't moving off screen...
     this.column = Math.min(Math.max(x,0),map.COLUMN_COUNT-1);
     this.row = Math.min(Math.max(y,0),map.ROWS_COUNT-1);
-    
+
     var coordinates =
         map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
     this.x = coordinates.x;
@@ -1622,7 +1625,7 @@ Player.prototype.setPosition = function(x,y) {
 
     switch (map.tileTypes[this.column][this.row]) {
         case map.Tile.STONE: //Road! Calculate upcoming collisions!
-            this.collisionTime = 
+            this.collisionTime =
                 enemyHandler.collisionTimeForCoordinates(this.column,this.row);
             break;
         case map.Tile.WATER: //Water! Dead :(
@@ -1712,3 +1715,5 @@ document.addEventListener('keydown', function(e) {
     if (keyString !== undefined)
         game.handleInput(keyString);
 });
+
+export default game;
