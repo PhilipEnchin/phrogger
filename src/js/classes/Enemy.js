@@ -3,7 +3,7 @@ import Resources from '../resources';
 /**
  * The Enemy object represents an individual enemy (a bug).
  */
-const [SPRITE, PIXEL_ADJUST] = ['images/enemy-bug.png', -20];
+const SPRITE = 'images/enemy-bug.png';
 
 class Enemy {
   constructor() {
@@ -29,7 +29,7 @@ class Enemy {
   init(x, y, lowerSpeedLimit, upperSpeedLimit) {
     this.speed = Math.random() * (upperSpeedLimit - lowerSpeedLimit) + lowerSpeedLimit;
     this.x = x;
-    this.y = y + PIXEL_ADJUST;
+    this.y = y + Enemy.PIXEL_ADJUST;
     this.hidden = false;
   }
 
@@ -48,6 +48,6 @@ class Enemy {
   }
 }
 
-[Enemy.EDGE_ADJUST_RIGHT, Enemy.EDGE_ADJUST_LEFT] = [5, 36];
+[Enemy.EDGE_ADJUST_RIGHT, Enemy.EDGE_ADJUST_LEFT, Enemy.PIXEL_ADJUST] = [5, 36, -20];
 
 export default Enemy;

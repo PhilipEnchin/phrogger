@@ -1240,7 +1240,7 @@ EnemyHandler.prototype.update = function(dt,now) {
       //Add paused time to tile entries and exits (for collisions)
       map.roadRowNumbers.forEach(function(i){
         var rowIndex = map.pixelCoordinatesForBoardCoordinates(0,i).y +
-          Enemy.prototype.PIXEL_ADJUST;
+          Enemy.PIXEL_ADJUST;
         if (this.activeEnemiesByRow[rowIndex] !== undefined) {
           this.activeEnemiesByRow[rowIndex].forEach(function(enemyObject){
             for (var i = enemyObject.entryTimes.length - 1; i >= 0; i--) {
@@ -1400,10 +1400,10 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
   var secondsPerColumn = map.COL_WIDTH_PIXELS / enemy.speed;
   //Seconds by which to adjust entry times based on visual edges of sprites
   var secondsPerEntryEdgeAdjustWidth =
-    (enemy.EDGE_ADJUST_RIGHT + Player.EDGE_ADJUST_LEFT) / enemy.speed;
+    (Enemy.EDGE_ADJUST_RIGHT + Player.EDGE_ADJUST_LEFT) / enemy.speed;
   //Same, buf for exit times
   var secondsPerExitEdgeAdjustWidth =
-    (enemy.EDGE_ADJUST_LEFT + Player.EDGE_ADJUST_RIGHT) / enemy.speed;
+    (Enemy.EDGE_ADJUST_LEFT + Player.EDGE_ADJUST_RIGHT) / enemy.speed;
 
   var now = Date.now() / 1000;
   for (var col = map.COLUMN_COUNT + 1; col >= 0; col--) {
@@ -1436,7 +1436,7 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
   }
 
   var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y +
-    Enemy.prototype.PIXEL_ADJUST;
+    Enemy.PIXEL_ADJUST;
 
   this.potentialCollisionLocation.column = x;
   this.potentialCollisionLocation.rowIndex = rowIndex;
