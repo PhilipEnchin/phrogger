@@ -108,4 +108,5 @@ const Resources =  {
   onReady: onReady,
   isReady: isReady
 };
+
 export default Resources;
