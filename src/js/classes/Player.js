@@ -68,6 +68,7 @@ class Player {
         this.moveable = false;
         this.hidden = false;
         break;
+      case game.State.GAME_OVER: break;
       default: throw new Error(`Unrecognized game state: ${state}`);
     }
   }
