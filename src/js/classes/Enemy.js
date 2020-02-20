@@ -7,15 +7,15 @@ const [SPRITE, PIXEL_ADJUST] = ['images/enemy-bug.png', -20];
 
 class Enemy {
   constructor() {
-    /** @type {number} */ this.x;
-    /** @type {number} */ this.y;
-    /** @type {boolean} */ this.hidden;
+    /** @type {number} */ this.x = null;
+    /** @type {number} */ this.y = null;
+    /** @type {boolean} */ this.hidden = null;
     /**
      * Speed, in pixels per second
      * @type {number}
      */
-    this.speed;
-  };
+    this.speed = null;
+  }
 
 
   /**
@@ -27,26 +27,25 @@ class Enemy {
    * @param {number} upperSpeedLimit
    */
   init(x, y, lowerSpeedLimit, upperSpeedLimit) {
-    this.speed = Math.random()*(upperSpeedLimit-lowerSpeedLimit) + lowerSpeedLimit;
+    this.speed = Math.random() * (upperSpeedLimit - lowerSpeedLimit) + lowerSpeedLimit;
     this.x = x;
     this.y = y + PIXEL_ADJUST;
     this.hidden = false;
-  };
+  }
 
   /**
    * Update the enemy's position.
    * @param {number} dt Time elapsed since last update
    * @param {number} now System time at invocation
    */
-  update(dt,now) {
+  update(dt) {
     this.x += this.speed * dt;
-  };
+  }
 
   /** Render the enemy to the screen. */
   render() {
-    if (!this.hidden)
-      ctx.drawImage(Resources.get(SPRITE), this.x, this.y);
-  };
+    if (!this.hidden) { ctx.drawImage(Resources.get(SPRITE), this.x, this.y); }
+  }
 }
 
 [Enemy.EDGE_ADJUST_RIGHT, Enemy.EDGE_ADJUST_LEFT] = [5, 36];

@@ -1272,7 +1272,7 @@ EnemyHandler.prototype.update = function(dt,now) {
 
     //Update remaining active enemies
     for (var i = this.activeEnemies.length - 1; i >= 0; i--) {
-      this.activeEnemies[i].enemy.update(dt,now);
+      this.activeEnemies[i].enemy.update(dt);
     }
 
     //Spawn a new enemy if the time until spawn has reached zero.
