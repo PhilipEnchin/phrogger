@@ -42,7 +42,6 @@ function init() {
   main();
 }
 
-console.log(Resources)
 Resources.load([ //Load image assets using resources.js
   'images/stone-block.png',
   'images/water-block.png',
