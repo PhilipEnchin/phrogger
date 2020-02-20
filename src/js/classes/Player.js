@@ -18,8 +18,8 @@ class Player {
      * Time of upcoming collision.
      * @type {number}
      */
-    this.collisionTime;
-  };
+    this.collisionTime = null;
+  }
 
   /** Initializes player object */
   init(game, map, enemyHandler) {
@@ -27,7 +27,7 @@ class Player {
     this.map = map;
     this.enemyHandler = enemyHandler;
     this.setPosition(this.column, this.row);
-  };
+  }
 
   /**
    * Sets properties and calls methods on player when new game state is set.
@@ -39,7 +39,7 @@ class Player {
       case game.State.TITLE:
         this.hidden = false;
         this.moveable = false;
-        this.setPosition((map.COLUMN_COUNT-1)/2,map.ROWS_COUNT-1);
+        this.setPosition((map.COLUMN_COUNT - 1) / 2, map.ROWS_COUNT - 1);
         this.collisionDetectionOn = false;
         break;
       case game.State.INSTRUCTIONS:
@@ -47,7 +47,7 @@ class Player {
       case game.State.REINCARNATE:
         this.hidden = false;
         this.moveable = false;
-        this.setPosition((map.COLUMN_COUNT-1)/2,map.ROWS_COUNT-1);
+        this.setPosition((map.COLUMN_COUNT - 1) / 2, map.ROWS_COUNT - 1);
         break;
       case game.State.PLAY:
         this.collisionDetectionOn = true;
@@ -59,7 +59,7 @@ class Player {
         this.hidden = true;
         this.moveable = false;
         break;
-      case game.State.DIED   :
+      case game.State.DIED:
         this.collisionDetectionOn = false;
         this.hidden = false;
         this.moveable = false;
@@ -67,8 +67,10 @@ class Player {
         this.collisionDetectionOn = false;
         this.moveable = false;
         this.hidden = false;
+        break;
+      default: throw new Error(`Unrecognized game state: ${state}`);
     }
-  };
+  }
 
   /**
    * Detects a collision, if collision detection is on. Kills player if there's
@@ -76,47 +78,45 @@ class Player {
    * @param {number} dt Time elapsed since last update.
    * @param {number} now System time an invocation.
    */
-  update(dt,now) {
-    if (this.collisionDetectionOn && this.collisionTime &&
-      now > this.collisionTime) {
+  update(dt, now) {
+    if (this.collisionDetectionOn && this.collisionTime && now > this.collisionTime) {
       this.die();
     }
-  };
+  }
 
   /** Render the player */
   render() {
-    if (!this.hidden)
-      ctx.drawImage(Resources.get(SPRITE), this.x, this.y);
-  };
+    if (!this.hidden) { ctx.drawImage(Resources.get(SPRITE), this.x, this.y); }
+  }
 
   /**
    * Sets the player's position, and updates this.collisionTime.
    * @param {number} x Column number.
    * @param {number} y Row number.
    */
-  setPosition(x,y) {
+  setPosition(x, y) {
     const { map, enemyHandler } = this;
-    //Make sure player isn't moving off screen...
-    this.column = Math.min(Math.max(x,0),map.COLUMN_COUNT-1);
-    this.row = Math.min(Math.max(y,0),map.ROWS_COUNT-1);
+    // Make sure player isn't moving off screen...
+    this.column = Math.min(Math.max(x, 0), map.COLUMN_COUNT - 1);
+    this.row = Math.min(Math.max(y, 0), map.ROWS_COUNT - 1);
 
-    var coordinates =
-      map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
+    const coordinates = map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
     this.x = coordinates.x;
     this.y = coordinates.y + PIXEL_ADJUST;
 
-    switch (map.tileTypes[this.column][this.row]) {
-      case map.Tile.STONE: //Road! Calculate upcoming collisions!
-        this.collisionTime =
-          enemyHandler.collisionTimeForCoordinates(this.column,this.row);
+    const tile = map.tileTypes[this.column][this.row];
+    switch (tile) {
+      case map.Tile.STONE: // Road! Calculate upcoming collisions!
+        this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column, this.row);
         break;
-      case map.Tile.WATER: //Water! Dead :(
+      case map.Tile.WATER: // Water! Dead :(
         this.die();
-      case map.Tile.GRASS: //Grass! Safe! (Cancel collision)
+      case map.Tile.GRASS: // Grass! Safe! (Cancel collision)
         this.collisionTime = enemyHandler.collisionTimeForCoordinates();
         break;
+      default: throw new Error(`Unrecognized tile type: ${tile}`);
     }
-  };
+  }
 
   /**
    * Is called when a new enemy is generated in the row occupied by the player.
@@ -124,18 +124,16 @@ class Player {
    * @param {number} collisionTime Time of the new collision.
    */
   newEnemyInRow(collisionTime) {
-    if (!this.collisionTime)
-      this.collisionTime = collisionTime;
-  };
+    if (!this.collisionTime) { this.collisionTime = collisionTime; }
+  }
 
   /**
    * Is called when the game is unpaused. Adds timePaused to the collision time.
    * @param {number} timePaused The number of seconds for which the game was paused.
    */
   addPauseTimeToCollision(timePaused) {
-    if (this.collisionTime)
-      this.collisionTime += timePaused;
-  };
+    if (this.collisionTime) { this.collisionTime += timePaused; }
+  }
 
   /**
    * Kills the player by setting the game state to .DIED.
@@ -143,7 +141,7 @@ class Player {
   die() {
     const { game } = this;
     game.setState(game.State.DIED);
-  };
+  }
 
   /**
    * Handles keyboard input for the movement of the player.
@@ -155,10 +153,11 @@ class Player {
         case 'left':
         case 'right':
         case 'up':
-        case 'down': this.move(keyString);
+        case 'down': this.move(keyString); break;
+        default: throw new Error(`Unrecognized keyString: ${keyString}`);
       }
     }
-  };
+  }
 
   /**
    * Moves player in the direction specified by directionString
@@ -166,16 +165,17 @@ class Player {
    */
   move(directionString) {
     const { map } = this;
-    var x = this.column, y = this.row;
-    switch(directionString) {
+    let x = this.column;
+    let y = this.row;
+    switch (directionString) {
       case 'left': x--; break;
       case 'right': x++; break;
       case 'up': y--; break;
       case 'down': y++; break;
+      default: throw new Error(`Unrecognized directionString: ${directionString}`);
     }
-    if(map.playerCanMoveHere(x,y))
-      this.setPosition(x,y);
-  };
+    if (map.playerCanMoveHere(x, y)) { this.setPosition(x, y); }
+  }
 }
 
 [Player.EDGE_ADJUST_RIGHT, Player.EDGE_ADJUST_LEFT] = [29, 30];
