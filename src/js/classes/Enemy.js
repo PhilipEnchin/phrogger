@@ -3,50 +3,52 @@ import Resources from '../resources';
 /**
  * The Enemy object represents an individual enemy (a bug).
  */
-var Enemy = function() {
-  /** @type {number} */ this.x;
-  /** @type {number} */ this.y;
-  /** @type {boolean} */ this.hidden;
+const [SPRITE, PIXEL_ADJUST] = ['images/enemy-bug.png', -20];
+
+class Enemy {
+  constructor() {
+    /** @type {number} */ this.x;
+    /** @type {number} */ this.y;
+    /** @type {boolean} */ this.hidden;
+    /**
+     * Speed, in pixels per second
+     * @type {number}
+     */
+    this.speed;
+  };
+
+
   /**
-   * Speed, in pixels per second
-   * @type {number}
+   * Initializes an enemym randomly generating its speed based on the provided
+   * speed limits.
+   * @param {number} x Initial x coordinate.
+   * @param {number} y Initial y coordinate.
+   * @param {number} lowerSpeedLimit
+   * @param {number} upperSpeedLimit
    */
-  this.speed;
-};
+  init(x, y, lowerSpeedLimit, upperSpeedLimit) {
+    this.speed = Math.random()*(upperSpeedLimit-lowerSpeedLimit) + lowerSpeedLimit;
+    this.x = x;
+    this.y = y + PIXEL_ADJUST;
+    this.hidden = false;
+  };
 
-/** @const */ Enemy.prototype.SPRITE = 'images/enemy-bug.png';
-/** @const */ Enemy.prototype.PIXEL_ADJUST = -20;
-/** @const */ Enemy.prototype.EDGE_ADJUST_RIGHT = 5;
-/** @const */ Enemy.prototype.EDGE_ADJUST_LEFT = 36;
+  /**
+   * Update the enemy's position.
+   * @param {number} dt Time elapsed since last update
+   * @param {number} now System time at invocation
+   */
+  update(dt,now) {
+    this.x += this.speed * dt;
+  };
 
-/**
- * Initializes an enemym randomly generating its speed based on the provided
- * speed limits.
- * @param {number} x Initial x coordinate.
- * @param {number} y Initial y coordinate.
- * @param {number} lowerSpeedLimit
- * @param {number} upperSpeedLimit
- */
-Enemy.prototype.init = function(x, y, lowerSpeedLimit, upperSpeedLimit) {
-  this.speed = Math.random()*(upperSpeedLimit-lowerSpeedLimit) + lowerSpeedLimit;
-  this.x = x;
-  this.y = y + this.PIXEL_ADJUST;
-  this.hidden = false;
-};
+  /** Render the enemy to the screen. */
+  render() {
+    if (!this.hidden)
+      ctx.drawImage(Resources.get(SPRITE), this.x, this.y);
+  };
+}
 
-/**
- * Update the enemy's position.
- * @param {number} dt Time elapsed since last update
- * @param {number} now System time at invocation
- */
-Enemy.prototype.update = function(dt,now) {
-  this.x += this.speed * dt;
-};
-
-/** Render the enemy to the screen. */
-Enemy.prototype.render = function() {
-  if (!this.hidden)
-    ctx.drawImage(Resources.get(this.SPRITE), this.x, this.y);
-};
+[Enemy.EDGE_ADJUST_RIGHT, Enemy.EDGE_ADJUST_LEFT] = [5, 36];
 
 export default Enemy;
