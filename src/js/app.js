@@ -1447,10 +1447,10 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
   var secondsPerColumn = map.COL_WIDTH_PIXELS / enemy.speed;
   //Seconds by which to adjust entry times based on visual edges of sprites
   var secondsPerEntryEdgeAdjustWidth =
-    (enemy.EDGE_ADJUST_RIGHT + player.EDGE_ADJUST_LEFT) / enemy.speed;
+    (enemy.EDGE_ADJUST_RIGHT + Player.EDGE_ADJUST_LEFT) / enemy.speed;
   //Same, buf for exit times
   var secondsPerExitEdgeAdjustWidth =
-    (enemy.EDGE_ADJUST_LEFT + player.EDGE_ADJUST_RIGHT) / enemy.speed;
+    (enemy.EDGE_ADJUST_LEFT + Player.EDGE_ADJUST_RIGHT) / enemy.speed;
 
   var now = Date.now() / 1000;
   for (var col = map.COLUMN_COUNT + 1; col >= 0; col--) {
