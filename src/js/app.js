@@ -88,10 +88,13 @@ Game.prototype.State = {
  * Initializes the objects that need initializing, and initiates the game.
  */
 Game.prototype.init = function() {
+  const {
+    ROWS_COUNT, COLUMN_COUNT, ROW_HEIGHT_PIXELS, COL_WIDTH_PIXELS,
+  } = Map.prototype;
   map.init();
   enemyHandler.init();
   player.init(this, map, enemyHandler);
-  hud.init(this);
+  hud.init(this, ROWS_COUNT, ROW_HEIGHT_PIXELS, COLUMN_COUNT, COL_WIDTH_PIXELS);
 
   //Initialize high score cookie expiry (15 years off, rather permanent)
   var expiry = new Date();
