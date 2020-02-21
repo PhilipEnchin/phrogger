@@ -18,12 +18,27 @@ const [
   LIVES_TEXT_SIZE, INSTRUCTION_TEXT_SIZE, INSTRUCTION_LINE_HEIGHT,
 ] = [80, 36, 48, 16, 16, 20, 24];
 
-// const [this.LEVEL_X, this.LEVEL_Y, LIVES_X, LIVES_Y] = [
-//   0,
-//   (Map.prototype.ROWS_COUNT + 1) * Map.prototype.ROW_HEIGHT_PIXELS + 25,
-//   Map.prototype.COLUMN_COUNT * Map.prototype.COL_WIDTH_PIXELS,
-//   (Map.prototype.ROWS_COUNT + 1) * Map.prototype.ROW_HEIGHT_PIXELS + 25,
-// ];
+const WIN_TEXTS = ['Nicely done!', 'You rock!', 'Ka-Blamo'];
+const DIE_TEXTS = [
+  'You died', 'You expired', 'You perished', 'Kicked the bucket', 'Croaked',
+  'Bought it', 'Bought the farm', 'Checked out early',
+];
+
+/**
+ * Helper method to display text with an outline.
+ * @param {string} text The text to be rendered.
+ * @param {number} x The x pixel coordinate.
+ * @param {number} y The y pixel coordinate.
+ * @param {number} textSize The size of the text to be rendered.
+ * @param {string} typeface The typeface to be used.
+ * @param {string} alignment Left, right or center alignment.
+ */
+const renderText = (text, x, y, textSize, typeface, alignment) => {
+  ctx.font = `${textSize}pt ${typeface}`;
+  ctx.textAlign = alignment;
+  ctx.fillText(text, x, y, canvas.width);
+  ctx.strokeText(text, x, y, canvas.width);
+};
 
 class HeadsUp {
   constructor() {
@@ -32,7 +47,7 @@ class HeadsUp {
     /** @type {string} */ this.bigText = null;
     /** @type {string} */ this.bigTextSize = null;
     /** @type {string} */ this.instructionText = null;
-  };
+  }
 
   /**
    * Sets constants that can't be set until after engine.js is loaded.
@@ -42,29 +57,29 @@ class HeadsUp {
      * X position of HUD "big" text.
      * @const
      */
-    this.BIG_TEXT_X = canvas.width/2;
+    this.BIG_TEXT_X = canvas.width / 2;
     /**
      * Y position of HUD "big" text.
      * @const
      */
-    this.BIG_TEXT_Y = canvas.height/2 - 20;
+    this.BIG_TEXT_Y = canvas.height / 2 - 20;
     /**
      * X position of HUD instructions text.
      * @const
      */
-    this.INSTRUCTIONS_X = canvas.width/2;
+    this.INSTRUCTIONS_X = canvas.width / 2;
     /**
      * Y position of HUD instructions text.
      * @const
      */
-    this.INSTRUCTIONS_Y = canvas.height/2 + 20;
+    this.INSTRUCTIONS_Y = canvas.height / 2 + 20;
 
     this.game = game;
     this.LEVEL_X = 0;
     this.LEVEL_Y = (rowCount + 1) * rowHeight + 25;
     this.LIVES_X = colCount * colWidth;
     this.LIVES_Y = (rowCount + 1) * rowHeight + 25;
-  };
+  }
 
   /**
    * Sets HUD text based on game state.
@@ -81,7 +96,7 @@ class HeadsUp {
         this.instructionText = [
           'Press spacebar to begin',
           '',
-          (game.highScore > 0) ? 'High score: Level '+game.highScore : ''
+          (game.highScore > 0) ? `High score: Level ${game.highScore}` : '',
         ];
         break;
       case game.State.INSTRUCTIONS:
@@ -107,98 +122,72 @@ class HeadsUp {
         this.bigTextSize = PAUSED_TEXT_SIZE;
         break;
       case game.State.WIN_LEVEL:
-        var winTextArray = ['Nicely done!','You rock!','Ka-Blamo'];
-        this.bigText = winTextArray[Math.floor(Math.random() *
-          winTextArray.length)];
+        this.bigText = WIN_TEXTS[Math.floor(Math.random() * WIN_TEXTS.length)];
         break;
-      case game.State.DIED   :
-        var dieTextArray = ['You died','You expired','You perished',
-          'Kicked the bucket','Croaked','Bought it','Bought the farm',
-          'Checked out early'];
-        this.bigText = dieTextArray[Math.floor(Math.random()*dieTextArray.length)];
+      case game.State.DIED:
+        this.bigText = DIE_TEXTS[Math.floor(Math.random() * DIE_TEXTS.length)];
         break;
       case game.State.GAME_OVER:
         this.bigText = 'Game over';
-        if (game.distanceToHighScore < 0 &&
-          -game.distanceToHighScore !== game.highScore)
+        if (game.distanceToHighScore < 0 && -game.distanceToHighScore !== game.highScore) {
           this.instructionText = [
             'You beat your high score!',
             '',
             'New high score:',
-            'Level ' + game.highScore];
-        else if (game.distanceToHighScore < 0)
+            `Level ${game.highScore}`];
+        } else if (game.distanceToHighScore < 0) {
           this.instructionText = [
-          'You set your first high score!',
-          '',
-          'High Score: Level ' + game.highScore];
-        else if (game.distanceToHighScore === 0 && game.highScore > 0)
+            'You set your first high score!',
+            '',
+            `High Score: Level ${game.highScore}`];
+        } else if (game.distanceToHighScore === 0 && game.highScore > 0) {
           this.instructionText = [
             'You tied your high score!',
             '',
             'Give it another try!'];
-        else
+        } else {
           this.instructionText = ['So sad'];
-        this.instructionText.splice(1000,0,'','Press spacebar to continue');
+        }
+        this.instructionText.push('', 'Press spacebar to continue');
         break;
       default: throw new Error(`Unrecognized game state: ${state}`);
     }
-  };
+  }
 
   /**
    * Updates the lives text on screen when an extra life is achieved.
    */
   extraLife() {
-    this.livesText = livesPrefix + game.lives;
-  };
+    this.livesText = livesPrefix + this.game.lives;
+  }
 
   /**
    * Renders all non-empty text strings to the screen
    */
   render() {
-    if (this.bigText){
-      this.renderText(this.bigText,this.BIG_TEXT_X,this.BIG_TEXT_Y,
-        TITLE_TEXT_SIZE,TYPEFACE,'center');
+    if (this.bigText) {
+      renderText(this.bigText, this.BIG_TEXT_X, this.BIG_TEXT_Y, TITLE_TEXT_SIZE, TYPEFACE, 'center');
     }
-    if (this.instructionText){
-      if(this.instructionText.constructor == Array){
-        for (var i = this.instructionText.length - 1; i >= 0; i--) {
-          this.renderText(this.instructionText[i],this.INSTRUCTIONS_X,
-            INSTRUCTION_LINE_HEIGHT*i + this.INSTRUCTIONS_Y,
-            INSTRUCTION_TEXT_SIZE,TYPEFACE,'center');
+    if (this.instructionText) {
+      if (Array.isArray(this.instructionText)) {
+        for (let i = this.instructionText.length - 1; i >= 0; i--) {
+          renderText(
+            this.instructionText[i],
+            this.INSTRUCTIONS_X, INSTRUCTION_LINE_HEIGHT * i + this.INSTRUCTIONS_Y,
+            INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center',
+          );
         }
       } else {
-        this.renderText(this.instructionText,this.INSTRUCTIONS_X,
-          this.INSTRUCTIONS_Y,INSTRUCTION_TEXT_SIZE,TYPEFACE,
-          'center');
+        renderText(this.instructionText, this.INSTRUCTIONS_X, this.INSTRUCTIONS_Y, INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center');
       }
     }
-    if (this.levelText){
-      console.log(this.levelText,this.LEVEL_X,this.LEVEL_Y,
-        LEVEL_TEXT_SIZE,TYPEFACE,'left')
-      this.renderText(this.levelText,this.LEVEL_X,this.LEVEL_Y,
-        LEVEL_TEXT_SIZE,TYPEFACE,'left');
+    if (this.levelText) {
+      renderText(this.levelText, this.LEVEL_X, this.LEVEL_Y, LEVEL_TEXT_SIZE, TYPEFACE, 'left');
     }
-    if (this.livesText){
-      this.renderText(this.livesText,this.LIVES_X,this.LIVES_Y,
-        LIVES_TEXT_SIZE,TYPEFACE,'right');
+    if (this.livesText) {
+      renderText(this.livesText, this.LIVES_X, this.LIVES_Y, LIVES_TEXT_SIZE, TYPEFACE, 'right');
     }
-  };
-
-  /**
-   * Helper method to display text with an outline.
-   * @param {string} text The text to be rendered.
-   * @param {number} x The x pixel coordinate.
-   * @param {number} y The y pixel coordinate.
-   * @param {number} textSize The size of the text to be rendered.
-   * @param {string} typeface The typeface to be used.
-   * @param {string} alignment Left, right or center alignment.
-   */
-  renderText(text,x,y,textSize,typeface,alignment) {
-    ctx.font = textSize + 'pt ' + typeface;
-    ctx.textAlign = alignment;
-    ctx.fillText(text,x,y,canvas.width);
-    ctx.strokeText(text,x,y,canvas.width);
-  };
+  }
 }
 
 export default HeadsUp;
