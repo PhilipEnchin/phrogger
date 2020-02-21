@@ -33,32 +33,33 @@ class Board {
      */
     this.pendingTileChanges = {
       status: null,
-      changes: []
+      changes: [],
     };
-  };
+  }
 
   /**
    * Initializes game board, and caches coordinates of each tile.
    */
   init(game, mapAccessories) {
-    var row, col;
-    var rowTypes = [];
-    //Store row types in a temporary array
+    let row;
+    let col;
+    const rowTypes = [];
+    // Store row types in a temporary array
     for (row = 0; row < Board.ROWS_COUNT; row++) {
-      if (row === 0)
+      if (row === 0) {
         rowTypes.push(Board.Tile.WATER);
-      else
+      } else {
         rowTypes.push(Board.Tile.GRASS);
+      }
     }
-    //Initialize tileTypes (using array from above) and tileCoordinates grids
+    // Initialize tileTypes (using array from above) and tileCoordinates grids
     for (col = 0; col < Board.COLUMN_COUNT; col++) {
       this.tileCoordinates.push([]);
       this.tileTypes.push([]);
-      var colPixel = col * this.COL_WIDTH_PIXELS;
       for (row = 0; row < Board.ROWS_COUNT; row++) {
-        var coordinates = {
+        const coordinates = {
           x: col * Board.COL_WIDTH_PIXELS,
-          y: row * Board.ROW_HEIGHT_PIXELS
+          y: row * Board.ROW_HEIGHT_PIXELS,
         };
         this.tileCoordinates[col].push(coordinates);
         this.tileTypes[col].push(rowTypes[row]);
@@ -69,23 +70,35 @@ class Board {
 
     this.game = game;
     this.mapAccessories = mapAccessories;
-  };
+  }
 
   /**
    * Sets up map accordinly when game state is set.
    * @param {number} state The new game state.
    */
   setState(state) {
+    const {
+      TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
+    } = this.game.State;
     switch (state) {
-      case this.game.State.TITLE:
+      case TITLE:
         this.setRows(
-          0,Board.Tile.WATER,
-          [1,2,3,4],Board.Tile.STONE,
-          Board.Tile.GRASS
+          0, Board.Tile.WATER,
+          [1, 2, 3, 4], Board.Tile.STONE,
+          Board.Tile.GRASS,
         );
         break;
+      case INSTRUCTIONS:
+      case LEVEL_TITLE:
+      case PLAY:
+      case PAUSED:
+      case GAME_OVER:
+      case DIED:
+      case WIN_LEVEL:
+      case REINCARNATE: break;
+      default: throw new Error(`Unrecognized game state: ${state}`);
     }
-  };
+  }
 
   /**
    * Returns the pixel coordinates for the column and row corresponding to a tile.
@@ -95,15 +108,8 @@ class Board {
    * @return {Object.<string,number>} The coordinates of the specified tile.
    */
   pixelCoordinatesForBoardCoordinates(colNumber, rowNumber) {
-    var newCoordinates = {};
-    var coordinates = this.tileCoordinates[colNumber][rowNumber];
-    //Make a copy of the coordinates object to prevent accidental manipulation
-    for (var key in coordinates) {
-      if (coordinates.hasOwnProperty(key))
-        newCoordinates[key] = coordinates[key];
-    }
-    return newCoordinates;
-  };
+    return { ...this.tileCoordinates[colNumber][rowNumber] };
+  }
 
   /**
    * Takes pairs of arguments. The first of each pair is either a row number or an
@@ -114,31 +120,33 @@ class Board {
    * changed. This method uses Board.prototype.setRow() to actually set the rows.
    * @param {...*} var_args See above description.
    */
-  setRows(var_args) {
-    var args = Array.prototype.slice.call(arguments);
-    var remainingRows = []; //Stores rows not yet set in this invocation
-    var rowArray, tileType;
-    for (var i = Board.ROWS_COUNT - 1; i >= 0; i--) {
-      remainingRows.splice(0,0,i);
-    };
-    while(args.length > 1){ //If there is at least one pair remaining in args
-      if (args[0].constructor === Number) //If the first arg is a number
-        rowArray = [args.splice(0,1)[0]]; //Place in an array, then save
-      else //If the first arg is an array
-        rowArray = args.splice(0,1)[0]; //Save as is
-      tileType = args.splice(0,1)[0]; //Next arg is tile type
-      //Step through rows specified and change those rows
-      for (var i = rowArray.length - 1; i >= 0; i--) {
-        this.setRow(rowArray[i],tileType);
-        remainingRows.splice(remainingRows.indexOf(rowArray[i]),1);
-      };
+  setRows(...args) {
+    const remainingRows = []; // Stores rows not yet set in this invocation
+    let rowArray;
+    let tileType;
+    for (let i = Board.ROWS_COUNT - 1; i >= 0; i--) {
+      remainingRows.splice(0, 0, i);
     }
-    if (args.length > 0){ //If the last arg is not part of a pair...
-      tileType = args[0]; //The arg is a tile type
-      while (remainingRows.length > 0) //Change remaining rows to that type
-        this.setRow(remainingRows.pop(),tileType);
+    while (args.length > 1) { // If there is at least one pair remaining in args
+      if (args[0].constructor === Number) { // If the first arg is a number
+        rowArray = [args.shift()]; // Place in an array, then save
+      } else { // If the first arg is an array
+        rowArray = args.shift(); // Save as is
+      }
+      tileType = args.shift(); // Next arg is tile type
+      // Step through rows specified and change those rows
+      for (let i = rowArray.length - 1; i >= 0; i--) {
+        this.setRow(rowArray[i], tileType);
+        remainingRows.splice(remainingRows.indexOf(rowArray[i]), 1);
+      }
     }
-  };
+    if (args.length > 0) { // If the last arg is not part of a pair...
+      tileType = args.pop(); // The arg is a tile type
+      while (remainingRows.length > 0) { // Change remaining rows to that type
+        this.setRow(remainingRows.pop(), tileType);
+      }
+    }
+  }
 
   /**
    * Takes a row number and a tile type, and sets that row to that tile type. This
@@ -147,23 +155,23 @@ class Board {
    * @param {tileType} tileType The type of tile
    */
   setRow(rowNumber, tileType) {
-    if (tileType === Board.Tile.STONE) { //If row is set to be a road...
+    if (tileType === Board.Tile.STONE) { // If row is set to be a road...
       if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
-        this.roadRowNumbers.push(rowNumber); //Remember this row is a road
+        this.roadRowNumbers.push(rowNumber); // Remember this row is a road
       } else {
-        return; //This row is already a road. Do nothing.
+        return; // This row is already a road. Do nothing.
       }
-    } else { //This row is going to be non-road. Un-remember this row is a road
-      var rowArrayIndex = this.roadRowNumbers.indexOf(rowNumber);
-      if (rowArrayIndex !== -1) { //This row is going from road to something else
-        this.roadRowNumbers.splice(rowArrayIndex,1);
+    } else { // This row is going to be non-road. Un-remember this row is a road
+      const rowArrayIndex = this.roadRowNumbers.indexOf(rowNumber);
+      if (rowArrayIndex !== -1) { // This row is going from road to something else
+        this.roadRowNumbers.splice(rowArrayIndex, 1);
       }
     }
-    //Set tiles in this row
-    for (var col = Board.COLUMN_COUNT-1; col >= 0; col--) {
-      this.setTile(col,rowNumber,tileType);
+    // Set tiles in this row
+    for (let col = Board.COLUMN_COUNT - 1; col >= 0; col--) {
+      this.setTile(col, rowNumber, tileType);
     }
-  };
+  }
 
   /**
    * Takes column and row numbers, and a tile type, and sets that tile. Depending
@@ -181,11 +189,12 @@ class Board {
       case game.State.TITLE:
         this.tileTypes[colNumber][rowNumber] = tileType;
         break;
-      default: //If the state isn't specified above, animate this change
-        if (this.tileTypes[colNumber][rowNumber] != tileType)
-          this.addTileChangeToPending(colNumber,rowNumber,tileType);
+      default: // If the state isn't specified above, animate this change
+        if (this.tileTypes[colNumber][rowNumber] !== tileType) {
+          this.addTileChangeToPending(colNumber, rowNumber, tileType);
+        }
     }
-  };
+  }
 
   /**
    * Adds this tile change to the upcoming tile change animation.
@@ -194,17 +203,14 @@ class Board {
    * @param {number} rowNumber The row number, from top to bottom, starting at zero.
    * @param {tileType} tileType The type of tile
    */
-  addTileChangeToPending(colNumber, rowNumber, tileType) {
+  addTileChangeToPending(column, row, tileType) {
     this.pendingTileChanges.changes.push({
-      location: { //The location on the game board
-        column: colNumber,
-        row: rowNumber
-      },
-      tileType: tileType, //The type of tile
-      time: Math.random() //A randomly generated time (processed in update())
+      location: { column, row }, // The location on the game board
+      tileType, // The type of tile
+      time: Math.random(), // A randomly generated time (processed in update())
     });
     this.pendingTileChanges.status = Board.AnimationState.CONTAINS_NEW_CHANGES;
-  };
+  }
 
   /**
    * If the animation state is .CONTAINS_NEW_CHANGES, it completes the processing
@@ -214,44 +220,47 @@ class Board {
    * @param {number} dt The time elapsed since the last update
    * @param {number} now The system time at the moment of invocation
    */
-  update(dt,now) {
+  update(dt, now) {
     const { game } = this;
-    var changes; //Array of upcoming tile changes
+    let changes; // Array of upcoming tile changes
     switch (this.pendingTileChanges.status) {
       case Board.AnimationState.NOTHING_TO_ANIMATE: break;
-      case Board.AnimationState.CONTAINS_NEW_CHANGES:
+      case Board.AnimationState.CONTAINS_NEW_CHANGES: {
         changes = this.pendingTileChanges.changes;
-        changes.sort(function(a,b){ //Sort by random times in ascening order
-          return a.time-b.time; //So animation goes from fast to slow
-        });
-        //Use the randomly generated values as delta-time, and replace those
-        //with corresponding system time
-        var previousValue = 0;
-        var totalTime = changes[changes.length-1].time;
-        changes.forEach(function(change){
+        changes.sort((a, b) => a.time - b.time);
+        // Use the randomly generated values as delta-time, and replace those
+        // with corresponding system time
+        let previousValue = 0;
+        let totalTime = changes[changes.length - 1].time;
+        changes.forEach(change => {
           previousValue = change.time += previousValue;
         });
         totalTime += previousValue;
-        //Scale the time to fit the time alotted for the animation
-        changes.forEach(function(change){
+        // Scale the time to fit the time alotted for the animation
+        changes.forEach(change => {
           change.time *= game.timeRemaining * 9 / totalTime / 10;
           change.time += now;
         });
         this.pendingTileChanges.status = Board.AnimationState.ANIMATE;
-      case Board.AnimationState.ANIMATE:
+      }
+      case Board.AnimationState.ANIMATE: {
         changes = this.pendingTileChanges.changes;
-        var change, location;
-        //Animate changes that are to be complete at this time
+        let change;
+        let location;
+        // Animate changes that are to be complete at this time
         while (changes.length > 0 && now >= changes[0].time) {
-          change = changes.splice(0,1)[0];
+          change = changes.shift();
           location = change.location;
           this.tileTypes[location.column][location.row] = change.tileType;
         }
-        if (changes.length === 0) //No tile changes left, finish animation
-          this.pendingTileChanges.status =
-            Board.AnimationState.NOTHING_TO_ANIMATE;
+        if (changes.length === 0) { // No tile changes left, finish animation
+          this.pendingTileChanges.status = Board.AnimationState.NOTHING_TO_ANIMATE;
+        }
+        break;
+      }
+      default: throw new Error(`Unknown animation state: ${this.pendingTileChanges.status}`);
     }
-  };
+  }
 
   /**
    * Randomly generates a Y coordinate corresponding with a tile on an existing
@@ -260,10 +269,10 @@ class Board {
    * @return {number} A vertical pixel coordinate corresponding with a road.
    */
   randomRoadYCoordinate() {
-    var roadRowIndex = Math.floor(Math.random()*this.roadRowNumbers.length);
-    var rowIndex = this.roadRowNumbers[roadRowIndex];
-    return this.pixelCoordinatesForBoardCoordinates(0,rowIndex).y;
-  };
+    const roadRowIndex = Math.floor(Math.random() * this.roadRowNumbers.length);
+    const rowIndex = this.roadRowNumbers[roadRowIndex];
+    return this.pixelCoordinatesForBoardCoordinates(0, rowIndex).y;
+  }
 
   /**
    * @return {Object.<string, number>} An object that contains randomly generated
@@ -271,33 +280,10 @@ class Board {
    */
   randomRoadBoardLocation() {
     return {
-      column: Math.floor(Math.random()*Board.COLUMN_COUNT),
-      row: this.roadRowNumbers[
-        Math.floor(Math.random()*this.roadRowNumbers.length)]
+      column: Math.floor(Math.random() * Board.COLUMN_COUNT),
+      row: this.roadRowNumbers[Math.floor(Math.random() * this.roadRowNumbers.length)],
     };
-  };
-
-  /**
-   * @param {number|Array.<number>} var_args Either a row number or an array of
-   *     row numbers
-   * @return {Object.<string, number>} An object that contains randomly generated
-   *     row and column numbers based on the desired rows specified.
-   */
-  randomBoardLocationInRows(var_args) {
-    var args = Array.prototype.slice.call(arguments);
-    var rowNumber
-    if (args.length === 0) //No rows provided, use all possible rows
-      rowNumber = Math.floor(Math.random()*Board.ROWS_COUNT);
-    else if (args[0].constructor === Array) //Rows in an array
-      rowNumber = args[0][Math.floor(Math.random()*args.length)];
-    else //Rows are specified in individual arguments
-      rowNumber = args[Math.floor(Math.random()*args.length)];
-
-    return {
-      column: Math.floor(Math.random()*Board.COLUMN_COUNT),
-      row: rowNumber
-    };
-  };
+  }
 
   /**
    * Returns a boolean indicating whether or not the player is able to move to the
@@ -309,33 +295,33 @@ class Board {
    * @param {number} y A column number
    * @return {boolean} Whether the move is legal.
    */
-  playerCanMoveHere(x,y) {
-    const { game, mapAccessories } = this;
-    //If mapAccessories says player can move here, and the player isn't trying
-    //to move off the game board...
-    if (mapAccessories.playerCanMoveHere(x,y) && x < Board.COLUMN_COUNT &&
-      x >= 0 && y < Board.ROWS_COUNT && y >= 0) {
-      //If the player is hitting the top row and isn't drowning, level is won!
-      if (y === 0 && this.tileTypes[x][y] !== Board.Tile.WATER)
-        game.setState(game.State.WIN_LEVEL);
-      return true; //Move is legal
+  playerCanMoveHere(x, y) {
+    const { game, mapAccessories: ma } = this;
+    const { COLUMN_COUNT, ROWS_COUNT, Tile } = Board;
+    // If mapAccessories says player can move here, and the player isn't trying
+    // to move off the game board...
+    if (ma.playerCanMoveHere(x, y) && x < COLUMN_COUNT && x >= 0 && y < ROWS_COUNT && y >= 0) {
+      // If the player is hitting the top row and isn't drowning, level is won!
+      if (y === 0 && this.tileTypes[x][y] !== Tile.WATER) { game.setState(game.State.WIN_LEVEL); }
+      return true; // Move is legal
     }
-    return false; //Move is illegal
-  };
+    return false; // Move is illegal
+  }
 
   /**
    * Renders the game board.
    */
   render() {
-    var coordinates, image;
-    for (var row = 0; row < Board.ROWS_COUNT; row++) {
-      for (var col = 0; col < Board.COLUMN_COUNT; col++) {
+    let coordinates;
+    let image;
+    for (let row = 0; row < Board.ROWS_COUNT; row++) {
+      for (let col = 0; col < Board.COLUMN_COUNT; col++) {
         coordinates = this.tileCoordinates[col][row];
         image = Resources.get(Board.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
         ctx.drawImage(image, coordinates.x, coordinates.y);
-      };
-    };
-  };
+      }
+    }
+  }
 }
 
 /** @const */ Board.ROWS_COUNT = 6;
@@ -365,6 +351,24 @@ Board.AnimationState = {
   CONTAINS_NEW_CHANGES: 0, // Queues new animation sequence
   ANIMATE: 1, // Animation in progess
   NOTHING_TO_ANIMATE: 2, // Animation complete
+};
+
+/**
+ * @param {number|Array.<number>} var_args Either a row number or an array of
+ *     row numbers
+ * @return {Object.<string, number>} An object that contains randomly generated
+ *     row and column numbers based on the desired rows specified.
+ */
+Board.randomBoardLocationInRows = (...args) => {
+  let row;
+  if (args.length === 0) { // No rows provided, use all possible rows
+    row = Math.floor(Math.random() * Board.ROWS_COUNT);
+  } else if (args[0].constructor === Array) { // Rows in an array
+    row = args[0][Math.floor(Math.random() * args.length)];
+  } else { // Rows are specified in individual arguments
+    row = args[Math.floor(Math.random() * args.length)];
+  }
+  return { column: Math.floor(Math.random() * Board.COLUMN_COUNT), row };
 };
 
 export default Board;

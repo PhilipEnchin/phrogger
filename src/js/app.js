@@ -385,9 +385,9 @@ MapAccessories.prototype.placeAccessories = function() {
     return;
   //Rock...
   this.accessories = [];
-  var rockLocation = board.randomBoardLocationInRows(0);
+  var rockLocation = Board.randomBoardLocationInRows(0);
   while (rockLocation.column < this.leftMostRockPosition)
-    rockLocation = board.randomBoardLocationInRows(0);
+    rockLocation = Board.randomBoardLocationInRows(0);
   board.setTile(rockLocation.column,rockLocation.row,Board.Tile.STONE);
   this.rockAccessory = this.packageAccessory(this.Type.ROCK,rockLocation);
   this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
