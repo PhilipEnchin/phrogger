@@ -91,7 +91,7 @@ Game.prototype.State = {
 Game.prototype.init = function() {
   const {
     ROWS_COUNT, COLUMN_COUNT, ROW_HEIGHT_PIXELS, COL_WIDTH_PIXELS,
-  } = Board.prototype;
+  } = Board;
   board.init(this, mapAccessories);
   enemyHandler.init();
   player.init(this, board, enemyHandler);
@@ -588,9 +588,9 @@ var EnemyHandler = function(){
 /** Initializes spawnX and retireX, which require the map to be initialized */
 EnemyHandler.prototype.init = function() {
   this.spawnX = board.pixelCoordinatesForBoardCoordinates(0,0).x -
-    board.COL_WIDTH_PIXELS;
-  this.retireX = board.pixelCoordinatesForBoardCoordinates(board.COLUMN_COUNT-1,0).x +
-    board.COL_WIDTH_PIXELS;
+    Board.COL_WIDTH_PIXELS;
+  this.retireX = board.pixelCoordinatesForBoardCoordinates(Board.COLUMN_COUNT-1,0).x +
+    Board.COL_WIDTH_PIXELS;
 };
 
 /**
@@ -761,7 +761,7 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
       this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
     var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
     var rowIndex = nakedEnemy.y; //For activeEnemiesByRow...
-    var retireTime = entryTimes[board.COLUMN_COUNT+1];
+    var retireTime = entryTimes[Board.COLUMN_COUNT+1];
     var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
 
     //Creates the row if this is the first enemy in that row.
@@ -778,9 +778,9 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
         rowOfEnemies[rowOfEnemies.length-1].entryTimes;
       //The moment when the leftmost enemy will be completely offscreen
       var leftMostEnemyInRowExitCompletion =
-        leftMostEnemyEntryTimes[board.COLUMN_COUNT+1];
+        leftMostEnemyEntryTimes[Board.COLUMN_COUNT+1];
       //The moment when the new enemy will begin to exit the screen
-      var newEnemyExitBegin = entryTimes[board.COLUMN_COUNT];
+      var newEnemyExitBegin = entryTimes[Board.COLUMN_COUNT];
       //If the new enemy begins to exit before the existing any is gone,
       //then we have potential for overlap. Retire that enemy and attempt
       //another spawn.
@@ -835,7 +835,7 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
   var entryTimes = [];
   var exitTimes = [];
   //Seconds required to traverse a single column
-  var secondsPerColumn = board.COL_WIDTH_PIXELS / enemy.speed;
+  var secondsPerColumn = Board.COL_WIDTH_PIXELS / enemy.speed;
   //Seconds by which to adjust entry times based on visual edges of sprites
   var secondsPerEntryEdgeAdjustWidth =
     (Enemy.EDGE_ADJUST_RIGHT + Player.EDGE_ADJUST_LEFT) / enemy.speed;
@@ -844,7 +844,7 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
     (Enemy.EDGE_ADJUST_LEFT + Player.EDGE_ADJUST_RIGHT) / enemy.speed;
 
   var now = Date.now() / 1000;
-  for (var col = board.COLUMN_COUNT + 1; col >= 0; col--) {
+  for (var col = Board.COLUMN_COUNT + 1; col >= 0; col--) {
     entryTimes.splice(0, 0,
       col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
     exitTimes.splice(0, 0,

@@ -1,3 +1,4 @@
+import Board from './Board';
 import Resources from '../resources';
 
 /**
@@ -22,9 +23,9 @@ class Player {
   }
 
   /** Initializes player object */
-  init(game, map, enemyHandler) {
+  init(game, board, enemyHandler) {
     this.game = game;
-    this.map = map;
+    this.board = board;
     this.enemyHandler = enemyHandler;
     this.setPosition(this.column, this.row);
   }
@@ -34,12 +35,12 @@ class Player {
    * @param {number} state New game state.
    */
   setState(state) {
-    const { game, map } = this;
+    const { game, board } = this;
     switch (state) {
       case game.State.TITLE:
         this.hidden = false;
         this.moveable = false;
-        this.setPosition((map.COLUMN_COUNT - 1) / 2, map.ROWS_COUNT - 1);
+        this.setPosition((Board.COLUMN_COUNT - 1) / 2, Board.ROWS_COUNT - 1);
         this.collisionDetectionOn = false;
         break;
       case game.State.INSTRUCTIONS:
@@ -47,7 +48,7 @@ class Player {
       case game.State.REINCARNATE:
         this.hidden = false;
         this.moveable = false;
-        this.setPosition((map.COLUMN_COUNT - 1) / 2, map.ROWS_COUNT - 1);
+        this.setPosition((Board.COLUMN_COUNT - 1) / 2, Board.ROWS_COUNT - 1);
         break;
       case game.State.PLAY:
         this.collisionDetectionOn = true;
@@ -96,23 +97,23 @@ class Player {
    * @param {number} y Row number.
    */
   setPosition(x, y) {
-    const { map, enemyHandler } = this;
+    const { board, enemyHandler } = this;
     // Make sure player isn't moving off screen...
-    this.column = Math.min(Math.max(x, 0), map.COLUMN_COUNT - 1);
-    this.row = Math.min(Math.max(y, 0), map.ROWS_COUNT - 1);
+    this.column = Math.min(Math.max(x, 0), Board.COLUMN_COUNT - 1);
+    this.row = Math.min(Math.max(y, 0), Board.ROWS_COUNT - 1);
 
-    const coordinates = map.pixelCoordinatesForBoardCoordinates(this.column, this.row);
+    const coordinates = board.pixelCoordinatesForBoardCoordinates(this.column, this.row);
     this.x = coordinates.x;
     this.y = coordinates.y + PIXEL_ADJUST;
 
-    const tile = map.tileTypes[this.column][this.row];
+    const tile = board.tileTypes[this.column][this.row];
     switch (tile) {
-      case map.Tile.STONE: // Road! Calculate upcoming collisions!
+      case board.Tile.STONE: // Road! Calculate upcoming collisions!
         this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column, this.row);
         break;
-      case map.Tile.WATER: // Water! Dead :(
+      case board.Tile.WATER: // Water! Dead :(
         this.die();
-      case map.Tile.GRASS: // Grass! Safe! (Cancel collision)
+      case board.Tile.GRASS: // Grass! Safe! (Cancel collision)
         this.collisionTime = enemyHandler.collisionTimeForCoordinates();
         break;
       default: throw new Error(`Unrecognized tile type: ${tile}`);
@@ -165,7 +166,7 @@ class Player {
    * @param {string} directionString String specifying the direction of movement.
    */
   move(directionString) {
-    const { map } = this;
+    const { board } = this;
     let x = this.column;
     let y = this.row;
     switch (directionString) {
@@ -175,7 +176,7 @@ class Player {
       case 'down': y++; break;
       default: throw new Error(`Unrecognized directionString: ${directionString}`);
     }
-    if (map.playerCanMoveHere(x, y)) { this.setPosition(x, y); }
+    if (board.playerCanMoveHere(x, y)) { this.setPosition(x, y); }
   }
 }
 

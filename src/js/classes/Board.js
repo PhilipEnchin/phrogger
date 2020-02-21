@@ -36,10 +36,6 @@ var Board = function() {
   };
 };
 
-/** @const */ Board.prototype.ROWS_COUNT = 6;
-/** @const */ Board.prototype.COLUMN_COUNT = 5;
-/** @const */ Board.prototype.ROW_HEIGHT_PIXELS = 83;
-/** @const */ Board.prototype.COL_WIDTH_PIXELS = 101;
 /**
  * Array of image URLs whose indices correspond with the Tile enum above.
  * @const {Array.<string>}
@@ -71,21 +67,21 @@ Board.prototype.init = function(game, mapAccessories) {
   var row, col;
   var rowTypes = [];
   //Store row types in a temporary array
-  for (row = 0; row < this.ROWS_COUNT; row++) {
+  for (row = 0; row < Board.ROWS_COUNT; row++) {
     if (row === 0)
       rowTypes.push(this.Tile.WATER);
     else
       rowTypes.push(this.Tile.GRASS);
   }
   //Initialize tileTypes (using array from above) and tileCoordinates grids
-  for (col = 0; col < this.COLUMN_COUNT; col++) {
+  for (col = 0; col < Board.COLUMN_COUNT; col++) {
     this.tileCoordinates.push([]);
     this.tileTypes.push([]);
     var colPixel = col * this.COL_WIDTH_PIXELS;
-    for (row = 0; row < this.ROWS_COUNT; row++) {
+    for (row = 0; row < Board.ROWS_COUNT; row++) {
       var coordinates = {
-        x: col * this.COL_WIDTH_PIXELS,
-        y: row * this.ROW_HEIGHT_PIXELS
+        x: col * Board.COL_WIDTH_PIXELS,
+        y: row * Board.ROW_HEIGHT_PIXELS
       };
       this.tileCoordinates[col].push(coordinates);
       this.tileTypes[col].push(rowTypes[row]);
@@ -123,6 +119,7 @@ Board.prototype.setState = function(state) {
  */
 Board.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
   var newCoordinates = {};
+  console.log(this.tileCoordinates, colNumber, rowNumber);
   var coordinates = this.tileCoordinates[colNumber][rowNumber];
   //Make a copy of the coordinates object to prevent accidental manipulation
   for (var key in coordinates) {
@@ -145,7 +142,7 @@ Board.prototype.setRows = function(var_args) {
   var args = Array.prototype.slice.call(arguments);
   var remainingRows = []; //Stores rows not yet set in this invocation
   var rowArray, tileType;
-  for (var i = this.ROWS_COUNT - 1; i >= 0; i--) {
+  for (var i = Board.ROWS_COUNT - 1; i >= 0; i--) {
     remainingRows.splice(0,0,i);
   };
   while(args.length > 1){ //If there is at least one pair remaining in args
@@ -187,7 +184,7 @@ Board.prototype.setRow = function(rowNumber, tileType) {
     }
   }
   //Set tiles in this row
-  for (var col = this.COLUMN_COUNT-1; col >= 0; col--) {
+  for (var col = Board.COLUMN_COUNT-1; col >= 0; col--) {
     this.setTile(col,rowNumber,tileType);
   }
 };
@@ -298,7 +295,7 @@ Board.prototype.randomRoadYCoordinate = function() {
  */
 Board.prototype.randomRoadBoardLocation = function() {
   return {
-    column: Math.floor(Math.random()*this.COLUMN_COUNT),
+    column: Math.floor(Math.random()*Board.COLUMN_COUNT),
     row: this.roadRowNumbers[
       Math.floor(Math.random()*this.roadRowNumbers.length)]
   };
@@ -314,14 +311,14 @@ Board.prototype.randomBoardLocationInRows = function(var_args) {
   var args = Array.prototype.slice.call(arguments);
   var rowNumber
   if (args.length === 0) //No rows provided, use all possible rows
-    rowNumber = Math.floor(Math.random()*this.ROWS_COUNT);
+    rowNumber = Math.floor(Math.random()*Board.ROWS_COUNT);
   else if (args[0].constructor === Array) //Rows in an array
     rowNumber = args[0][Math.floor(Math.random()*args.length)];
   else //Rows are specified in individual arguments
     rowNumber = args[Math.floor(Math.random()*args.length)];
 
   return {
-    column: Math.floor(Math.random()*this.COLUMN_COUNT),
+    column: Math.floor(Math.random()*Board.COLUMN_COUNT),
     row: rowNumber
   };
 };
@@ -340,8 +337,8 @@ Board.prototype.playerCanMoveHere = function(x,y) {
   const { game, mapAccessories } = this;
   //If mapAccessories says player can move here, and the player isn't trying
   //to move off the game board...
-  if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLUMN_COUNT &&
-    x >= 0 && y < this.ROWS_COUNT && y >= 0) {
+  if (mapAccessories.playerCanMoveHere(x,y) && x < Board.COLUMN_COUNT &&
+    x >= 0 && y < Board.ROWS_COUNT && y >= 0) {
     //If the player is hitting the top row and isn't drowning, level is won!
     if (y === 0 && this.tileTypes[x][y] !== this.Tile.WATER)
       game.setState(game.State.WIN_LEVEL);
@@ -355,13 +352,18 @@ Board.prototype.playerCanMoveHere = function(x,y) {
  */
 Board.prototype.render = function() {
   var coordinates, image;
-  for (var row = 0; row < this.ROWS_COUNT; row++) {
-    for (var col = 0; col < this.COLUMN_COUNT; col++) {
+  for (var row = 0; row < Board.ROWS_COUNT; row++) {
+    for (var col = 0; col < Board.COLUMN_COUNT; col++) {
       coordinates = this.tileCoordinates[col][row];
       image = Resources.get(this.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
       ctx.drawImage(image, coordinates.x, coordinates.y);
     };
   };
 };
+
+/** @const */ Board.ROWS_COUNT = 6;
+/** @const */ Board.COLUMN_COUNT = 5;
+/** @const */ Board.ROW_HEIGHT_PIXELS = 83;
+/** @const */ Board.COL_WIDTH_PIXELS = 101;
 
 export default Board;
