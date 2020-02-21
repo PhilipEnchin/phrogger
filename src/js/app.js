@@ -803,7 +803,7 @@ MapAccessories.prototype.playerCanMoveHere = function(x,y) {
     game.extraLife();
   }
   //Player can collect key to make rock go away, then it disappears
-  else if (this.keyAccessory.location.column === x &&
+  else if (this.accessories.indexOf(this.keyAccessory) >= 0 && this.keyAccessory.location.column === x &&
     this.keyAccessory.location.row === y) {
     this.accessories.splice(this.accessories.indexOf(this.rockAccessory),1);
     this.accessories.splice(this.accessories.indexOf(this.keyAccessory),1);
