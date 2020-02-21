@@ -90,10 +90,10 @@ Game.prototype.State = {
 Game.prototype.init = function() {
   const {
     ROWS_COUNT, COLUMN_COUNT, ROW_HEIGHT_PIXELS, COL_WIDTH_PIXELS,
-  } = Map.prototype;
-  map.init();
+  } = Board.prototype;
+  board.init();
   enemyHandler.init();
-  player.init(this, map, enemyHandler);
+  player.init(this, board, enemyHandler);
   hud.init(this, ROWS_COUNT, ROW_HEIGHT_PIXELS, COLUMN_COUNT, COL_WIDTH_PIXELS);
 
   //Initialize high score cookie expiry (15 years off, rather permanent)
@@ -122,7 +122,7 @@ Game.prototype.init = function() {
 Game.prototype.setState = function(state) {
   this.state = state;
   hud.setState(state);
-  map.setState(state);
+  board.setState(state);
   enemyHandler.setState(state);
   player.setState(state);
   mapAccessories.setState(state)
@@ -138,7 +138,7 @@ Game.prototype.setState = function(state) {
       break;
     case this.State.WIN_LEVEL:
       this.timeRemaining = 2.0;
-      map.setRows(0,map.Tile.WATER);
+      board.setRows(0,board.Tile.WATER);
       this.setLevel(this.level+1);
       break;
     case this.State.DIED:
@@ -194,56 +194,56 @@ Game.prototype.setLevel = function(newLevel) {
   //Set game parameters per level
   switch (newLevel) {
     case 1:
-      map.setRows(
-        0,map.Tile.WATER,
-        2,map.Tile.STONE,
-        map.Tile.GRASS);
+      board.setRows(
+        0,board.Tile.WATER,
+        2,board.Tile.STONE,
+        board.Tile.GRASS);
       mapAccessories.leftMostRockPosition = 0;
       mapAccessories.leftMostKeyPosition = 3;
       enemyHandler.setSpeeds(250,300);
       enemyHandler.setSpawnIntervalAndVariance(0.75,0.8);
       break;
     case 2:
-      map.setRows(
-        1,map.Tile.STONE,
-        2,map.Tile.GRASS
+      board.setRows(
+        1,board.Tile.STONE,
+        2,board.Tile.GRASS
       );
       mapAccessories.leftMostRockPosition = 3;
       mapAccessories.leftMostKeyPosition = 2;
       break;
     case 3:
-      map.setRows(3,map.Tile.STONE);
+      board.setRows(3,board.Tile.STONE);
       enemyHandler.setSpawnIntervalAndVariance(0.4,0.6);
       enemyHandler.setSpeeds(225,325);
       break;
     case 4:
-      map.setRows(4,map.Tile.STONE);
+      board.setRows(4,board.Tile.STONE);
       mapAccessories.leftMostRockPosition = 3;
       enemyHandler.setSpawnIntervalAndVariance(0.35,0.4);
       break;
     case 5:
-      map.setRows(
-        2,map.Tile.STONE,
-        3,map.Tile.GRASS);
+      board.setRows(
+        2,board.Tile.STONE,
+        3,board.Tile.GRASS);
       break;
     case 6:
-      map.setRows(
-        1,map.Tile.GRASS,
-        3,map.Tile.STONE
+      board.setRows(
+        1,board.Tile.GRASS,
+        3,board.Tile.STONE
       );
       mapAccessories.leftMostRockPosition = 0;
       enemyHandler.setSpawnIntervalAndVariance(0.4,0.4);
       break;
     case 7:
-      map.setRows(
-        1,map.Tile.STONE,
-        4,map.Tile.GRASS
+      board.setRows(
+        1,board.Tile.STONE,
+        4,board.Tile.GRASS
       );
       mapAccessories.leftMostRockPosition = 2
       mapAccessories.leftMostKeyPosition = 3;
       break;
     case 8:
-      map.setRows(4,map.Tile.STONE);
+      board.setRows(4,board.Tile.STONE);
       break;
     default: //Level 9 and onward, make the game just a little faster
       enemyHandler.setSpawnIntervalAndVariance(
@@ -301,7 +301,7 @@ Game.prototype.decrementTimer = function(dt){
 Game.prototype.update = function(dt,now) {
   enemyHandler.update(dt,now);
   player.update(dt,now);
-  map.update(dt,now);
+  board.update(dt,now);
 
   if (this.timeRemaining > 0) //If timer is active...
     this.decrementTimer(dt);
@@ -313,7 +313,7 @@ Game.prototype.update = function(dt,now) {
  */
 Game.prototype.render = function() {
   ctx.clearRect(0,0,canvas.width,canvas.height); //Clear background
-  map.render(); //Render map
+  board.render(); //Render map
   mapAccessories.render(); //Render map accessores (rock, key, heart)
   player.render(); //Render player
   enemyHandler.render(); //Render all enemies
@@ -330,7 +330,7 @@ Game.prototype.render = function() {
  * animation used for transitioning from one map to another.
  * @constructor
  */
-var Map = function() {
+var Board = function() {
   /**
    * A 2D array of tile-types
    * @type {Array.<Array.<number>>}
@@ -358,15 +358,15 @@ var Map = function() {
   };
 };
 
-/** @const */ Map.prototype.ROWS_COUNT = 6;
-/** @const */ Map.prototype.COLUMN_COUNT = 5;
-/** @const */ Map.prototype.ROW_HEIGHT_PIXELS = 83;
-/** @const */ Map.prototype.COL_WIDTH_PIXELS = 101;
+/** @const */ Board.prototype.ROWS_COUNT = 6;
+/** @const */ Board.prototype.COLUMN_COUNT = 5;
+/** @const */ Board.prototype.ROW_HEIGHT_PIXELS = 83;
+/** @const */ Board.prototype.COL_WIDTH_PIXELS = 101;
 /**
  * Array of image URLs whose indices correspond with the Tile enum above.
  * @const {Array.<string>}
  */
-Map.prototype.IMAGE_URL_ARRAY = [
+Board.prototype.IMAGE_URL_ARRAY = [
   'images/water-block.png',
   'images/stone-block.png',
   'images/grass-block.png'
@@ -375,12 +375,12 @@ Map.prototype.IMAGE_URL_ARRAY = [
  * Enum for possible tile types
  * @enum {number}
  */
-Map.prototype.Tile = { WATER: 0, STONE: 1, GRASS: 2 };
+Board.prototype.Tile = { WATER: 0, STONE: 1, GRASS: 2 };
 /**
  * Enum for possible states of pre-level animation.
  * @enum {number}
  */
-Map.prototype.AnimationState = {
+Board.prototype.AnimationState = {
   CONTAINS_NEW_CHANGES: 0, //Queues new animation sequence
   ANIMATE: 1, //Animation in progess
   NOTHING_TO_ANIMATE: 2 //Animation complete
@@ -389,7 +389,7 @@ Map.prototype.AnimationState = {
 /**
  * Initializes game board, and caches coordinates of each tile.
  */
-Map.prototype.init = function() {
+Board.prototype.init = function() {
   var row, col;
   var rowTypes = [];
   //Store row types in a temporary array
@@ -421,13 +421,13 @@ Map.prototype.init = function() {
  * Sets up map accordinly when game state is set.
  * @param {number} state The new game state.
  */
-Map.prototype.setState = function(state) {
+Board.prototype.setState = function(state) {
   switch (state) {
     case game.State.TITLE:
       this.setRows(
         0,this.Tile.WATER,
         [1,2,3,4],this.Tile.STONE,
-        map.Tile.GRASS
+        board.Tile.GRASS
       );
       break;
   }
@@ -440,7 +440,7 @@ Map.prototype.setState = function(state) {
  * @param {number} rowNumber The row number, from top to bottom, starting at zero.
  * @return {Object.<string,number>} The coordinates of the specified tile.
  */
-Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
+Board.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
   var newCoordinates = {};
   var coordinates = this.tileCoordinates[colNumber][rowNumber];
   //Make a copy of the coordinates object to prevent accidental manipulation
@@ -457,10 +457,10 @@ Map.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumbe
  * single extra tile type argument (or if no pairs are specified, a single
  * argument) can be used to apply that tile to all the rows now already specified
  * by the previous arguments. If that last one is omitted, no additional rows are
- * changed. This method uses Map.prototype.setRow() to actually set the rows.
+ * changed. This method uses Board.prototype.setRow() to actually set the rows.
  * @param {...*} var_args See above description.
  */
-Map.prototype.setRows = function(var_args) {
+Board.prototype.setRows = function(var_args) {
   var args = Array.prototype.slice.call(arguments);
   var remainingRows = []; //Stores rows not yet set in this invocation
   var rowArray, tileType;
@@ -488,11 +488,11 @@ Map.prototype.setRows = function(var_args) {
 
 /**
  * Takes a row number and a tile type, and sets that row to that tile type. This
- * method uses Map.prototype.setTile() to actually set the individual tiles.
+ * method uses Board.prototype.setTile() to actually set the individual tiles.
  * @param {number} rowNumber The row number, from top to bottom, starting at zero.
  * @param {tileType} tileType The type of tile
  */
-Map.prototype.setRow = function(rowNumber, tileType) {
+Board.prototype.setRow = function(rowNumber, tileType) {
   if (tileType === this.Tile.STONE) { //If row is set to be a road...
     if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
       this.roadRowNumbers.push(rowNumber); //Remember this row is a road
@@ -520,7 +520,7 @@ Map.prototype.setRow = function(rowNumber, tileType) {
  * @param {number} rowNumber The row number, from top to bottom, starting at zero.
  * @param {tileType} tileType The type of tile
  */
-Map.prototype.setTile = function(colNumber, rowNumber, tileType) {
+Board.prototype.setTile = function(colNumber, rowNumber, tileType) {
   switch (game.state) {
     case game.State.PLAY:
     case game.State.TITLE:
@@ -539,7 +539,7 @@ Map.prototype.setTile = function(colNumber, rowNumber, tileType) {
  * @param {number} rowNumber The row number, from top to bottom, starting at zero.
  * @param {tileType} tileType The type of tile
  */
-Map.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType) {
+Board.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType) {
   this.pendingTileChanges.changes.push({
     location: { //The location on the game board
       column: colNumber,
@@ -559,7 +559,7 @@ Map.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType) 
  * @param {number} dt The time elapsed since the last update
  * @param {number} now The system time at the moment of invocation
  */
-Map.prototype.update = function(dt,now) {
+Board.prototype.update = function(dt,now) {
   var changes; //Array of upcoming tile changes
   switch (this.pendingTileChanges.status) {
     case this.AnimationState.NOTHING_TO_ANIMATE: break;
@@ -603,7 +603,7 @@ Map.prototype.update = function(dt,now) {
  * placed correctly on a road.
  * @return {number} A vertical pixel coordinate corresponding with a road.
  */
-Map.prototype.randomRoadYCoordinate = function() {
+Board.prototype.randomRoadYCoordinate = function() {
   var roadRowIndex = Math.floor(Math.random()*this.roadRowNumbers.length);
   var rowIndex = this.roadRowNumbers[roadRowIndex];
   return this.pixelCoordinatesForBoardCoordinates(0,rowIndex).y;
@@ -613,9 +613,9 @@ Map.prototype.randomRoadYCoordinate = function() {
  * @return {Object.<string, number>} An object that contains randomly generated
  *     row and column numbers.
  */
-Map.prototype.randomRoadBoardLocation = function() {
+Board.prototype.randomRoadBoardLocation = function() {
   return {
-    column: Math.floor(Math.random()*map.COLUMN_COUNT),
+    column: Math.floor(Math.random()*board.COLUMN_COUNT),
     row: this.roadRowNumbers[
       Math.floor(Math.random()*this.roadRowNumbers.length)]
   };
@@ -627,7 +627,7 @@ Map.prototype.randomRoadBoardLocation = function() {
  * @return {Object.<string, number>} An object that contains randomly generated
  *     row and column numbers based on the desired rows specified.
  */
-Map.prototype.randomBoardLocationInRows = function(var_args) {
+Board.prototype.randomBoardLocationInRows = function(var_args) {
   var args = Array.prototype.slice.call(arguments);
   var rowNumber
   if (args.length === 0) //No rows provided, use all possible rows
@@ -653,7 +653,7 @@ Map.prototype.randomBoardLocationInRows = function(var_args) {
  * @param {number} y A column number
  * @return {boolean} Whether the move is legal.
  */
-Map.prototype.playerCanMoveHere = function(x,y) {
+Board.prototype.playerCanMoveHere = function(x,y) {
   //If mapAccessories says player can move here, and the player isn't trying
   //to move off the game board...
   if (mapAccessories.playerCanMoveHere(x,y) && x < this.COLUMN_COUNT &&
@@ -669,7 +669,7 @@ Map.prototype.playerCanMoveHere = function(x,y) {
 /**
  * Renders the game board.
  */
-Map.prototype.render = function() {
+Board.prototype.render = function() {
   var coordinates, image;
   for (var row = 0; row < this.ROWS_COUNT; row++) {
     for (var col = 0; col < this.COLUMN_COUNT; col++) {
@@ -740,16 +740,16 @@ MapAccessories.prototype.placeAccessories = function() {
     return;
   //Rock...
   this.accessories = [];
-  var rockLocation = map.randomBoardLocationInRows(0);
+  var rockLocation = board.randomBoardLocationInRows(0);
   while (rockLocation.column < this.leftMostRockPosition)
-    rockLocation = map.randomBoardLocationInRows(0);
-  map.setTile(rockLocation.column,rockLocation.row,map.Tile.STONE);
+    rockLocation = board.randomBoardLocationInRows(0);
+  board.setTile(rockLocation.column,rockLocation.row,board.Tile.STONE);
   this.rockAccessory = this.packageAccessory(this.Type.ROCK,rockLocation);
   this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
   //Key...
-  var keyLocation = map.randomRoadBoardLocation();
+  var keyLocation = board.randomRoadBoardLocation();
   while (keyLocation.column < this.leftMostKeyPosition)
-    keyLocation = map.randomRoadBoardLocation();
+    keyLocation = board.randomRoadBoardLocation();
   this.keyAccessory = this.packageAccessory(this.Type.KEY,keyLocation);
   this.keyAccessory.coordinates.y += this.KEY_PIXEL_ADJUST;
 
@@ -758,10 +758,10 @@ MapAccessories.prototype.placeAccessories = function() {
 
   //Heart...
   if (Math.random() <= this.PROBABILITY_OF_EXTRA_LIFE) {
-    var heartLocation = map.randomRoadBoardLocation();
+    var heartLocation = board.randomRoadBoardLocation();
     while (heartLocation.column === keyLocation.column &&
       heartLocation.row === keyLocation.row)
-      heartLocation = map.randomRoadBoardLocation();
+      heartLocation = board.randomRoadBoardLocation();
     this.heartAccessory = this.packageAccessory(this.Type.HEART,heartLocation);
     this.accessories.push(this.heartAccessory);
   }
@@ -781,7 +781,7 @@ MapAccessories.prototype.packageAccessory = function(type,location) {
     accessoryType: type, //Accessory type
     location: location, //Board location
     coordinates: //Pixel coordinates
-      map.pixelCoordinatesForBoardCoordinates(location.column,location.row)
+      board.pixelCoordinatesForBoardCoordinates(location.column,location.row)
   };
 };
 
@@ -942,10 +942,10 @@ var EnemyHandler = function(){
 
 /** Initializes spawnX and retireX, which require the map to be initialized */
 EnemyHandler.prototype.init = function() {
-  this.spawnX = map.pixelCoordinatesForBoardCoordinates(0,0).x -
-    map.COL_WIDTH_PIXELS;
-  this.retireX = map.pixelCoordinatesForBoardCoordinates(map.COLUMN_COUNT-1,0).x +
-    map.COL_WIDTH_PIXELS;
+  this.spawnX = board.pixelCoordinatesForBoardCoordinates(0,0).x -
+    board.COL_WIDTH_PIXELS;
+  this.retireX = board.pixelCoordinatesForBoardCoordinates(board.COLUMN_COUNT-1,0).x +
+    board.COL_WIDTH_PIXELS;
 };
 
 /**
@@ -1031,8 +1031,8 @@ EnemyHandler.prototype.update = function(dt,now) {
         enemyObject.retireTime += this.timePaused;
       }, this);
       //Add paused time to tile entries and exits (for collisions)
-      map.roadRowNumbers.forEach(function(i){
-        var rowIndex = map.pixelCoordinatesForBoardCoordinates(0,i).y +
+      board.roadRowNumbers.forEach(function(i){
+        var rowIndex = board.pixelCoordinatesForBoardCoordinates(0,i).y +
           Enemy.PIXEL_ADJUST;
         if (this.activeEnemiesByRow[rowIndex] !== undefined) {
           this.activeEnemiesByRow[rowIndex].forEach(function(enemyObject){
@@ -1090,7 +1090,7 @@ EnemyHandler.prototype.getNewEnemy = function() {
       enemy: new Enemy(),
       retireTime: null
     };
-  var yCoordinate = map.randomRoadYCoordinate();
+  var yCoordinate = board.randomRoadYCoordinate();
   newEnemy.enemy.init(this.spawnX, yCoordinate, this.lowerSpeedLimit,
     this.upperSpeedLimit); //Initialize (or reinitialize) enemy
   return newEnemy;
@@ -1116,7 +1116,7 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
       this.packageEnemyWithEntryAndExitTimes(nakedEnemy);
     var entryTimes = enemyObjectWithEntryAndExitTimes.entryTimes;
     var rowIndex = nakedEnemy.y; //For activeEnemiesByRow...
-    var retireTime = entryTimes[map.COLUMN_COUNT+1];
+    var retireTime = entryTimes[board.COLUMN_COUNT+1];
     var rowOfEnemies = this.activeEnemiesByRow[rowIndex];
 
     //Creates the row if this is the first enemy in that row.
@@ -1133,9 +1133,9 @@ EnemyHandler.prototype.spawnNewEnemy = function(attemptIndex) {
         rowOfEnemies[rowOfEnemies.length-1].entryTimes;
       //The moment when the leftmost enemy will be completely offscreen
       var leftMostEnemyInRowExitCompletion =
-        leftMostEnemyEntryTimes[map.COLUMN_COUNT+1];
+        leftMostEnemyEntryTimes[board.COLUMN_COUNT+1];
       //The moment when the new enemy will begin to exit the screen
-      var newEnemyExitBegin = entryTimes[map.COLUMN_COUNT];
+      var newEnemyExitBegin = entryTimes[board.COLUMN_COUNT];
       //If the new enemy begins to exit before the existing any is gone,
       //then we have potential for overlap. Retire that enemy and attempt
       //another spawn.
@@ -1190,7 +1190,7 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
   var entryTimes = [];
   var exitTimes = [];
   //Seconds required to traverse a single column
-  var secondsPerColumn = map.COL_WIDTH_PIXELS / enemy.speed;
+  var secondsPerColumn = board.COL_WIDTH_PIXELS / enemy.speed;
   //Seconds by which to adjust entry times based on visual edges of sprites
   var secondsPerEntryEdgeAdjustWidth =
     (Enemy.EDGE_ADJUST_RIGHT + Player.EDGE_ADJUST_LEFT) / enemy.speed;
@@ -1199,7 +1199,7 @@ EnemyHandler.prototype.packageEnemyWithEntryAndExitTimes = function(enemy) {
     (Enemy.EDGE_ADJUST_LEFT + Player.EDGE_ADJUST_RIGHT) / enemy.speed;
 
   var now = Date.now() / 1000;
-  for (var col = map.COLUMN_COUNT + 1; col >= 0; col--) {
+  for (var col = board.COLUMN_COUNT + 1; col >= 0; col--) {
     entryTimes.splice(0, 0,
       col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
     exitTimes.splice(0, 0,
@@ -1228,7 +1228,7 @@ EnemyHandler.prototype.collisionTimeForCoordinates = function(x,y) {
     return null;
   }
 
-  var rowIndex = map.pixelCoordinatesForBoardCoordinates(x,y).y +
+  var rowIndex = board.pixelCoordinatesForBoardCoordinates(x,y).y +
     Enemy.PIXEL_ADJUST;
 
   this.potentialCollisionLocation.column = x;
@@ -1271,7 +1271,7 @@ EnemyHandler.prototype.render = function() {
 
 
 //Declare all game objects here! They'll be initialized in engine.js
-var map = new Map();
+var board = new Board();
 var mapAccessories = new MapAccessories();
 var enemyHandler = new EnemyHandler();
 var hud = new HeadsUp();
