@@ -108,12 +108,12 @@ class Player {
 
     const tile = board.tileTypes[this.column][this.row];
     switch (tile) {
-      case board.Tile.STONE: // Road! Calculate upcoming collisions!
+      case Board.Tile.STONE: // Road! Calculate upcoming collisions!
         this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column, this.row);
         break;
-      case board.Tile.WATER: // Water! Dead :(
+      case Board.Tile.WATER: // Water! Dead :(
         this.die();
-      case board.Tile.GRASS: // Grass! Safe! (Cancel collision)
+      case Board.Tile.GRASS: // Grass! Safe! (Cancel collision)
         this.collisionTime = enemyHandler.collisionTimeForCoordinates();
         break;
       default: throw new Error(`Unrecognized tile type: ${tile}`);

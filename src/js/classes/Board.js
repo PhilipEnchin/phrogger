@@ -37,30 +37,6 @@ var Board = function() {
 };
 
 /**
- * Array of image URLs whose indices correspond with the Tile enum above.
- * @const {Array.<string>}
- */
-Board.prototype.IMAGE_URL_ARRAY = [
-  'images/water-block.png',
-  'images/stone-block.png',
-  'images/grass-block.png'
-];
-/**
- * Enum for possible tile types
- * @enum {number}
- */
-Board.prototype.Tile = { WATER: 0, STONE: 1, GRASS: 2 };
-/**
- * Enum for possible states of pre-level animation.
- * @enum {number}
- */
-Board.prototype.AnimationState = {
-  CONTAINS_NEW_CHANGES: 0, //Queues new animation sequence
-  ANIMATE: 1, //Animation in progess
-  NOTHING_TO_ANIMATE: 2 //Animation complete
-};
-
-/**
  * Initializes game board, and caches coordinates of each tile.
  */
 Board.prototype.init = function(game, mapAccessories) {
@@ -69,9 +45,9 @@ Board.prototype.init = function(game, mapAccessories) {
   //Store row types in a temporary array
   for (row = 0; row < Board.ROWS_COUNT; row++) {
     if (row === 0)
-      rowTypes.push(this.Tile.WATER);
+      rowTypes.push(Board.Tile.WATER);
     else
-      rowTypes.push(this.Tile.GRASS);
+      rowTypes.push(Board.Tile.GRASS);
   }
   //Initialize tileTypes (using array from above) and tileCoordinates grids
   for (col = 0; col < Board.COLUMN_COUNT; col++) {
@@ -88,7 +64,7 @@ Board.prototype.init = function(game, mapAccessories) {
     }
   }
 
-  this.pendingTileChanges.status = this.AnimationState.NOTHING_TO_ANIMATE;
+  this.pendingTileChanges.status = Board.AnimationState.NOTHING_TO_ANIMATE;
 
   this.game = game;
   this.mapAccessories = mapAccessories;
@@ -102,9 +78,9 @@ Board.prototype.setState = function(state) {
   switch (state) {
     case this.game.State.TITLE:
       this.setRows(
-        0,this.Tile.WATER,
-        [1,2,3,4],this.Tile.STONE,
-        this.Tile.GRASS
+        0,Board.Tile.WATER,
+        [1,2,3,4],Board.Tile.STONE,
+        Board.Tile.GRASS
       );
       break;
   }
@@ -119,7 +95,6 @@ Board.prototype.setState = function(state) {
  */
 Board.prototype.pixelCoordinatesForBoardCoordinates = function(colNumber, rowNumber) {
   var newCoordinates = {};
-  console.log(this.tileCoordinates, colNumber, rowNumber);
   var coordinates = this.tileCoordinates[colNumber][rowNumber];
   //Make a copy of the coordinates object to prevent accidental manipulation
   for (var key in coordinates) {
@@ -171,7 +146,7 @@ Board.prototype.setRows = function(var_args) {
  * @param {tileType} tileType The type of tile
  */
 Board.prototype.setRow = function(rowNumber, tileType) {
-  if (tileType === this.Tile.STONE) { //If row is set to be a road...
+  if (tileType === Board.Tile.STONE) { //If row is set to be a road...
     if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
       this.roadRowNumbers.push(rowNumber); //Remember this row is a road
     } else {
@@ -227,7 +202,7 @@ Board.prototype.addTileChangeToPending = function(colNumber, rowNumber, tileType
     tileType: tileType, //The type of tile
     time: Math.random() //A randomly generated time (processed in update())
   });
-  this.pendingTileChanges.status = this.AnimationState.CONTAINS_NEW_CHANGES;
+  this.pendingTileChanges.status = Board.AnimationState.CONTAINS_NEW_CHANGES;
 };
 
 /**
@@ -242,8 +217,8 @@ Board.prototype.update = function(dt,now) {
   const { game } = this;
   var changes; //Array of upcoming tile changes
   switch (this.pendingTileChanges.status) {
-    case this.AnimationState.NOTHING_TO_ANIMATE: break;
-    case this.AnimationState.CONTAINS_NEW_CHANGES:
+    case Board.AnimationState.NOTHING_TO_ANIMATE: break;
+    case Board.AnimationState.CONTAINS_NEW_CHANGES:
       changes = this.pendingTileChanges.changes;
       changes.sort(function(a,b){ //Sort by random times in ascening order
         return a.time-b.time; //So animation goes from fast to slow
@@ -261,8 +236,8 @@ Board.prototype.update = function(dt,now) {
         change.time *= game.timeRemaining * 9 / totalTime / 10;
         change.time += now;
       });
-      this.pendingTileChanges.status = this.AnimationState.ANIMATE;
-    case this.AnimationState.ANIMATE:
+      this.pendingTileChanges.status = Board.AnimationState.ANIMATE;
+    case Board.AnimationState.ANIMATE:
       changes = this.pendingTileChanges.changes;
       var change, location;
       //Animate changes that are to be complete at this time
@@ -273,7 +248,7 @@ Board.prototype.update = function(dt,now) {
       }
       if (changes.length === 0) //No tile changes left, finish animation
         this.pendingTileChanges.status =
-          this.AnimationState.NOTHING_TO_ANIMATE;
+          Board.AnimationState.NOTHING_TO_ANIMATE;
   }
 };
 
@@ -340,7 +315,7 @@ Board.prototype.playerCanMoveHere = function(x,y) {
   if (mapAccessories.playerCanMoveHere(x,y) && x < Board.COLUMN_COUNT &&
     x >= 0 && y < Board.ROWS_COUNT && y >= 0) {
     //If the player is hitting the top row and isn't drowning, level is won!
-    if (y === 0 && this.tileTypes[x][y] !== this.Tile.WATER)
+    if (y === 0 && this.tileTypes[x][y] !== Board.Tile.WATER)
       game.setState(game.State.WIN_LEVEL);
     return true; //Move is legal
   }
@@ -355,7 +330,7 @@ Board.prototype.render = function() {
   for (var row = 0; row < Board.ROWS_COUNT; row++) {
     for (var col = 0; col < Board.COLUMN_COUNT; col++) {
       coordinates = this.tileCoordinates[col][row];
-      image = Resources.get(this.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
+      image = Resources.get(Board.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
       ctx.drawImage(image, coordinates.x, coordinates.y);
     };
   };
@@ -365,5 +340,29 @@ Board.prototype.render = function() {
 /** @const */ Board.COLUMN_COUNT = 5;
 /** @const */ Board.ROW_HEIGHT_PIXELS = 83;
 /** @const */ Board.COL_WIDTH_PIXELS = 101;
+
+/**
+ * Array of image URLs whose indices correspond with the Tile enum above.
+ * @const {Array.<string>}
+ */
+Board.IMAGE_URL_ARRAY = [
+  'images/water-block.png',
+  'images/stone-block.png',
+  'images/grass-block.png',
+];
+/**
+ * Enum for possible tile types
+ * @enum {number}
+ */
+Board.Tile = { WATER: 0, STONE: 1, GRASS: 2 };
+/**
+ * Enum for possible states of pre-level animation.
+ * @enum {number}
+ */
+Board.AnimationState = {
+  CONTAINS_NEW_CHANGES: 0, // Queues new animation sequence
+  ANIMATE: 1, // Animation in progess
+  NOTHING_TO_ANIMATE: 2, // Animation complete
+};
 
 export default Board;
