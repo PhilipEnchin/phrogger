@@ -37,24 +37,6 @@ MapAccessories.prototype.init = function (game, board) {
 };
 
 /**
- * Enum for possible accessory types.
- * @enum {number}
- */
-MapAccessories.prototype.Type = { KEY: 0, ROCK: 1, HEART: 2 };
-/**
- * Array of image URLs that correspond with the possible accessory types.
- * @const {Array.<string>}
- */
-MapAccessories.prototype.IMAGE_URL_ARRAY = [
-  'images/Key.png',
-  'images/Rock.png',
-  'images/Heart.png'
-];
-/** @const */ MapAccessories.prototype.ROCK_PIXEL_ADJUST = -25;
-/** @const */ MapAccessories.prototype.KEY_PIXEL_ADJUST = -15;
-/** @const */ MapAccessories.prototype.PROBABILITY_OF_EXTRA_LIFE = 100/20;
-
-/**
  * Places accessories on game board before a level begins.
  */
 MapAccessories.prototype.placeAccessories = function() {
@@ -69,25 +51,25 @@ MapAccessories.prototype.placeAccessories = function() {
   while (rockLocation.column < this.leftMostRockPosition)
     rockLocation = Board.randomBoardLocationInRows(0);
   board.setTile(rockLocation.column,rockLocation.row,Board.Tile.STONE);
-  this.rockAccessory = this.packageAccessory(this.Type.ROCK,rockLocation);
-  this.rockAccessory.coordinates.y += this.ROCK_PIXEL_ADJUST;
+  this.rockAccessory = this.packageAccessory(MapAccessories.Type.ROCK,rockLocation);
+  this.rockAccessory.coordinates.y += MapAccessories.ROCK_PIXEL_ADJUST;
   //Key...
   var keyLocation = board.randomRoadBoardLocation();
   while (keyLocation.column < this.leftMostKeyPosition)
     keyLocation = board.randomRoadBoardLocation();
-  this.keyAccessory = this.packageAccessory(this.Type.KEY,keyLocation);
-  this.keyAccessory.coordinates.y += this.KEY_PIXEL_ADJUST;
+  this.keyAccessory = this.packageAccessory(MapAccessories.Type.KEY,keyLocation);
+  this.keyAccessory.coordinates.y += MapAccessories.KEY_PIXEL_ADJUST;
 
   //Add rock and key to accessories array
   this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
 
   //Heart...
-  if (Math.random() <= this.PROBABILITY_OF_EXTRA_LIFE) {
+  if (Math.random() <= MapAccessories.PROBABILITY_OF_EXTRA_LIFE) {
     var heartLocation = board.randomRoadBoardLocation();
     while (heartLocation.column === keyLocation.column &&
       heartLocation.row === keyLocation.row)
       heartLocation = board.randomRoadBoardLocation();
-    this.heartAccessory = this.packageAccessory(this.Type.HEART,heartLocation);
+    this.heartAccessory = this.packageAccessory(MapAccessories.Type.HEART,heartLocation);
     this.accessories.push(this.heartAccessory);
   }
 };
@@ -182,11 +164,29 @@ MapAccessories.prototype.render = function() {
   if (!this.hidden) {
     var image, coordinates;
     this.accessories.forEach(function(accessoryObject){
-      image = Resources.get(this.IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
+      image = Resources.get(MapAccessories.IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
       coordinates = accessoryObject.coordinates;
       ctx.drawImage(image,coordinates.x,coordinates.y);
     },this);
   }
 };
+
+/**
+ * Enum for possible accessory types.
+ * @enum {number}
+ */
+MapAccessories.Type = { KEY: 0, ROCK: 1, HEART: 2 };
+/**
+ * Array of image URLs that correspond with the possible accessory types.
+ * @const {Array.<string>}
+ */
+MapAccessories.IMAGE_URL_ARRAY = [
+  'images/Key.png',
+  'images/Rock.png',
+  'images/Heart.png'
+];
+/** @const */ MapAccessories.ROCK_PIXEL_ADJUST = -25;
+/** @const */ MapAccessories.KEY_PIXEL_ADJUST = -15;
+/** @const */ MapAccessories.PROBABILITY_OF_EXTRA_LIFE = 1/20;
 
 export default MapAccessories;
