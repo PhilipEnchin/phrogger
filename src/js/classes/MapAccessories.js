@@ -14,11 +14,11 @@ class MapAccessories {
      */
     this.accessories = [];
     /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
-    this.rockAccessory;
+    this.rockAccessory = null;
     /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
-    this.keyAccessory;
+    this.keyAccessory = null;
     /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
-    this.heartAccessory;
+    this.heartAccessory = null;
     /** @type{boolean} */ this.hidden = true;
     /**
      * The leftmost column number where the rock might end up in a given level.
@@ -30,50 +30,51 @@ class MapAccessories {
      * @type {number}
      */
     this.leftMostKeyPosition = 0;
-  };
+  }
 
   init(game, board) {
     this.game = game;
     this.board = board;
-  };
+  }
 
   /**
    * Places accessories on game board before a level begins.
    */
   placeAccessories() {
     const { board } = this;
-    //If rock and key are already placed, don't place them again!
-    if (this.accessories.indexOf(this.rockAccessory) !== -1 &&
-      this.accessories.indexOf(this.keyAccessory) !== -1)
-      return;
-    //Rock...
+    // If rock and key are already placed, don't place them again!
+    if (this.accessories.indexOf(this.rockAccessory) !== -1
+      && this.accessories.indexOf(this.keyAccessory) !== -1) { return; }
+    // Rock...
     this.accessories = [];
-    var rockLocation = Board.randomBoardLocationInRows(0);
-    while (rockLocation.column < this.leftMostRockPosition)
+    let rockLocation = Board.randomBoardLocationInRows(0);
+    while (rockLocation.column < this.leftMostRockPosition) {
       rockLocation = Board.randomBoardLocationInRows(0);
-    board.setTile(rockLocation.column,rockLocation.row,Board.Tile.STONE);
-    this.rockAccessory = this.packageAccessory(MapAccessories.Type.ROCK,rockLocation);
+    }
+    board.setTile(rockLocation.column, rockLocation.row, Board.Tile.STONE);
+    this.rockAccessory = this.packageAccessory(MapAccessories.Type.ROCK, rockLocation);
     this.rockAccessory.coordinates.y += MapAccessories.ROCK_PIXEL_ADJUST;
-    //Key...
-    var keyLocation = board.randomRoadBoardLocation();
-    while (keyLocation.column < this.leftMostKeyPosition)
+    // Key...
+    let keyLocation = board.randomRoadBoardLocation();
+    while (keyLocation.column < this.leftMostKeyPosition) {
       keyLocation = board.randomRoadBoardLocation();
-    this.keyAccessory = this.packageAccessory(MapAccessories.Type.KEY,keyLocation);
+    }
+    this.keyAccessory = this.packageAccessory(MapAccessories.Type.KEY, keyLocation);
     this.keyAccessory.coordinates.y += MapAccessories.KEY_PIXEL_ADJUST;
 
-    //Add rock and key to accessories array
-    this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
+    // Add rock and key to accessories array
+    this.accessories.splice(0, 0, this.rockAccessory, this.keyAccessory);
 
-    //Heart...
+    // Heart...
     if (Math.random() <= MapAccessories.PROBABILITY_OF_EXTRA_LIFE) {
-      var heartLocation = board.randomRoadBoardLocation();
-      while (heartLocation.column === keyLocation.column &&
-        heartLocation.row === keyLocation.row)
+      let heartLocation = board.randomRoadBoardLocation();
+      while (heartLocation.column === keyLocation.column && heartLocation.row === keyLocation.row) {
         heartLocation = board.randomRoadBoardLocation();
-      this.heartAccessory = this.packageAccessory(MapAccessories.Type.HEART,heartLocation);
+      }
+      this.heartAccessory = this.packageAccessory(MapAccessories.Type.HEART, heartLocation);
       this.accessories.push(this.heartAccessory);
     }
-  };
+  }
 
   /**
    * Packages the accessory and its location (both board- and pixel-coordinates)
@@ -84,14 +85,13 @@ class MapAccessories {
    *     contains the type of accessory, its row-column coordinates, and its pixel
    *     coordinates.
    */
-  packageAccessory(type,location) {
+  packageAccessory(accessoryType, location) {
     return {
-      accessoryType: type, //Accessory type
-      location: location, //Board location
-      coordinates: //Pixel coordinates
-        this.board.pixelCoordinatesForBoardCoordinates(location.column,location.row)
+      accessoryType,
+      location,
+      coordinates: this.board.pixelCoordinatesForBoardCoordinates(location.column, location.row),
     };
-  };
+  }
 
   /**
    * Returns whether the move is legal, taking into account map accessories, and
@@ -101,27 +101,27 @@ class MapAccessories {
    * @param {number} y Row number.
    * @return {boolean} Whether the move is legal, looking only at map accessories.
    */
-  playerCanMoveHere(x,y) {
-    //Player can't occupy the same space as the rock
-    if (this.accessories.indexOf(this.rockAccessory) !== -1 &&
-      this.rockAccessory.location.column === x &&
-      this.rockAccessory.location.row === y)
-      return false; //Move is illegal
-    //Player can collect heart for an extra life, then it disappears
-    else if (this.heartAccessory && this.heartAccessory.location.column === x &&
-      this.heartAccessory.location.row === y) {
-      this.accessories.splice(this.accessories.indexOf(this.heartAccessory),1);
+  playerCanMoveHere(x, y) {
+    // Player can't occupy the same space as the rock
+    if (this.accessories.indexOf(this.rockAccessory) !== -1
+      && this.rockAccessory.location.column === x
+      && this.rockAccessory.location.row === y) {
+      return false; // Move is illegal
+    }
+    // Player can collect heart for an extra life, then it disappears
+    if (this.heartAccessory && this.heartAccessory.location.column === x
+      && this.heartAccessory.location.row === y) {
+      this.accessories.splice(this.accessories.indexOf(this.heartAccessory), 1);
       this.heartAccessory = null;
       this.game.extraLife();
+    // Player can collect key to make rock go away, then it disappears
+    } else if (this.accessories.includes(this.keyAccessory)
+    && this.keyAccessory.location.column === x && this.keyAccessory.location.row === y) {
+      this.accessories.splice(this.accessories.indexOf(this.rockAccessory), 1);
+      this.accessories.splice(this.accessories.indexOf(this.keyAccessory), 1);
     }
-    //Player can collect key to make rock go away, then it disappears
-    else if (this.accessories.indexOf(this.keyAccessory) >= 0 && this.keyAccessory.location.column === x &&
-      this.keyAccessory.location.row === y) {
-      this.accessories.splice(this.accessories.indexOf(this.rockAccessory),1);
-      this.accessories.splice(this.accessories.indexOf(this.keyAccessory),1);
-    }
-    return true; //Move is legal
-  };
+    return true; // Move is legal
+  }
 
   /**
    * Changes settings in the MapAccessories object as a result of a change in game
@@ -130,19 +130,19 @@ class MapAccessories {
    */
   setState(state) {
     const { game } = this;
-    switch(state) {
+    switch (state) {
       case game.State.LEVEL_TITLE:
         this.hidden = true;
         this.placeAccessories();
         break;
       case game.State.REINCARNATE:
         this.hidden = true;
-        this.accessories.splice(0,0,this.rockAccessory,this.keyAccessory);
+        this.accessories.splice(0, 0, this.rockAccessory, this.keyAccessory);
         break;
       case game.State.PLAY:
         this.hidden = false;
         break;
-      case game.State.DIED   :
+      case game.State.DIED:
         this.hidden = false;
         this.heartAccessory = null;
         this.accessories = [];
@@ -156,21 +156,22 @@ class MapAccessories {
       default:
         this.hidden = true;
     }
-  };
+  }
 
   /**
    * Renders all active map accessories.
    */
   render() {
     if (!this.hidden) {
-      var image, coordinates;
-      this.accessories.forEach(function(accessoryObject){
+      let image;
+      let coordinates;
+      this.accessories.forEach(accessoryObject => {
         image = Resources.get(MapAccessories.IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
         coordinates = accessoryObject.coordinates;
-        ctx.drawImage(image,coordinates.x,coordinates.y);
-      },this);
+        ctx.drawImage(image, coordinates.x, coordinates.y);
+      }, this);
     }
-  };
+  }
 }
 
 /**
@@ -185,10 +186,10 @@ MapAccessories.Type = { KEY: 0, ROCK: 1, HEART: 2 };
 MapAccessories.IMAGE_URL_ARRAY = [
   'images/Key.png',
   'images/Rock.png',
-  'images/Heart.png'
+  'images/Heart.png',
 ];
 /** @const */ MapAccessories.ROCK_PIXEL_ADJUST = -25;
 /** @const */ MapAccessories.KEY_PIXEL_ADJUST = -15;
-/** @const */ MapAccessories.PROBABILITY_OF_EXTRA_LIFE = 1/20;
+/** @const */ MapAccessories.PROBABILITY_OF_EXTRA_LIFE = 1 / 20;
 
 export default MapAccessories;
