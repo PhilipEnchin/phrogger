@@ -1,5 +1,4 @@
-import Game from './Game';
-import { width, height } from '../constants';
+import { width, height, GAME_STATE } from '../constants';
 
 /**
  * Object representing the heads-up display - lives remaining, level number,
@@ -92,8 +91,11 @@ class HeadsUp {
    */
   setState(state) {
     const { game } = this;
+    const {
+      TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
+    } = GAME_STATE;
     switch (state) {
-      case Game.State.TITLE:
+      case TITLE:
         this.levelText = '';
         this.livesText = '';
         this.bigText = GAME_TITLE;
@@ -104,35 +106,35 @@ class HeadsUp {
           (game.highScore > 0) ? `High score: Level ${game.highScore}` : '',
         ];
         break;
-      case Game.State.INSTRUCTIONS:
+      case INSTRUCTIONS:
         this.bigText = '';
         this.instructionText = GAME_INSTRUCTIONS;
         break;
-      case Game.State.LEVEL_TITLE:
-      case Game.State.REINCARNATE:
+      case LEVEL_TITLE:
+      case REINCARNATE:
         this.bigText = levelPrefix + game.level;
         this.instructionText = livesPrefix + game.lives;
         this.bigTextSize = PRE_LEVEL_TEXT_SIZE;
         this.levelText = '';
         this.livesText = '';
         break;
-      case Game.State.PLAY:
+      case PLAY:
         this.levelText = levelPrefix + game.level;
         this.livesText = livesPrefix + game.lives;
         this.bigText = '';
         this.instructionText = '';
         break;
-      case Game.State.PAUSED:
+      case PAUSED:
         this.bigText = 'PAUSED';
         this.bigTextSize = PAUSED_TEXT_SIZE;
         break;
-      case Game.State.WIN_LEVEL:
+      case WIN_LEVEL:
         this.bigText = WIN_TEXTS[Math.floor(Math.random() * WIN_TEXTS.length)];
         break;
-      case Game.State.DIED:
+      case DIED:
         this.bigText = DIE_TEXTS[Math.floor(Math.random() * DIE_TEXTS.length)];
         break;
-      case Game.State.GAME_OVER:
+      case GAME_OVER:
         this.bigText = 'Game over';
         if (game.distanceToHighScore < 0 && -game.distanceToHighScore !== game.highScore) {
           this.instructionText = [

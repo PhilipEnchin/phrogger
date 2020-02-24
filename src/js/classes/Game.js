@@ -3,7 +3,7 @@ import EnemyHandler from './EnemyHandler';
 import HeadsUp from './HeadsUp';
 import MapAccessories from './MapAccessories';
 import Player from './Player';
-import { width, height } from '../constants';
+import { width, height, GAME_STATE } from '../constants';
 
 const ALLOWED_KEYS = {
   32: 'space', // spacebar
@@ -104,7 +104,7 @@ class Game {
       this.highScore = 0;
     }
 
-    this.setState(Game.State.TITLE);
+    this.setState(GAME_STATE.TITLE);
   }
 
   /**
@@ -115,7 +115,7 @@ class Game {
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
-    } = Game.State;
+    } = GAME_STATE;
 
     this.state = state;
     this.hud.setState(state);
@@ -163,20 +163,20 @@ class Game {
         this.player.handleInput(keyString);
         break;
       case 'pause':
-        if (this.state === Game.State.PLAY) {
-          this.setState(Game.State.PAUSED);
-        } else if (this.state === Game.State.PAUSED) {
-          this.setState(Game.State.PLAY);
+        if (this.state === GAME_STATE.PLAY) {
+          this.setState(GAME_STATE.PAUSED);
+        } else if (this.state === GAME_STATE.PAUSED) {
+          this.setState(GAME_STATE.PLAY);
         }
         break;
       case 'space':
-        if (this.state === Game.State.TITLE) {
-          this.setState(Game.State.INSTRUCTIONS);
-        } else if (this.state === Game.State.INSTRUCTIONS) {
+        if (this.state === GAME_STATE.TITLE) {
+          this.setState(GAME_STATE.INSTRUCTIONS);
+        } else if (this.state === GAME_STATE.INSTRUCTIONS) {
           this.setLevel(1);
-          this.setState(Game.State.LEVEL_TITLE);
-        } else if (this.state === Game.State.GAME_OVER) {
-          this.setState(Game.State.TITLE);
+          this.setState(GAME_STATE.LEVEL_TITLE);
+        } else if (this.state === GAME_STATE.GAME_OVER) {
+          this.setState(GAME_STATE.TITLE);
         }
         break;
       default: throw new Error(`Unrecognized keyString: ${keyString}`);
@@ -273,9 +273,9 @@ class Game {
    */
   died() {
     if (--this.lives >= 0) { // At least one more life available
-      this.setState(Game.State.REINCARNATE);
+      this.setState(GAME_STATE.REINCARNATE);
     } else { // No more lives, game over.
-      this.setState(Game.State.GAME_OVER);
+      this.setState(GAME_STATE.GAME_OVER);
     }
   }
 
@@ -293,10 +293,10 @@ class Game {
   decrementTimer(dt) {
     if ((this.timeRemaining -= dt) <= 0) {
       switch (this.state) {
-        case Game.State.LEVEL_TITLE:
-        case Game.State.REINCARNATE: this.setState(Game.State.PLAY); break;
-        case Game.State.WIN_LEVEL: this.setState(Game.State.LEVEL_TITLE); break;
-        case Game.State.DIED: this.died(); break;
+        case GAME_STATE.LEVEL_TITLE:
+        case GAME_STATE.REINCARNATE: this.setState(GAME_STATE.PLAY); break;
+        case GAME_STATE.WIN_LEVEL: this.setState(GAME_STATE.LEVEL_TITLE); break;
+        case GAME_STATE.DIED: this.died(); break;
         default: throw new Error(`Unrecognized game state: ${this.state}`);
       }
     }
@@ -337,20 +337,5 @@ class Game {
 * @const
 */
 Game.HIGH_SCORE_COOKIE_KEY = 'highScore';
-/**
-* Enum for possible game states.
-* @enum {number}
-*/
-Game.State = {
-  TITLE: 0, // Title screen
-  INSTRUCTIONS: 1, // Instructions displayed after title screen
-  LEVEL_TITLE: 2, // Level title screen (as in, LEVEL 1. FIGHT!)
-  PLAY: 3,
-  PAUSED: 4,
-  GAME_OVER: 5,
-  DIED: 6, // Player just died (next state will be REINCARNATE or GAME_OVER)
-  WIN_LEVEL: 7, // Player has just passed level
-  REINCARNATE: 8, // Like LEVEL_TITLE, but with small differences
-};
 
 export default Game;

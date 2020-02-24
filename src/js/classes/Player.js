@@ -1,6 +1,6 @@
 import Board from './Board';
-import Game from './Game';
 import Resources from '../resources';
+import { GAME_STATE } from '../constants';
 
 /**
  * The Player object represents the player on the screen and handles input that
@@ -38,40 +38,43 @@ class Player {
    * @param {number} state New game state.
    */
   setState(state) {
+    const {
+      TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
+    } = GAME_STATE;
     switch (state) {
-      case Game.State.TITLE:
+      case TITLE:
         this.hidden = false;
         this.moveable = false;
         this.setPosition((Board.COLUMN_COUNT - 1) / 2, Board.ROWS_COUNT - 1);
         this.collisionDetectionOn = false;
         break;
-      case Game.State.INSTRUCTIONS:
-      case Game.State.LEVEL_TITLE:
-      case Game.State.REINCARNATE:
+      case INSTRUCTIONS:
+      case LEVEL_TITLE:
+      case REINCARNATE:
         this.hidden = false;
         this.moveable = false;
         this.setPosition((Board.COLUMN_COUNT - 1) / 2, Board.ROWS_COUNT - 1);
         break;
-      case Game.State.PLAY:
+      case PLAY:
         this.collisionDetectionOn = true;
         this.hidden = false;
         this.moveable = true;
         break;
-      case Game.State.PAUSED:
+      case PAUSED:
         this.collisionDetectionOn = false;
         this.hidden = true;
         this.moveable = false;
         break;
-      case Game.State.DIED:
+      case DIED:
         this.collisionDetectionOn = false;
         this.hidden = false;
         this.moveable = false;
-      case Game.State.WIN_LEVEL:
+      case WIN_LEVEL:
         this.collisionDetectionOn = false;
         this.moveable = false;
         this.hidden = false;
         break;
-      case Game.State.GAME_OVER: break;
+      case GAME_OVER: break;
       default: throw new Error(`Unrecognized game state: ${state}`);
     }
   }
@@ -144,7 +147,7 @@ class Player {
    */
   die() {
     const { game } = this;
-    game.setState(Game.State.DIED);
+    game.setState(GAME_STATE.DIED);
   }
 
   /**

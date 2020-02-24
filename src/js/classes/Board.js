@@ -1,5 +1,5 @@
-import Game from './Game';
 import Resources from '../resources';
+import { GAME_STATE } from '../constants';
 
 /**
  * The Board class deals with anything relating to the game board. It has methods
@@ -82,7 +82,7 @@ class Board {
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
-    } = Game.State;
+    } = GAME_STATE;
     switch (state) {
       case TITLE:
         this.setRows(
@@ -188,8 +188,8 @@ class Board {
   setTile(colNumber, rowNumber, tileType) {
     const { game } = this;
     switch (game.state) {
-      case Game.State.PLAY:
-      case Game.State.TITLE:
+      case GAME_STATE.PLAY:
+      case GAME_STATE.TITLE:
         this.tileTypes[colNumber][rowNumber] = tileType;
         break;
       default: // If the state isn't specified above, animate this change
@@ -305,7 +305,7 @@ class Board {
     // to move off the game board...
     if (ma.playerCanMoveHere(x, y) && x < COLUMN_COUNT && x >= 0 && y < ROWS_COUNT && y >= 0) {
       // If the player is hitting the top row and isn't drowning, level is won!
-      if (y === 0 && this.tileTypes[x][y] !== Tile.WATER) { game.setState(Game.State.WIN_LEVEL); }
+      if (y === 0 && this.tileTypes[x][y] !== Tile.WATER) { game.setState(GAME_STATE.WIN_LEVEL); }
       return true; // Move is legal
     }
     return false; // Move is illegal

@@ -1,7 +1,7 @@
 import Board from './Board';
 import Enemy from './Enemy';
-import Game from './Game';
 import Player from './Player';
+import { GAME_STATE } from '../constants';
 
 /**
  * Puts the Enemy object inside another object with entry and exit times.
@@ -119,7 +119,7 @@ class EnemyHandler {
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
-    } = Game.State;
+    } = GAME_STATE;
     switch (state) {
       case TITLE:
         this.moveable = true;

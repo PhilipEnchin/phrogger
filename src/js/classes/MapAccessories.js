@@ -1,6 +1,6 @@
 import Board from './Board';
-import Game from './Game';
 import Resources from '../resources';
+import { GAME_STATE } from '../constants';
 
 /**
  * The MapAccessories class deals with objects that can be placed on the map at
@@ -132,31 +132,39 @@ class MapAccessories {
    * @param {number} state The new game state.
    */
   setState(state) {
+    const {
+      TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
+    } = GAME_STATE;
     switch (state) {
-      case Game.State.LEVEL_TITLE:
+      case LEVEL_TITLE:
         this.hidden = true;
         this.placeAccessories();
         break;
-      case Game.State.REINCARNATE:
+      case REINCARNATE:
         this.hidden = true;
         this.accessories.splice(0, 0, this.rockAccessory, this.keyAccessory);
         break;
-      case Game.State.PLAY:
+      case PLAY:
         this.hidden = false;
         break;
-      case Game.State.DIED:
+      case DIED:
         this.hidden = false;
         this.heartAccessory = null;
         this.accessories = [];
         break;
-      case Game.State.GAME_OVER:
+      case GAME_OVER:
         this.hidden = true;
         this.rockAccessory = null;
         this.keyAccessory = null;
         this.accessories = [];
         break;
-      default:
+      case TITLE:
+      case INSTRUCTIONS:
+      case PAUSED:
+      case WIN_LEVEL:
         this.hidden = true;
+        break;
+      default: throw new Error(`Unrecognized game state: ${state}`);
     }
   }
 
