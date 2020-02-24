@@ -300,12 +300,12 @@ class Board {
    */
   playerCanMoveHere(x, y) {
     const { game, mapAccessories: ma } = this;
-    const { COLUMN_COUNT, ROWS_COUNT, Tile } = Board;
+    const { COLUMN_COUNT, ROWS_COUNT } = Board;
     // If mapAccessories says player can move here, and the player isn't trying
     // to move off the game board...
     if (ma.playerCanMoveHere(x, y) && x < COLUMN_COUNT && x >= 0 && y < ROWS_COUNT && y >= 0) {
       // If the player is hitting the top row and isn't drowning, level is won!
-      if (y === 0 && this.tileTypes[x][y] !== Tile.WATER) { game.setState(GAME_STATE.WIN_LEVEL); }
+      if (y === 0 && this.tileTypes[x][y] !== TILE.WATER) { game.setState(GAME_STATE.WIN_LEVEL); }
       return true; // Move is legal
     }
     return false; // Move is illegal
