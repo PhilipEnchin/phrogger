@@ -1,5 +1,5 @@
 import Resources from '../resources';
-import { GAME_STATE, TILE } from '../constants';
+import { GAME_STATE, TILE, COL_WIDTH_PIXELS } from '../constants';
 
 /**
  * The Board class deals with anything relating to the game board. It has methods
@@ -61,7 +61,7 @@ class Board {
       this.tileTypes.push([]);
       for (row = 0; row < Board.ROWS_COUNT; row++) {
         const coordinates = {
-          x: col * Board.COL_WIDTH_PIXELS,
+          x: col * COL_WIDTH_PIXELS,
           y: row * Board.ROW_HEIGHT_PIXELS,
         };
         this.tileCoordinates[col].push(coordinates);
@@ -330,7 +330,6 @@ class Board {
 /** @const */ Board.ROWS_COUNT = 6;
 /** @const */ Board.COLUMN_COUNT = 5;
 /** @const */ Board.ROW_HEIGHT_PIXELS = 83;
-/** @const */ Board.COL_WIDTH_PIXELS = 101;
 
 /**
  * Array of image URLs whose indices correspond with the Tile enum above.

@@ -1,7 +1,7 @@
 import Board from './Board';
 import Enemy from './Enemy';
 import Player from './Player';
-import { GAME_STATE } from '../constants';
+import { GAME_STATE, COL_WIDTH_PIXELS } from '../constants';
 
 /**
  * Puts the Enemy object inside another object with entry and exit times.
@@ -12,7 +12,7 @@ const packageEnemyWithEntryAndExitTimes = enemy => {
   const entryTimes = [];
   const exitTimes = [];
   // Seconds required to traverse a single column
-  const secondsPerColumn = Board.COL_WIDTH_PIXELS / enemy.speed;
+  const secondsPerColumn = COL_WIDTH_PIXELS / enemy.speed;
   // Seconds by which to adjust entry times based on visual edges of sprites
   const secondsPerEntryEdgeAdjustWidth = (Enemy.EDGE_ADJUST_RIGHT + Player.EDGE_ADJUST_LEFT)
     / enemy.speed;
@@ -103,9 +103,9 @@ class EnemyHandler {
 
   /** Initializes spawnX and retireX, which require the map to be initialized */
   init(game, board, player) {
-    this.spawnX = board.pixelCoordinatesForBoardCoordinates(0, 0).x - Board.COL_WIDTH_PIXELS;
+    this.spawnX = board.pixelCoordinatesForBoardCoordinates(0, 0).x - COL_WIDTH_PIXELS;
     this.retireX = board.pixelCoordinatesForBoardCoordinates(Board.COLUMN_COUNT - 1, 0).x
-      + Board.COL_WIDTH_PIXELS;
+      + COL_WIDTH_PIXELS;
 
     this.board = board;
     this.game = game;
