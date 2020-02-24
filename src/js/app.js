@@ -12,49 +12,23 @@
  * @constructor
  */
 
-import Board from './classes/Board';
-import EnemyHandler from './classes/EnemyHandler';
-import HeadsUp from './classes/HeadsUp';
-import MapAccessories from './classes/MapAccessories';
-import Player from './classes/Player';
 import Game from './classes/Game';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//Declare all game objects here! They'll be initialized in engine.js
-var game = new Game();
+// Declare all game objects here! They'll be initialized in engine.js
+const game = new Game();
 
 // Listens for key presses. Sends recognized keys to Game.handleInput()
-document.addEventListener('keydown', function(e) {
-  var allowedKeys = {
-    32: 'space', //spacebar
-    37: 'left', //left arrow
-    38: 'up', //up arrow
-    39: 'right', //right arrow
-    40: 'down', //down arrow
-    80: 'pause', //P key
+document.addEventListener('keydown', e => {
+  const allowedKeys = {
+    32: 'space', // spacebar
+    37: 'left', // left arrow
+    38: 'up', // up arrow
+    39: 'right', // right arrow
+    40: 'down', // down arrow
+    80: 'pause', // P key
   };
-  var keyString = allowedKeys[e.keyCode];
-  if (keyString !== undefined)
-    game.handleInput(keyString);
+  const keyString = allowedKeys[e.keyCode];
+  if (keyString !== undefined) game.handleInput(keyString);
 });
 
 export default game;
