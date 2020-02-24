@@ -1,4 +1,7 @@
-import { WIDTH, HEIGHT, GAME_STATE } from '../constants';
+import {
+  WIDTH, HEIGHT, GAME_STATE,
+  ROWS_COUNT, COLUMN_COUNT, ROW_HEIGHT_PIXELS, COL_WIDTH_PIXELS,
+} from '../constants';
 
 /**
  * Object representing the heads-up display - lives remaining, level number,
@@ -25,6 +28,11 @@ const DIE_TEXTS = [
   'You died', 'You expired', 'You perished', 'Kicked the bucket', 'Croaked',
   'Bought it', 'Bought the farm', 'Checked out early',
 ];
+
+const LEVEL_X = 0;
+const LEVEL_Y = (ROWS_COUNT + 1) * ROW_HEIGHT_PIXELS + 25;
+const LIVES_X = COLUMN_COUNT * COL_WIDTH_PIXELS;
+const LIVES_Y = (ROWS_COUNT + 1) * ROW_HEIGHT_PIXELS + 25;
 
 /**
  * Helper method to display text with an outline.
@@ -56,7 +64,7 @@ class HeadsUp {
   /**
    * Sets constants that can't be set until after engine.js is loaded.
    */
-  init(game, rowCount, rowHeight, colCount, colWidth) {
+  init(game) {
     /**
      * X position of HUD "big" text.
      * @const
@@ -79,10 +87,6 @@ class HeadsUp {
     this.INSTRUCTIONS_Y = HEIGHT / 2 + 20;
 
     this.game = game;
-    this.LEVEL_X = 0;
-    this.LEVEL_Y = (rowCount + 1) * rowHeight + 25;
-    this.LIVES_X = colCount * colWidth;
-    this.LIVES_Y = (rowCount + 1) * rowHeight + 25;
   }
 
   /**
@@ -190,10 +194,10 @@ class HeadsUp {
       }
     }
     if (this.levelText) {
-      renderText(this.ctx, this.levelText, this.LEVEL_X, this.LEVEL_Y, LEVEL_TEXT_SIZE, TYPEFACE, 'left');
+      renderText(this.ctx, this.levelText, LEVEL_X, LEVEL_Y, LEVEL_TEXT_SIZE, TYPEFACE, 'left');
     }
     if (this.livesText) {
-      renderText(this.ctx, this.livesText, this.LIVES_X, this.LIVES_Y, LIVES_TEXT_SIZE, TYPEFACE, 'right');
+      renderText(this.ctx, this.livesText, LIVES_X, LIVES_Y, LIVES_TEXT_SIZE, TYPEFACE, 'right');
     }
   }
 }
