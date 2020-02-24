@@ -8,7 +8,7 @@ import Resources from '../resources';
  * @constructor
  */
 class MapAccessories {
-  constructor() {
+  constructor(ctx) {
     /**
      * An array of all active accessories
      * @type {Array.<Object<string, number | Object.<string, Object.<string, number>>>>}
@@ -31,6 +31,8 @@ class MapAccessories {
      * @type {number}
      */
     this.leftMostKeyPosition = 0;
+
+    this.ctx = ctx;
   }
 
   init(game, board) {
@@ -168,7 +170,7 @@ class MapAccessories {
       this.accessories.forEach(accessoryObject => {
         image = Resources.get(MapAccessories.IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
         coordinates = accessoryObject.coordinates;
-        ctx.drawImage(image, coordinates.x, coordinates.y);
+        this.ctx.drawImage(image, coordinates.x, coordinates.y);
       }, this);
     }
   }

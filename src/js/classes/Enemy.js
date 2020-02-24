@@ -6,7 +6,7 @@ import Resources from '../resources';
 const SPRITE = 'images/enemy-bug.png';
 
 class Enemy {
-  constructor() {
+  constructor(ctx) {
     /** @type {number} */ this.x = null;
     /** @type {number} */ this.y = null;
     /** @type {boolean} */ this.hidden = null;
@@ -15,6 +15,8 @@ class Enemy {
      * @type {number}
      */
     this.speed = null;
+
+    this.ctx = ctx;
   }
 
 
@@ -44,7 +46,7 @@ class Enemy {
 
   /** Render the enemy to the screen. */
   render() {
-    if (!this.hidden) { ctx.drawImage(Resources.get(SPRITE), this.x, this.y); }
+    if (!this.hidden) { this.ctx.drawImage(Resources.get(SPRITE), this.x, this.y); }
   }
 }
 

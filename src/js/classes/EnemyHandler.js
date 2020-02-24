@@ -37,7 +37,7 @@ const packageEnemyWithEntryAndExitTimes = enemy => {
  * recycling the Enemy objects for reuse.
  */
 class EnemyHandler {
-  constructor() {
+  constructor(ctx) {
     /**
      * An array to hold objects that contain an Enemy object that's currently
      * being updated and rendered, and a retire time.
@@ -97,6 +97,8 @@ class EnemyHandler {
      * @type {number}
      */
     this.retireX = null;
+
+    this.ctx = ctx;
   }
 
   /** Initializes spawnX and retireX, which require the map to be initialized */
@@ -244,7 +246,7 @@ class EnemyHandler {
     const { board } = this;
     let newEnemy;
     if (!(newEnemy = this.retiredEnemies.pop())) {
-      newEnemy = { enemy: new Enemy(), retireTime: null };
+      newEnemy = { enemy: new Enemy(this.ctx), retireTime: null };
     }
     const yCoordinate = board.randomRoadYCoordinate();
     newEnemy.enemy.init(this.spawnX, yCoordinate, this.lowerSpeedLimit,

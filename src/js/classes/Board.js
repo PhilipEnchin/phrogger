@@ -10,7 +10,7 @@ import Resources from '../resources';
  * @constructor
  */
 class Board {
-  constructor() {
+  constructor(ctx) {
     /**
      * A 2D array of tile-types
      * @type {Array.<Array.<number>>}
@@ -36,6 +36,8 @@ class Board {
       status: null,
       changes: [],
     };
+
+    this.ctx = ctx;
   }
 
   /**
@@ -319,7 +321,7 @@ class Board {
       for (let col = 0; col < Board.COLUMN_COUNT; col++) {
         coordinates = this.tileCoordinates[col][row];
         image = Resources.get(Board.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
-        ctx.drawImage(image, coordinates.x, coordinates.y);
+        this.ctx.drawImage(image, coordinates.x, coordinates.y);
       }
     }
   }

@@ -10,7 +10,7 @@ import Resources from '../resources';
 
 const [SPRITE, PIXEL_ADJUST] = ['images/char-boy.png', -15];
 class Player {
-  constructor() {
+  constructor(ctx) {
     /** @type {number} */ this.row = 4;
     /** @type {number} */ this.column = 1;
     /** @type {number} */ this.hidden = false;
@@ -21,6 +21,8 @@ class Player {
      * @type {number}
      */
     this.collisionTime = null;
+
+    this.ctx = ctx;
   }
 
   /** Initializes player object */
@@ -88,7 +90,7 @@ class Player {
 
   /** Render the player */
   render() {
-    if (!this.hidden) { ctx.drawImage(Resources.get(SPRITE), this.x, this.y); }
+    if (!this.hidden) { this.ctx.drawImage(Resources.get(SPRITE), this.x, this.y); }
   }
 
   /**

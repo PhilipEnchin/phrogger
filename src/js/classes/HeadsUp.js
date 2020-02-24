@@ -35,7 +35,7 @@ const DIE_TEXTS = [
  * @param {string} typeface The typeface to be used.
  * @param {string} alignment Left, right or center alignment.
  */
-const renderText = (text, x, y, textSize, typeface, alignment) => {
+const renderText = (ctx, text, x, y, textSize, typeface, alignment) => {
   ctx.font = `${textSize}pt ${typeface}`;
   ctx.textAlign = alignment;
   ctx.fillText(text, x, y, canvas.width);
@@ -43,12 +43,14 @@ const renderText = (text, x, y, textSize, typeface, alignment) => {
 };
 
 class HeadsUp {
-  constructor() {
+  constructor(ctx) {
     /** @type {string} */ this.levelText = null;
     /** @type {string} */ this.livesText = null;
     /** @type {string} */ this.bigText = null;
     /** @type {string} */ this.bigTextSize = null;
     /** @type {string} */ this.instructionText = null;
+
+    this.ctx = ctx;
   }
 
   /**
@@ -168,26 +170,27 @@ class HeadsUp {
    */
   render() {
     if (this.bigText) {
-      renderText(this.bigText, this.BIG_TEXT_X, this.BIG_TEXT_Y, TITLE_TEXT_SIZE, TYPEFACE, 'center');
+      renderText(this.ctx, this.bigText, this.BIG_TEXT_X, this.BIG_TEXT_Y, TITLE_TEXT_SIZE, TYPEFACE, 'center');
     }
     if (this.instructionText) {
       if (Array.isArray(this.instructionText)) {
         for (let i = this.instructionText.length - 1; i >= 0; i--) {
           renderText(
+            this.ctx,
             this.instructionText[i],
             this.INSTRUCTIONS_X, INSTRUCTION_LINE_HEIGHT * i + this.INSTRUCTIONS_Y,
             INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center',
           );
         }
       } else {
-        renderText(this.instructionText, this.INSTRUCTIONS_X, this.INSTRUCTIONS_Y, INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center');
+        renderText(this.ctx, this.instructionText, this.INSTRUCTIONS_X, this.INSTRUCTIONS_Y, INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center');
       }
     }
     if (this.levelText) {
-      renderText(this.levelText, this.LEVEL_X, this.LEVEL_Y, LEVEL_TEXT_SIZE, TYPEFACE, 'left');
+      renderText(this.ctx, this.levelText, this.LEVEL_X, this.LEVEL_Y, LEVEL_TEXT_SIZE, TYPEFACE, 'left');
     }
     if (this.livesText) {
-      renderText(this.livesText, this.LIVES_X, this.LIVES_Y, LIVES_TEXT_SIZE, TYPEFACE, 'right');
+      renderText(this.ctx, this.livesText, this.LIVES_X, this.LIVES_Y, LIVES_TEXT_SIZE, TYPEFACE, 'right');
     }
   }
 }

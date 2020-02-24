@@ -10,7 +10,7 @@ canvas.width = 505;
 canvas.height = 606;
 document.body.appendChild(canvas);
 
-const game = new Game();
+const game = new Game(ctx);
 
 /* Game loop */
 const main = () => {
@@ -53,5 +53,4 @@ Resources.load([ // Load image assets using resources.js
 ]);
 Resources.onReady(init);
 
-global.ctx = ctx;
 global.canvas = canvas;

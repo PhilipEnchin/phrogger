@@ -14,7 +14,7 @@ const ALLOWED_KEYS = {
 };
 
 class Game {
-  constructor() {
+  constructor(ctx) {
     /**
      * Time remaining for showing titles for levels, etc. The timer is active as
      * long as this.timeRemaining > 0.
@@ -63,6 +63,8 @@ class Game {
       const keyString = ALLOWED_KEYS[e.keyCode];
       if (keyString) this.handleInput(keyString);
     });
+
+    this.ctx = ctx;
   }
 
 
@@ -74,11 +76,11 @@ class Game {
       ROWS_COUNT, COLUMN_COUNT, ROW_HEIGHT_PIXELS, COL_WIDTH_PIXELS,
     } = Board;
 
-    this.board = new Board();
-    this.enemyHandler = new EnemyHandler();
-    this.player = new Player();
-    this.hud = new HeadsUp();
-    this.mapAccessories = new MapAccessories();
+    this.board = new Board(this.ctx);
+    this.enemyHandler = new EnemyHandler(this.ctx);
+    this.player = new Player(this.ctx);
+    this.hud = new HeadsUp(this.ctx);
+    this.mapAccessories = new MapAccessories(this.ctx);
 
     this.board.init(this, this.mapAccessories);
     this.enemyHandler.init(this, this.board, this.player);
@@ -320,7 +322,7 @@ class Game {
    * methods in other objects.
    */
   render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear background
+    this.ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear background
     this.board.render(); // Render map
     this.mapAccessories.render(); // Render map accessores (rock, key, heart)
     this.player.render(); // Render player
