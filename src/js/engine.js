@@ -2,15 +2,13 @@ import Game from './classes/Game';
 import Resources from './resources';
 import '../style.css';
 
-const doc = document;
-const win = window;
-const canvas = doc.createElement('canvas');
+const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 let lastTime;
 
 canvas.width = 505;
 canvas.height = 606;
-doc.body.appendChild(canvas);
+document.body.appendChild(canvas);
 
 const game = new Game();
 
@@ -24,7 +22,7 @@ const main = () => {
 
   lastTime = now;
 
-  win.requestAnimationFrame(main);
+  window.requestAnimationFrame(main);
 };
 
 /* Sets up lastTime (needed in loop) and initiates the loop. Also sets the
