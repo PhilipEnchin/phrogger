@@ -1,6 +1,20 @@
-import Board from './Board';
 import Resources from '../resources';
-import { GAME_STATE, TILE } from '../constants';
+import {
+  GAME_STATE, TILE,
+  ROWS_COUNT, COLUMN_COUNT,
+} from '../constants';
+
+const randomBoardLocationInRows = (...args) => {
+  let row;
+  if (args.length === 0) { // No rows provided, use all possible rows
+    row = Math.floor(Math.random() * ROWS_COUNT);
+  } else if (args[0].constructor === Array) { // Rows in an array
+    row = args[0][Math.floor(Math.random() * args.length)];
+  } else { // Rows are specified in individual arguments
+    row = args[Math.floor(Math.random() * args.length)];
+  }
+  return { column: Math.floor(Math.random() * COLUMN_COUNT), row };
+};
 
 /**
  * The MapAccessories class deals with objects that can be placed on the map at
@@ -50,9 +64,9 @@ class MapAccessories {
       && this.accessories.indexOf(this.keyAccessory) !== -1) { return; }
     // Rock...
     this.accessories = [];
-    let rockLocation = Board.randomBoardLocationInRows(0);
+    let rockLocation = randomBoardLocationInRows(0);
     while (rockLocation.column < this.leftMostRockPosition) {
-      rockLocation = Board.randomBoardLocationInRows(0);
+      rockLocation = randomBoardLocationInRows(0);
     }
     board.setTile(rockLocation.column, rockLocation.row, TILE.STONE);
     this.rockAccessory = this.packageAccessory(MapAccessories.Type.ROCK, rockLocation);

@@ -349,22 +349,4 @@ Board.AnimationState = {
   NOTHING_TO_ANIMATE: 2, // Animation complete
 };
 
-/**
- * @param {number|Array.<number>} var_args Either a row number or an array of
- *     row numbers
- * @return {Object.<string, number>} An object that contains randomly generated
- *     row and column numbers based on the desired rows specified.
- */
-Board.randomBoardLocationInRows = (...args) => {
-  let row;
-  if (args.length === 0) { // No rows provided, use all possible rows
-    row = Math.floor(Math.random() * ROWS_COUNT);
-  } else if (args[0].constructor === Array) { // Rows in an array
-    row = args[0][Math.floor(Math.random() * args.length)];
-  } else { // Rows are specified in individual arguments
-    row = args[Math.floor(Math.random() * args.length)];
-  }
-  return { column: Math.floor(Math.random() * COLUMN_COUNT), row };
-};
-
 export default Board;
