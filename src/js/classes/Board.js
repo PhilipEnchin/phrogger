@@ -1,5 +1,8 @@
 import Resources from '../resources';
-import { GAME_STATE, TILE, COL_WIDTH_PIXELS } from '../constants';
+import {
+  GAME_STATE, TILE, COL_WIDTH_PIXELS,
+  ROWS_COUNT,
+} from '../constants';
 
 /**
  * The Board class deals with anything relating to the game board. It has methods
@@ -48,7 +51,7 @@ class Board {
     let col;
     const rowTypes = [];
     // Store row types in a temporary array
-    for (row = 0; row < Board.ROWS_COUNT; row++) {
+    for (row = 0; row < ROWS_COUNT; row++) {
       if (row === 0) {
         rowTypes.push(TILE.WATER);
       } else {
@@ -59,7 +62,7 @@ class Board {
     for (col = 0; col < Board.COLUMN_COUNT; col++) {
       this.tileCoordinates.push([]);
       this.tileTypes.push([]);
-      for (row = 0; row < Board.ROWS_COUNT; row++) {
+      for (row = 0; row < ROWS_COUNT; row++) {
         const coordinates = {
           x: col * COL_WIDTH_PIXELS,
           y: row * Board.ROW_HEIGHT_PIXELS,
@@ -127,7 +130,7 @@ class Board {
     const remainingRows = []; // Stores rows not yet set in this invocation
     let rowArray;
     let tileType;
-    for (let i = Board.ROWS_COUNT - 1; i >= 0; i--) {
+    for (let i = ROWS_COUNT - 1; i >= 0; i--) {
       remainingRows.splice(0, 0, i);
     }
     while (args.length > 1) { // If there is at least one pair remaining in args
@@ -300,7 +303,7 @@ class Board {
    */
   playerCanMoveHere(x, y) {
     const { game, mapAccessories: ma } = this;
-    const { COLUMN_COUNT, ROWS_COUNT } = Board;
+    const { COLUMN_COUNT } = Board;
     // If mapAccessories says player can move here, and the player isn't trying
     // to move off the game board...
     if (ma.playerCanMoveHere(x, y) && x < COLUMN_COUNT && x >= 0 && y < ROWS_COUNT && y >= 0) {
@@ -317,7 +320,7 @@ class Board {
   render() {
     let coordinates;
     let image;
-    for (let row = 0; row < Board.ROWS_COUNT; row++) {
+    for (let row = 0; row < ROWS_COUNT; row++) {
       for (let col = 0; col < Board.COLUMN_COUNT; col++) {
         coordinates = this.tileCoordinates[col][row];
         image = Resources.get(Board.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
@@ -327,7 +330,6 @@ class Board {
   }
 }
 
-/** @const */ Board.ROWS_COUNT = 6;
 /** @const */ Board.COLUMN_COUNT = 5;
 /** @const */ Board.ROW_HEIGHT_PIXELS = 83;
 
@@ -359,7 +361,7 @@ Board.AnimationState = {
 Board.randomBoardLocationInRows = (...args) => {
   let row;
   if (args.length === 0) { // No rows provided, use all possible rows
-    row = Math.floor(Math.random() * Board.ROWS_COUNT);
+    row = Math.floor(Math.random() * ROWS_COUNT);
   } else if (args[0].constructor === Array) { // Rows in an array
     row = args[0][Math.floor(Math.random() * args.length)];
   } else { // Rows are specified in individual arguments

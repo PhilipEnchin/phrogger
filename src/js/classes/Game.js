@@ -6,6 +6,7 @@ import Player from './Player';
 import {
   WIDTH, HEIGHT, GAME_STATE, TILE,
   COL_WIDTH_PIXELS,
+  ROWS_COUNT,
 } from '../constants';
 
 const ALLOWED_KEYS = {
@@ -77,7 +78,7 @@ class Game {
    */
   init() {
     const {
-      ROWS_COUNT, COLUMN_COUNT, ROW_HEIGHT_PIXELS,
+      COLUMN_COUNT, ROW_HEIGHT_PIXELS,
     } = Board;
 
     this.board = new Board(this.ctx);
