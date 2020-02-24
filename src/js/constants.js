@@ -15,4 +15,6 @@ export const GAME_STATE = {
 
 export const TILE = { WATER: 0, STONE: 1, GRASS: 2 };
 export const ROWS_COUNT = 6;
+export const COLUMN_COUNT = 5;
+export const ROW_HEIGHT_PIXELS = 83;
 export const COL_WIDTH_PIXELS = 101;

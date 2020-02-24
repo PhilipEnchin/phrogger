@@ -1,6 +1,8 @@
-import Board from './Board';
 import Resources from '../resources';
-import { GAME_STATE, TILE, ROWS_COUNT } from '../constants';
+import {
+  GAME_STATE, TILE,
+  ROWS_COUNT, COLUMN_COUNT,
+} from '../constants';
 
 /**
  * The Player object represents the player on the screen and handles input that
@@ -45,7 +47,7 @@ class Player {
       case TITLE:
         this.hidden = false;
         this.moveable = false;
-        this.setPosition((Board.COLUMN_COUNT - 1) / 2, ROWS_COUNT - 1);
+        this.setPosition((COLUMN_COUNT - 1) / 2, ROWS_COUNT - 1);
         this.collisionDetectionOn = false;
         break;
       case INSTRUCTIONS:
@@ -53,7 +55,7 @@ class Player {
       case REINCARNATE:
         this.hidden = false;
         this.moveable = false;
-        this.setPosition((Board.COLUMN_COUNT - 1) / 2, ROWS_COUNT - 1);
+        this.setPosition((COLUMN_COUNT - 1) / 2, ROWS_COUNT - 1);
         break;
       case PLAY:
         this.collisionDetectionOn = true;
@@ -104,7 +106,7 @@ class Player {
   setPosition(x, y) {
     const { board, enemyHandler } = this;
     // Make sure player isn't moving off screen...
-    this.column = Math.min(Math.max(x, 0), Board.COLUMN_COUNT - 1);
+    this.column = Math.min(Math.max(x, 0), COLUMN_COUNT - 1);
     this.row = Math.min(Math.max(y, 0), ROWS_COUNT - 1);
 
     const coordinates = board.pixelCoordinatesForBoardCoordinates(this.column, this.row);

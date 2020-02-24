@@ -1,7 +1,8 @@
 import Resources from '../resources';
 import {
-  GAME_STATE, TILE, COL_WIDTH_PIXELS,
-  ROWS_COUNT,
+  GAME_STATE, TILE,
+  COL_WIDTH_PIXELS, ROW_HEIGHT_PIXELS,
+  ROWS_COUNT, COLUMN_COUNT,
 } from '../constants';
 
 /**
@@ -59,13 +60,13 @@ class Board {
       }
     }
     // Initialize tileTypes (using array from above) and tileCoordinates grids
-    for (col = 0; col < Board.COLUMN_COUNT; col++) {
+    for (col = 0; col < COLUMN_COUNT; col++) {
       this.tileCoordinates.push([]);
       this.tileTypes.push([]);
       for (row = 0; row < ROWS_COUNT; row++) {
         const coordinates = {
           x: col * COL_WIDTH_PIXELS,
-          y: row * Board.ROW_HEIGHT_PIXELS,
+          y: row * ROW_HEIGHT_PIXELS,
         };
         this.tileCoordinates[col].push(coordinates);
         this.tileTypes[col].push(rowTypes[row]);
@@ -174,7 +175,7 @@ class Board {
       }
     }
     // Set tiles in this row
-    for (let col = Board.COLUMN_COUNT - 1; col >= 0; col--) {
+    for (let col = COLUMN_COUNT - 1; col >= 0; col--) {
       this.setTile(col, rowNumber, tileType);
     }
   }
@@ -286,7 +287,7 @@ class Board {
    */
   randomRoadBoardLocation() {
     return {
-      column: Math.floor(Math.random() * Board.COLUMN_COUNT),
+      column: Math.floor(Math.random() * COLUMN_COUNT),
       row: this.roadRowNumbers[Math.floor(Math.random() * this.roadRowNumbers.length)],
     };
   }
@@ -303,7 +304,6 @@ class Board {
    */
   playerCanMoveHere(x, y) {
     const { game, mapAccessories: ma } = this;
-    const { COLUMN_COUNT } = Board;
     // If mapAccessories says player can move here, and the player isn't trying
     // to move off the game board...
     if (ma.playerCanMoveHere(x, y) && x < COLUMN_COUNT && x >= 0 && y < ROWS_COUNT && y >= 0) {
@@ -321,7 +321,7 @@ class Board {
     let coordinates;
     let image;
     for (let row = 0; row < ROWS_COUNT; row++) {
-      for (let col = 0; col < Board.COLUMN_COUNT; col++) {
+      for (let col = 0; col < COLUMN_COUNT; col++) {
         coordinates = this.tileCoordinates[col][row];
         image = Resources.get(Board.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
         this.ctx.drawImage(image, coordinates.x, coordinates.y);
@@ -329,9 +329,6 @@ class Board {
     }
   }
 }
-
-/** @const */ Board.COLUMN_COUNT = 5;
-/** @const */ Board.ROW_HEIGHT_PIXELS = 83;
 
 /**
  * Array of image URLs whose indices correspond with the Tile enum above.
@@ -367,7 +364,7 @@ Board.randomBoardLocationInRows = (...args) => {
   } else { // Rows are specified in individual arguments
     row = args[Math.floor(Math.random() * args.length)];
   }
-  return { column: Math.floor(Math.random() * Board.COLUMN_COUNT), row };
+  return { column: Math.floor(Math.random() * COLUMN_COUNT), row };
 };
 
 export default Board;

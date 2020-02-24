@@ -5,8 +5,8 @@ import MapAccessories from './MapAccessories';
 import Player from './Player';
 import {
   WIDTH, HEIGHT, GAME_STATE, TILE,
-  COL_WIDTH_PIXELS,
-  ROWS_COUNT,
+  COL_WIDTH_PIXELS, ROW_HEIGHT_PIXELS,
+  ROWS_COUNT, COLUMN_COUNT,
 } from '../constants';
 
 const ALLOWED_KEYS = {
@@ -77,10 +77,6 @@ class Game {
    * Initializes the objects that need initializing, and initiates the game.
    */
   init() {
-    const {
-      COLUMN_COUNT, ROW_HEIGHT_PIXELS,
-    } = Board;
-
     this.board = new Board(this.ctx);
     this.enemyHandler = new EnemyHandler(this.ctx);
     this.player = new Player(this.ctx);

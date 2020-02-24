@@ -1,7 +1,6 @@
-import Board from './Board';
 import Enemy from './Enemy';
 import Player from './Player';
-import { GAME_STATE, COL_WIDTH_PIXELS } from '../constants';
+import { GAME_STATE, COL_WIDTH_PIXELS, COLUMN_COUNT } from '../constants';
 
 /**
  * Puts the Enemy object inside another object with entry and exit times.
@@ -21,7 +20,7 @@ const packageEnemyWithEntryAndExitTimes = enemy => {
     / enemy.speed;
 
   const now = Date.now() / 1000;
-  for (let col = Board.COLUMN_COUNT + 1; col >= 0; col--) {
+  for (let col = COLUMN_COUNT + 1; col >= 0; col--) {
     entryTimes.splice(0, 0,
       col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
     exitTimes.splice(0, 0,
@@ -104,7 +103,7 @@ class EnemyHandler {
   /** Initializes spawnX and retireX, which require the map to be initialized */
   init(game, board, player) {
     this.spawnX = board.pixelCoordinatesForBoardCoordinates(0, 0).x - COL_WIDTH_PIXELS;
-    this.retireX = board.pixelCoordinatesForBoardCoordinates(Board.COLUMN_COUNT - 1, 0).x
+    this.retireX = board.pixelCoordinatesForBoardCoordinates(COLUMN_COUNT - 1, 0).x
       + COL_WIDTH_PIXELS;
 
     this.board = board;
@@ -274,7 +273,7 @@ class EnemyHandler {
       const enemyObjectWithEntryAndExitTimes = packageEnemyWithEntryAndExitTimes(nakedEnemy);
       const { entryTimes } = enemyObjectWithEntryAndExitTimes;
       const rowIndex = nakedEnemy.y; // For activeEnemiesByRow...
-      const retireTime = entryTimes[Board.COLUMN_COUNT + 1];
+      const retireTime = entryTimes[COLUMN_COUNT + 1];
       let rowOfEnemies = this.activeEnemiesByRow[rowIndex];
 
       // Creates the row if this is the first enemy in that row.
@@ -289,9 +288,9 @@ class EnemyHandler {
         // Entry times for leftmost enemy in row
         const leftMostEnemyEntryTimes = rowOfEnemies[rowOfEnemies.length - 1].entryTimes;
         // The moment when the leftmost enemy will be completely offscreen
-        const leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[Board.COLUMN_COUNT + 1];
+        const leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[COLUMN_COUNT + 1];
         // The moment when the new enemy will begin to exit the screen
-        const newEnemyExitBegin = entryTimes[Board.COLUMN_COUNT];
+        const newEnemyExitBegin = entryTimes[COLUMN_COUNT];
         // If the new enemy begins to exit before the existing any is gone,
         // then we have potential for overlap. Retire that enemy and attempt
         // another spawn.
