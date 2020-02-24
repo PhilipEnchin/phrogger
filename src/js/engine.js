@@ -53,5 +53,3 @@ Resources.load([ // Load image assets using resources.js
   'images/Heart.png',
 ]);
 Resources.onReady(init);
-
-global.canvas = canvas;
