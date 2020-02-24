@@ -187,6 +187,4 @@ class Player {
   }
 }
 
-[Player.EDGE_ADJUST_RIGHT, Player.EDGE_ADJUST_LEFT] = [29, 30];
-
 export default Player;

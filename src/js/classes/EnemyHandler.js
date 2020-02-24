@@ -1,6 +1,7 @@
 import Enemy from './Enemy';
-import Player from './Player';
 import { GAME_STATE, COL_WIDTH_PIXELS, COLUMN_COUNT } from '../constants';
+
+const [PLAYER_EDGE_ADJUST_RIGHT, PLAYER_EDGE_ADJUST_LEFT] = [29, 30];
 
 /**
  * Puts the Enemy object inside another object with entry and exit times.
@@ -13,10 +14,10 @@ const packageEnemyWithEntryAndExitTimes = enemy => {
   // Seconds required to traverse a single column
   const secondsPerColumn = COL_WIDTH_PIXELS / enemy.speed;
   // Seconds by which to adjust entry times based on visual edges of sprites
-  const secondsPerEntryEdgeAdjustWidth = (Enemy.EDGE_ADJUST_RIGHT + Player.EDGE_ADJUST_LEFT)
+  const secondsPerEntryEdgeAdjustWidth = (Enemy.EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT)
     / enemy.speed;
   // Same, buf for exit times
-  const secondsPerExitEdgeAdjustWidth = (Enemy.EDGE_ADJUST_LEFT + Player.EDGE_ADJUST_RIGHT)
+  const secondsPerExitEdgeAdjustWidth = (Enemy.EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT)
     / enemy.speed;
 
   const now = Date.now() / 1000;
