@@ -161,6 +161,7 @@ class Game {
         } else if (this.state === Game.State.GAME_OVER) {
           this.setState(Game.State.TITLE);
         }
+        break;
       default: throw new Error(`Unrecognized keyString: ${keyString}`);
     }
   }
