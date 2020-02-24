@@ -1,5 +1,5 @@
+import Game from './classes/Game';
 import Resources from './resources';
-import game from './app';
 import '../style.css';
 
 const doc = document;
@@ -12,8 +12,9 @@ canvas.width = 505;
 canvas.height = 606;
 doc.body.appendChild(canvas);
 
-/* Game loop
-  */
+const game = new Game();
+
+/* Game loop */
 const main = () => {
   const now = Date.now() / 1000;
   const dt = (now - lastTime);

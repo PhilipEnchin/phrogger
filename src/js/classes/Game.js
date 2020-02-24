@@ -4,6 +4,15 @@ import HeadsUp from './HeadsUp';
 import MapAccessories from './MapAccessories';
 import Player from './Player';
 
+const ALLOWED_KEYS = {
+  32: 'space', // spacebar
+  37: 'left', // left arrow
+  38: 'up', // up arrow
+  39: 'right', // right arrow
+  40: 'down', // down arrow
+  80: 'pause', // P key
+};
+
 class Game {
   constructor() {
     /**
@@ -49,6 +58,11 @@ class Game {
      * @type {number}
      */
     this.highScoreCookieExpiry = null;
+
+    document.addEventListener('keydown', e => {
+      const keyString = ALLOWED_KEYS[e.keyCode];
+      if (keyString) this.handleInput(keyString);
+    });
   }
 
 
