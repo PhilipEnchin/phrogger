@@ -1,3 +1,5 @@
+import Game from './Game';
+
 /**
  * Object representing the heads-up display - lives remaining, level number,
  * etc. Renders all in-game text to the screen.
@@ -88,7 +90,7 @@ class HeadsUp {
   setState(state) {
     const { game } = this;
     switch (state) {
-      case game.State.TITLE:
+      case Game.State.TITLE:
         this.levelText = '';
         this.livesText = '';
         this.bigText = GAME_TITLE;
@@ -99,35 +101,35 @@ class HeadsUp {
           (game.highScore > 0) ? `High score: Level ${game.highScore}` : '',
         ];
         break;
-      case game.State.INSTRUCTIONS:
+      case Game.State.INSTRUCTIONS:
         this.bigText = '';
         this.instructionText = GAME_INSTRUCTIONS;
         break;
-      case game.State.LEVEL_TITLE:
-      case game.State.REINCARNATE:
+      case Game.State.LEVEL_TITLE:
+      case Game.State.REINCARNATE:
         this.bigText = levelPrefix + game.level;
         this.instructionText = livesPrefix + game.lives;
         this.bigTextSize = PRE_LEVEL_TEXT_SIZE;
         this.levelText = '';
         this.livesText = '';
         break;
-      case game.State.PLAY:
+      case Game.State.PLAY:
         this.levelText = levelPrefix + game.level;
         this.livesText = livesPrefix + game.lives;
         this.bigText = '';
         this.instructionText = '';
         break;
-      case game.State.PAUSED:
+      case Game.State.PAUSED:
         this.bigText = 'PAUSED';
         this.bigTextSize = PAUSED_TEXT_SIZE;
         break;
-      case game.State.WIN_LEVEL:
+      case Game.State.WIN_LEVEL:
         this.bigText = WIN_TEXTS[Math.floor(Math.random() * WIN_TEXTS.length)];
         break;
-      case game.State.DIED:
+      case Game.State.DIED:
         this.bigText = DIE_TEXTS[Math.floor(Math.random() * DIE_TEXTS.length)];
         break;
-      case game.State.GAME_OVER:
+      case Game.State.GAME_OVER:
         this.bigText = 'Game over';
         if (game.distanceToHighScore < 0 && -game.distanceToHighScore !== game.highScore) {
           this.instructionText = [

@@ -1,4 +1,5 @@
 import Board from './Board';
+import Game from './Game';
 import Resources from '../resources';
 
 /**
@@ -35,41 +36,40 @@ class Player {
    * @param {number} state New game state.
    */
   setState(state) {
-    const { game, board } = this;
     switch (state) {
-      case game.State.TITLE:
+      case Game.State.TITLE:
         this.hidden = false;
         this.moveable = false;
         this.setPosition((Board.COLUMN_COUNT - 1) / 2, Board.ROWS_COUNT - 1);
         this.collisionDetectionOn = false;
         break;
-      case game.State.INSTRUCTIONS:
-      case game.State.LEVEL_TITLE:
-      case game.State.REINCARNATE:
+      case Game.State.INSTRUCTIONS:
+      case Game.State.LEVEL_TITLE:
+      case Game.State.REINCARNATE:
         this.hidden = false;
         this.moveable = false;
         this.setPosition((Board.COLUMN_COUNT - 1) / 2, Board.ROWS_COUNT - 1);
         break;
-      case game.State.PLAY:
+      case Game.State.PLAY:
         this.collisionDetectionOn = true;
         this.hidden = false;
         this.moveable = true;
         break;
-      case game.State.PAUSED:
+      case Game.State.PAUSED:
         this.collisionDetectionOn = false;
         this.hidden = true;
         this.moveable = false;
         break;
-      case game.State.DIED:
+      case Game.State.DIED:
         this.collisionDetectionOn = false;
         this.hidden = false;
         this.moveable = false;
-      case game.State.WIN_LEVEL:
+      case Game.State.WIN_LEVEL:
         this.collisionDetectionOn = false;
         this.moveable = false;
         this.hidden = false;
         break;
-      case game.State.GAME_OVER: break;
+      case Game.State.GAME_OVER: break;
       default: throw new Error(`Unrecognized game state: ${state}`);
     }
   }
@@ -142,7 +142,7 @@ class Player {
    */
   die() {
     const { game } = this;
-    game.setState(game.State.DIED);
+    game.setState(Game.State.DIED);
   }
 
   /**

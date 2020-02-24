@@ -1,5 +1,6 @@
 import Board from './Board';
 import Enemy from './Enemy';
+import Game from './Game';
 import Player from './Player';
 
 /**
@@ -116,7 +117,7 @@ class EnemyHandler {
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
-    } = this.game.State;
+    } = Game.State;
     switch (state) {
       case TITLE:
         this.moveable = true;

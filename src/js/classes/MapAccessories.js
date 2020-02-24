@@ -1,4 +1,5 @@
 import Board from './Board';
+import Game from './Game';
 import Resources from '../resources';
 
 /**
@@ -129,25 +130,24 @@ class MapAccessories {
    * @param {number} state The new game state.
    */
   setState(state) {
-    const { game } = this;
     switch (state) {
-      case game.State.LEVEL_TITLE:
+      case Game.State.LEVEL_TITLE:
         this.hidden = true;
         this.placeAccessories();
         break;
-      case game.State.REINCARNATE:
+      case Game.State.REINCARNATE:
         this.hidden = true;
         this.accessories.splice(0, 0, this.rockAccessory, this.keyAccessory);
         break;
-      case game.State.PLAY:
+      case Game.State.PLAY:
         this.hidden = false;
         break;
-      case game.State.DIED:
+      case Game.State.DIED:
         this.hidden = false;
         this.heartAccessory = null;
         this.accessories = [];
         break;
-      case game.State.GAME_OVER:
+      case Game.State.GAME_OVER:
         this.hidden = true;
         this.rockAccessory = null;
         this.keyAccessory = null;
