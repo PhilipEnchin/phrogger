@@ -1,6 +1,6 @@
 import Board from './Board';
 import Resources from '../resources';
-import { GAME_STATE } from '../constants';
+import { GAME_STATE, TILE } from '../constants';
 
 /**
  * The Player object represents the player on the screen and handles input that
@@ -113,12 +113,12 @@ class Player {
 
     const tile = board.tileTypes[this.column][this.row];
     switch (tile) {
-      case Board.Tile.STONE: // Road! Calculate upcoming collisions!
+      case TILE.STONE: // Road! Calculate upcoming collisions!
         this.collisionTime = enemyHandler.collisionTimeForCoordinates(this.column, this.row);
         break;
-      case Board.Tile.WATER: // Water! Dead :(
+      case TILE.WATER: // Water! Dead :(
         this.die();
-      case Board.Tile.GRASS: // Grass! Safe! (Cancel collision)
+      case TILE.GRASS: // Grass! Safe! (Cancel collision)
         this.collisionTime = enemyHandler.collisionTimeForCoordinates();
         break;
       default: throw new Error(`Unrecognized tile type: ${tile}`);

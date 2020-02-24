@@ -12,3 +12,5 @@ export const GAME_STATE = {
   WIN_LEVEL: 7, // Player has just passed level
   REINCARNATE: 8, // Like LEVEL_TITLE, but with small differences
 };
+
+export const TILE = { WATER: 0, STONE: 1, GRASS: 2 };

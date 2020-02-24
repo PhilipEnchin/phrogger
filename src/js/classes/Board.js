@@ -1,5 +1,5 @@
 import Resources from '../resources';
-import { GAME_STATE } from '../constants';
+import { GAME_STATE, TILE } from '../constants';
 
 /**
  * The Board class deals with anything relating to the game board. It has methods
@@ -50,9 +50,9 @@ class Board {
     // Store row types in a temporary array
     for (row = 0; row < Board.ROWS_COUNT; row++) {
       if (row === 0) {
-        rowTypes.push(Board.Tile.WATER);
+        rowTypes.push(TILE.WATER);
       } else {
-        rowTypes.push(Board.Tile.GRASS);
+        rowTypes.push(TILE.GRASS);
       }
     }
     // Initialize tileTypes (using array from above) and tileCoordinates grids
@@ -86,9 +86,9 @@ class Board {
     switch (state) {
       case TITLE:
         this.setRows(
-          0, Board.Tile.WATER,
-          [1, 2, 3, 4], Board.Tile.STONE,
-          Board.Tile.GRASS,
+          0, TILE.WATER,
+          [1, 2, 3, 4], TILE.STONE,
+          TILE.GRASS,
         );
         break;
       case INSTRUCTIONS:
@@ -158,7 +158,7 @@ class Board {
    * @param {tileType} tileType The type of tile
    */
   setRow(rowNumber, tileType) {
-    if (tileType === Board.Tile.STONE) { // If row is set to be a road...
+    if (tileType === TILE.STONE) { // If row is set to be a road...
       if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
         this.roadRowNumbers.push(rowNumber); // Remember this row is a road
       } else {
@@ -341,11 +341,6 @@ Board.IMAGE_URL_ARRAY = [
   'images/stone-block.png',
   'images/grass-block.png',
 ];
-/**
- * Enum for possible tile types
- * @enum {number}
- */
-Board.Tile = { WATER: 0, STONE: 1, GRASS: 2 };
 /**
  * Enum for possible states of pre-level animation.
  * @enum {number}

@@ -1,6 +1,6 @@
 import Board from './Board';
 import Resources from '../resources';
-import { GAME_STATE } from '../constants';
+import { GAME_STATE, TILE } from '../constants';
 
 /**
  * The MapAccessories class deals with objects that can be placed on the map at
@@ -54,7 +54,7 @@ class MapAccessories {
     while (rockLocation.column < this.leftMostRockPosition) {
       rockLocation = Board.randomBoardLocationInRows(0);
     }
-    board.setTile(rockLocation.column, rockLocation.row, Board.Tile.STONE);
+    board.setTile(rockLocation.column, rockLocation.row, TILE.STONE);
     this.rockAccessory = this.packageAccessory(MapAccessories.Type.ROCK, rockLocation);
     this.rockAccessory.coordinates.y += MapAccessories.ROCK_PIXEL_ADJUST;
     // Key...
