@@ -1,13 +1,14 @@
 import Game from './classes/Game';
 import Resources from './resources';
 import '../style.css';
+import { width, height } from './constants';
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 let lastTime;
 
-canvas.width = 505;
-canvas.height = 606;
+canvas.width = width;
+canvas.height = height;
 document.body.appendChild(canvas);
 
 const game = new Game(ctx);
