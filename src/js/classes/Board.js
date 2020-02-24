@@ -5,6 +5,18 @@ import {
   ROWS_COUNT, COLUMN_COUNT,
 } from '../constants';
 
+const ANIMATION_STATE = {
+  CONTAINS_NEW_CHANGES: 0, // Queues new animation sequence
+  ANIMATE: 1, // Animation in progess
+  NOTHING_TO_ANIMATE: 2, // Animation complete
+};
+
+const IMAGE_URL_ARRAY = [
+  'images/water-block.png',
+  'images/stone-block.png',
+  'images/grass-block.png',
+];
+
 /**
  * The Board class deals with anything relating to the game board. It has methods
  * for returning coordinates to any tile on the board, rendering the board, as
@@ -73,7 +85,7 @@ class Board {
       }
     }
 
-    this.pendingTileChanges.status = Board.AnimationState.NOTHING_TO_ANIMATE;
+    this.pendingTileChanges.status = ANIMATION_STATE.NOTHING_TO_ANIMATE;
 
     this.game = game;
     this.mapAccessories = mapAccessories;
@@ -216,7 +228,7 @@ class Board {
       tileType, // The type of tile
       time: Math.random(), // A randomly generated time (processed in update())
     });
-    this.pendingTileChanges.status = Board.AnimationState.CONTAINS_NEW_CHANGES;
+    this.pendingTileChanges.status = ANIMATION_STATE.CONTAINS_NEW_CHANGES;
   }
 
   /**
@@ -231,8 +243,8 @@ class Board {
     const { game } = this;
     let changes; // Array of upcoming tile changes
     switch (this.pendingTileChanges.status) {
-      case Board.AnimationState.NOTHING_TO_ANIMATE: break;
-      case Board.AnimationState.CONTAINS_NEW_CHANGES: {
+      case ANIMATION_STATE.NOTHING_TO_ANIMATE: break;
+      case ANIMATION_STATE.CONTAINS_NEW_CHANGES: {
         changes = this.pendingTileChanges.changes;
         changes.sort((a, b) => a.time - b.time);
         // Use the randomly generated values as delta-time, and replace those
@@ -248,9 +260,9 @@ class Board {
           change.time *= game.timeRemaining * 9 / totalTime / 10;
           change.time += now;
         });
-        this.pendingTileChanges.status = Board.AnimationState.ANIMATE;
+        this.pendingTileChanges.status = ANIMATION_STATE.ANIMATE;
       }
-      case Board.AnimationState.ANIMATE: {
+      case ANIMATION_STATE.ANIMATE: {
         changes = this.pendingTileChanges.changes;
         let change;
         let location;
@@ -261,7 +273,7 @@ class Board {
           this.tileTypes[location.column][location.row] = change.tileType;
         }
         if (changes.length === 0) { // No tile changes left, finish animation
-          this.pendingTileChanges.status = Board.AnimationState.NOTHING_TO_ANIMATE;
+          this.pendingTileChanges.status = ANIMATION_STATE.NOTHING_TO_ANIMATE;
         }
         break;
       }
@@ -323,30 +335,11 @@ class Board {
     for (let row = 0; row < ROWS_COUNT; row++) {
       for (let col = 0; col < COLUMN_COUNT; col++) {
         coordinates = this.tileCoordinates[col][row];
-        image = Resources.get(Board.IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
+        image = Resources.get(IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
         this.ctx.drawImage(image, coordinates.x, coordinates.y);
       }
     }
   }
 }
-
-/**
- * Array of image URLs whose indices correspond with the Tile enum above.
- * @const {Array.<string>}
- */
-Board.IMAGE_URL_ARRAY = [
-  'images/water-block.png',
-  'images/stone-block.png',
-  'images/grass-block.png',
-];
-/**
- * Enum for possible states of pre-level animation.
- * @enum {number}
- */
-Board.AnimationState = {
-  CONTAINS_NEW_CHANGES: 0, // Queues new animation sequence
-  ANIMATE: 1, // Animation in progess
-  NOTHING_TO_ANIMATE: 2, // Animation complete
-};
 
 export default Board;
