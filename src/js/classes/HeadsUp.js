@@ -1,4 +1,4 @@
-import { width, height, GAME_STATE } from '../constants';
+import { WIDTH, HEIGHT, GAME_STATE } from '../constants';
 
 /**
  * Object representing the heads-up display - lives remaining, level number,
@@ -38,8 +38,8 @@ const DIE_TEXTS = [
 const renderText = (ctx, text, x, y, textSize, typeface, alignment) => {
   ctx.font = `${textSize}pt ${typeface}`;
   ctx.textAlign = alignment;
-  ctx.fillText(text, x, y, width);
-  ctx.strokeText(text, x, y, width);
+  ctx.fillText(text, x, y, WIDTH);
+  ctx.strokeText(text, x, y, WIDTH);
 };
 
 class HeadsUp {
@@ -61,22 +61,22 @@ class HeadsUp {
      * X position of HUD "big" text.
      * @const
      */
-    this.BIG_TEXT_X = width / 2;
+    this.BIG_TEXT_X = WIDTH / 2;
     /**
      * Y position of HUD "big" text.
      * @const
      */
-    this.BIG_TEXT_Y = height / 2 - 20;
+    this.BIG_TEXT_Y = HEIGHT / 2 - 20;
     /**
      * X position of HUD instructions text.
      * @const
      */
-    this.INSTRUCTIONS_X = width / 2;
+    this.INSTRUCTIONS_X = WIDTH / 2;
     /**
      * Y position of HUD instructions text.
      * @const
      */
-    this.INSTRUCTIONS_Y = height / 2 + 20;
+    this.INSTRUCTIONS_Y = HEIGHT / 2 + 20;
 
     this.game = game;
     this.LEVEL_X = 0;

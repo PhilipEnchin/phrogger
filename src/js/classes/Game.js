@@ -3,7 +3,7 @@ import EnemyHandler from './EnemyHandler';
 import HeadsUp from './HeadsUp';
 import MapAccessories from './MapAccessories';
 import Player from './Player';
-import { width, height, GAME_STATE } from '../constants';
+import { WIDTH, HEIGHT, GAME_STATE } from '../constants';
 
 const ALLOWED_KEYS = {
   32: 'space', // spacebar
@@ -323,7 +323,7 @@ class Game {
    * methods in other objects.
    */
   render() {
-    this.ctx.clearRect(0, 0, width, height); // Clear background
+    this.ctx.clearRect(0, 0, WIDTH, HEIGHT); // Clear background
     this.board.render(); // Render map
     this.mapAccessories.render(); // Render map accessores (rock, key, heart)
     this.player.render(); // Render player

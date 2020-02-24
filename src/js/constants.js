@@ -1,5 +1,5 @@
-export const width = 505;
-export const height = 606;
+export const WIDTH = 505;
+export const HEIGHT = 606;
 
 export const GAME_STATE = {
   TITLE: 0, // Title screen
