@@ -1,7 +1,7 @@
 import Resources from '../resources';
 import {
   GAME_STATE, TILE,
-  ROWS_COUNT, COLUMN_COUNT,
+  ROWS_COUNT, COLUMN_COUNT, IMAGE,
 } from '../constants';
 
 const randomBoardLocationInRows = (...args) => {
@@ -207,11 +207,7 @@ MapAccessories.Type = { KEY: 0, ROCK: 1, HEART: 2 };
  * Array of image URLs that correspond with the possible accessory types.
  * @const {Array.<string>}
  */
-MapAccessories.IMAGE_URL_ARRAY = [
-  'images/Key.png',
-  'images/Rock.png',
-  'images/Heart.png',
-];
+MapAccessories.IMAGE_URL_ARRAY = [IMAGE.KEY, IMAGE.ROCK, IMAGE.HEART];
 /** @const */ MapAccessories.ROCK_PIXEL_ADJUST = -25;
 /** @const */ MapAccessories.KEY_PIXEL_ADJUST = -15;
 /** @const */ MapAccessories.PROBABILITY_OF_EXTRA_LIFE = 1 / 20;

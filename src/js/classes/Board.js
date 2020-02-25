@@ -1,6 +1,6 @@
 import Resources from '../resources';
 import {
-  GAME_STATE, TILE, COL_WIDTH_PIXELS, ROW_HEIGHT_PIXELS, ROWS_COUNT, COLUMN_COUNT,
+  GAME_STATE, TILE, COL_WIDTH_PIXELS, ROW_HEIGHT_PIXELS, ROWS_COUNT, COLUMN_COUNT, IMAGE,
 } from '../constants';
 
 const ANIMATION_STATE = {
@@ -9,11 +9,8 @@ const ANIMATION_STATE = {
   NOTHING_TO_ANIMATE: 2, // Animation complete
 };
 
-const IMAGE_URL_ARRAY = [
-  'images/water-block.png',
-  'images/stone-block.png',
-  'images/grass-block.png',
-];
+const IMAGE_URL_ARRAY = [IMAGE.WATER, IMAGE.STONE, IMAGE.GRASS];
+
 
 /**
  * The Board class deals with anything relating to the game board. It has methods

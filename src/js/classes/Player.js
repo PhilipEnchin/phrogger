@@ -1,7 +1,7 @@
 import Resources from '../resources';
 import {
   GAME_STATE, TILE,
-  ROWS_COUNT, COLUMN_COUNT,
+  ROWS_COUNT, COLUMN_COUNT, IMAGE,
 } from '../constants';
 
 /**
@@ -10,7 +10,7 @@ import {
  * @constructor
  */
 
-const [SPRITE, PIXEL_ADJUST] = ['images/char-boy.png', -15];
+const [SPRITE, PIXEL_ADJUST] = [IMAGE.BOY, -15];
 class Player {
   constructor(ctx) {
     /** @type {number} */ this.row = 4;

@@ -1,9 +1,10 @@
 import Resources from '../resources';
+import { IMAGE } from '../constants';
 
 /**
  * The Enemy object represents an individual enemy (a bug).
  */
-const SPRITE = 'images/enemy-bug.png';
+const SPRITE = IMAGE.BUG;
 
 class Enemy {
   constructor(ctx) {

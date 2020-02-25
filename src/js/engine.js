@@ -1,7 +1,9 @@
 import Game from './classes/Game';
 import Resources from './resources';
 import '../style.css';
-import { WIDTH, HEIGHT, TYPEFACE } from './constants';
+import {
+  WIDTH, HEIGHT, TYPEFACE, IMAGE,
+} from './constants';
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
@@ -42,15 +44,6 @@ const init = () => {
   main();
 };
 
-Resources.load( // Load image assets using resources.js
-  'images/stone-block.png',
-  'images/water-block.png',
-  'images/grass-block.png',
-  'images/enemy-bug.png',
-  'images/char-boy.png',
-  'images/Rock.png',
-  'images/Key.png',
-  'images/Heart.png',
-);
+Resources.load(...Object.values(IMAGE));
 Resources.loadFonts(TYPEFACE);
 Resources.onReady(init);

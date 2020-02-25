@@ -20,3 +20,14 @@ export const ROW_HEIGHT_PIXELS = 83;
 export const COL_WIDTH_PIXELS = 101;
 
 export const TYPEFACE = 'Seymour One';
+
+export const IMAGE = {
+  STONE: 'images/stone-block.png',
+  WATER: 'images/water-block.png',
+  GRASS: 'images/grass-block.png',
+  BUG: 'images/enemy-bug.png',
+  BOY: 'images/char-boy.png',
+  ROCK: 'images/Rock.png',
+  KEY: 'images/Key.png',
+  HEART: 'images/Heart.png',
+};
