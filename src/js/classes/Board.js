@@ -1,8 +1,6 @@
 import Resources from '../resources';
 import {
-  GAME_STATE, TILE,
-  COL_WIDTH_PIXELS, ROW_HEIGHT_PIXELS,
-  ROWS_COUNT, COLUMN_COUNT,
+  GAME_STATE, TILE, COL_WIDTH_PIXELS, ROW_HEIGHT_PIXELS, ROWS_COUNT, COLUMN_COUNT,
 } from '../constants';
 
 const ANIMATION_STATE = {
@@ -233,7 +231,7 @@ class Board {
 
   /**
    * If the animation state is .CONTAINS_NEW_CHANGES, it completes the processing
-   * of the data contained in this.prndingTileChanges and initiates the animation.
+   * of the data contained in this.pendingTileChanges and initiates the animation.
    * If the animation state is .ANIMATE, it animates the changes whose time has
    * come. Otherwise, this method does nothing.
    * @param {number} dt The time elapsed since the last update
