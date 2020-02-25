@@ -5,8 +5,6 @@ import MapAccessories from './MapAccessories';
 import Player from './Player';
 import {
   WIDTH, HEIGHT, GAME_STATE, TILE,
-  COL_WIDTH_PIXELS, ROW_HEIGHT_PIXELS,
-  ROWS_COUNT, COLUMN_COUNT,
 } from '../constants';
 
 const ALLOWED_KEYS = {
@@ -86,7 +84,7 @@ class Game {
     this.board.init(this, this.mapAccessories);
     this.enemyHandler.init(this, this.board, this.player);
     this.player.init(this, this.board, this.enemyHandler);
-    this.hud.init(this, ROWS_COUNT, ROW_HEIGHT_PIXELS, COLUMN_COUNT, COL_WIDTH_PIXELS);
+    this.hud.init(this);
     this.mapAccessories.init(this, this.board);
 
     // Initialize high score cookie expiry (15 years off, rather permanent)
