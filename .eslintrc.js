@@ -7,6 +7,7 @@ module.exports = {
     'arrow-parens': ['error', 'as-needed'],
     'import/no-extraneous-dependencies': ['error', {'devDependencies': true}],
     'no-cond-assign': 'off',
+    'no-confusing-arrow': 'off',
     'no-fallthrough': 'off',
     'no-mixed-operators': 'off',
     'no-multi-assign': 'off',

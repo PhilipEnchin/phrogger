@@ -24,32 +24,15 @@ class Board {
     this.ctx = ctx;
   }
 
-  /**
-   * Initializes game board, and caches coordinates of each tile.
-   */
   init(game, mapAccessories) {
-    let row;
-    let col;
-    const rowTypes = [];
-    // Store row types in a temporary array
-    for (row = 0; row < ROWS_COUNT; row++) {
-      if (row === 0) {
-        rowTypes.push(TILE.WATER);
-      } else {
-        rowTypes.push(TILE.GRASS);
-      }
-    }
-    // Initialize tileTypes (using array from above) and tilePixels grids
-    for (col = 0; col < COLUMN_COUNT; col++) {
+    const rowTypes = [...Array(ROWS_COUNT)].map((_, i) => i === 0 ? TILE.WATER : TILE.GRASS);
+
+    for (let col = 0; col < COLUMN_COUNT; col++) {
       this.tilePixels.push([]);
-      this.tileTypes.push([]);
-      for (row = 0; row < ROWS_COUNT; row++) {
-        const coordinates = {
-          x: col * COL_WIDTH_PIXELS,
-          y: row * ROW_HEIGHT_PIXELS,
-        };
-        this.tilePixels[col].push(coordinates);
-        this.tileTypes[col].push(rowTypes[row]);
+      this.tileTypes.push([...rowTypes]);
+      const x = col * COL_WIDTH_PIXELS;
+      for (let row = 0; row < ROWS_COUNT; row++) {
+        this.tilePixels[col].push({ x, y: row * ROW_HEIGHT_PIXELS });
       }
     }
 
