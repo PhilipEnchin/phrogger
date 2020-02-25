@@ -1,7 +1,7 @@
 import Game from './classes/Game';
 import Resources from './resources';
 import '../style.css';
-import { WIDTH, HEIGHT } from './constants';
+import { WIDTH, HEIGHT, TYPEFACE } from './constants';
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
@@ -52,4 +52,5 @@ Resources.load([ // Load image assets using resources.js
   'images/Key.png',
   'images/Heart.png',
 ]);
+Resources.loadFonts(TYPEFACE);
 Resources.onReady(init);

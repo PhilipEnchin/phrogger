@@ -18,3 +18,5 @@ export const ROWS_COUNT = 6;
 export const COLUMN_COUNT = 5;
 export const ROW_HEIGHT_PIXELS = 83;
 export const COL_WIDTH_PIXELS = 101;
+
+export const TYPEFACE = 'Seymour One';

@@ -1,4 +1,6 @@
-import { WIDTH, HEIGHT, GAME_STATE } from '../constants';
+import {
+  WIDTH, HEIGHT, GAME_STATE, TYPEFACE,
+} from '../constants';
 
 /**
  * Object representing the heads-up display - lives remaining, level number,
@@ -6,7 +8,8 @@ import { WIDTH, HEIGHT, GAME_STATE } from '../constants';
  * @constructor
  */
 
-const [TYPEFACE, GAME_TITLE] = ['Impact', 'PHROGGER'];
+const GAME_TITLE = 'PHROGGER';
+// const FONT = `$"{TYPEFACE}", serif`
 const GAME_INSTRUCTIONS = [
   'Use arrow keys to get across the road',
   'Don\'t forget to grab the key!',
@@ -36,7 +39,7 @@ const DIE_TEXTS = [
  * @param {string} alignment Left, right or center alignment.
  */
 const renderText = (ctx, text, x, y, textSize, typeface, alignment) => {
-  ctx.font = `${textSize}pt ${typeface}`;
+  ctx.font = `${textSize}pt ${typeface}, sans-serif`;
   ctx.textAlign = alignment;
   ctx.fillText(text, x, y, WIDTH);
   ctx.strokeText(text, x, y, WIDTH);
