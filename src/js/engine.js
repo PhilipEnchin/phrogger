@@ -42,7 +42,7 @@ const init = () => {
   main();
 };
 
-Resources.load([ // Load image assets using resources.js
+Resources.load( // Load image assets using resources.js
   'images/stone-block.png',
   'images/water-block.png',
   'images/grass-block.png',
@@ -51,6 +51,6 @@ Resources.load([ // Load image assets using resources.js
   'images/Rock.png',
   'images/Key.png',
   'images/Heart.png',
-]);
+);
 Resources.loadFonts(TYPEFACE);
 Resources.onReady(init);

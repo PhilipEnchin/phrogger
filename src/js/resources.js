@@ -59,26 +59,10 @@ const loadImages = url => {
   }
 };
 
-/* This is the publicly accessible image loading function. It accepts
-  * an array of strings pointing to image files or a string for a single
-  * image. It will then call our private image loading function accordingly.
-  */
-const load = urlOrArr => {
-  if (urlOrArr instanceof Array) {
-    /* If the developer passed in an array of images
-      * loop through each value and call our image
-      * loader on that image file
-      */
-    urlOrArr.forEach(url => {
-      loadImages(url);
-    });
-  } else {
-    /* The developer did not pass an array to this function,
-      * assume the value is a string and call our image loader
-      * directly.
-      */
-    loadImages(urlOrArr);
-  }
+const load = (...urls) => {
+  urls.forEach(url => {
+    loadImages(url);
+  });
 };
 
 const loadFonts = (...fonts) => {
