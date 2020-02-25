@@ -11,39 +11,12 @@ const ANIMATION_STATE = {
 
 const IMAGE_URL_ARRAY = [IMAGE.WATER, IMAGE.STONE, IMAGE.GRASS];
 
-
-/**
- * The Board class deals with anything relating to the game board. It has methods
- * for returning coordinates to any tile on the board, rendering the board, as
- * well as returning randomly generated coordinates. It stores and deals with
- * data for which tiles are which types, which rows are roads, as well as the
- * animation used for transitioning from one board to another.
- * @constructor
- */
 class Board {
   constructor(ctx) {
-    /**
-     * A 2D array of tile-types
-     * @type {Array.<Array.<number>>}
-     */
-    this.tileTypes = [];
-    /**
-     * A 2D array of all the tile coordinates, calculated in advance (in the
-     * init() method) for quick and easy access!
-     * @type {Array.<Array.<number>>}
-     */
-    this.tileCoordinates = [];
-    /**
-     * Array of row indices that are roads, used when generating enemy locations.
-     * @type {Array<number>}
-     */
-    this.roadRowNumbers = [];
-    /**
-     * Object that stores an array of upcoming tile changes in an animation
-     * between levels, and the status (an enum) of that animation.
-     * @type {Object.<string, number|Array.<Object.<string, Object.<string,number>|number>>}
-     */
-    this.pendingTileChanges = {
+    this.tileTypes = []; // 2d array of tile types
+    this.tilePixels = []; // 2d array of tile coordinates
+    this.roadRowNumbers = []; // Row indices that are roads (per level)
+    this.pendingTileChanges = { // (Between-level animations)
       status: null,
       changes: [],
     };
@@ -66,16 +39,16 @@ class Board {
         rowTypes.push(TILE.GRASS);
       }
     }
-    // Initialize tileTypes (using array from above) and tileCoordinates grids
+    // Initialize tileTypes (using array from above) and tilePixels grids
     for (col = 0; col < COLUMN_COUNT; col++) {
-      this.tileCoordinates.push([]);
+      this.tilePixels.push([]);
       this.tileTypes.push([]);
       for (row = 0; row < ROWS_COUNT; row++) {
         const coordinates = {
           x: col * COL_WIDTH_PIXELS,
           y: row * ROW_HEIGHT_PIXELS,
         };
-        this.tileCoordinates[col].push(coordinates);
+        this.tilePixels[col].push(coordinates);
         this.tileTypes[col].push(rowTypes[row]);
       }
     }
@@ -122,7 +95,7 @@ class Board {
    * @return {Object.<string,number>} The coordinates of the specified tile.
    */
   pixelCoordinatesForBoardCoordinates(colNumber, rowNumber) {
-    return { ...this.tileCoordinates[colNumber][rowNumber] };
+    return { ...this.tilePixels[colNumber][rowNumber] };
   }
 
   /**
@@ -329,7 +302,7 @@ class Board {
     let image;
     for (let row = 0; row < ROWS_COUNT; row++) {
       for (let col = 0; col < COLUMN_COUNT; col++) {
-        coordinates = this.tileCoordinates[col][row];
+        coordinates = this.tilePixels[col][row];
         image = Resources.get(IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
         this.ctx.drawImage(image, coordinates.x, coordinates.y);
       }
