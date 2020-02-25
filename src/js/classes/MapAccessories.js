@@ -4,6 +4,12 @@ import {
   ROWS_COUNT, COLUMN_COUNT, IMAGE,
 } from '../constants';
 
+const IMAGE_URL_ARRAY = [IMAGE.KEY, IMAGE.ROCK, IMAGE.HEART];
+const ACCESSORY_TYPE = { KEY: 0, ROCK: 1, HEART: 2 };
+const ROCK_PIXEL_ADJUST = -25;
+const KEY_PIXEL_ADJUST = -15;
+const PROBABILITY_OF_EXTRA_LIFE = 1 / 20;
+
 const randomBoardLocationInRows = (...args) => {
   let row;
   if (args.length === 0) { // No rows provided, use all possible rows
@@ -69,26 +75,26 @@ class MapAccessories {
       rockLocation = randomBoardLocationInRows(0);
     }
     board.setTile(rockLocation.column, rockLocation.row, TILE.STONE);
-    this.rockAccessory = this.packageAccessory(MapAccessories.Type.ROCK, rockLocation);
-    this.rockAccessory.coordinates.y += MapAccessories.ROCK_PIXEL_ADJUST;
+    this.rockAccessory = this.packageAccessory(ACCESSORY_TYPE.ROCK, rockLocation);
+    this.rockAccessory.coordinates.y += ROCK_PIXEL_ADJUST;
     // Key...
     let keyLocation = board.randomRoadBoardLocation();
     while (keyLocation.column < this.leftMostKeyPosition) {
       keyLocation = board.randomRoadBoardLocation();
     }
-    this.keyAccessory = this.packageAccessory(MapAccessories.Type.KEY, keyLocation);
-    this.keyAccessory.coordinates.y += MapAccessories.KEY_PIXEL_ADJUST;
+    this.keyAccessory = this.packageAccessory(ACCESSORY_TYPE.KEY, keyLocation);
+    this.keyAccessory.coordinates.y += KEY_PIXEL_ADJUST;
 
     // Add rock and key to accessories array
     this.accessories.splice(0, 0, this.rockAccessory, this.keyAccessory);
 
     // Heart...
-    if (Math.random() <= MapAccessories.PROBABILITY_OF_EXTRA_LIFE) {
+    if (Math.random() <= PROBABILITY_OF_EXTRA_LIFE) {
       let heartLocation = board.randomRoadBoardLocation();
       while (heartLocation.column === keyLocation.column && heartLocation.row === keyLocation.row) {
         heartLocation = board.randomRoadBoardLocation();
       }
-      this.heartAccessory = this.packageAccessory(MapAccessories.Type.HEART, heartLocation);
+      this.heartAccessory = this.packageAccessory(ACCESSORY_TYPE.HEART, heartLocation);
       this.accessories.push(this.heartAccessory);
     }
   }
@@ -190,26 +196,12 @@ class MapAccessories {
       let image;
       let coordinates;
       this.accessories.forEach(accessoryObject => {
-        image = Resources.get(MapAccessories.IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
+        image = Resources.get(IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
         coordinates = accessoryObject.coordinates;
         this.ctx.drawImage(image, coordinates.x, coordinates.y);
       }, this);
     }
   }
 }
-
-/**
- * Enum for possible accessory types.
- * @enum {number}
- */
-MapAccessories.Type = { KEY: 0, ROCK: 1, HEART: 2 };
-/**
- * Array of image URLs that correspond with the possible accessory types.
- * @const {Array.<string>}
- */
-MapAccessories.IMAGE_URL_ARRAY = [IMAGE.KEY, IMAGE.ROCK, IMAGE.HEART];
-/** @const */ MapAccessories.ROCK_PIXEL_ADJUST = -25;
-/** @const */ MapAccessories.KEY_PIXEL_ADJUST = -15;
-/** @const */ MapAccessories.PROBABILITY_OF_EXTRA_LIFE = 1 / 20;
 
 export default MapAccessories;
