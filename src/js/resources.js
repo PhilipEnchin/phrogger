@@ -83,7 +83,7 @@ const loadFonts = (...fonts) => {
   */
 
 const Resources = {
-  load, loadFonts, get, onReady, isReady,
+  load, loadFonts, get, onReady,
 };
 
 export default Resources;
