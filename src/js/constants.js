@@ -31,3 +31,5 @@ export const IMAGE = {
   KEY: 'images/Key.png',
   HEART: 'images/Heart.png',
 };
+
+export const ENEMY_PIXEL_ADJUST = -20;

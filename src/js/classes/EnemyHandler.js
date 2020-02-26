@@ -1,7 +1,10 @@
 import Enemy from './Enemy';
-import { GAME_STATE, COL_WIDTH_PIXELS, COLUMN_COUNT } from '../constants';
+import {
+  GAME_STATE, COL_WIDTH_PIXELS, COLUMN_COUNT, ENEMY_PIXEL_ADJUST,
+} from '../constants';
 
 const [PLAYER_EDGE_ADJUST_RIGHT, PLAYER_EDGE_ADJUST_LEFT] = [29, 30];
+const [ENEMY_EDGE_ADJUST_RIGHT, ENEMY_EDGE_ADJUST_LEFT] = [5, 36];
 
 /**
  * Puts the Enemy object inside another object with entry and exit times.
@@ -14,10 +17,10 @@ const packageEnemyWithEntryAndExitTimes = enemy => {
   // Seconds required to traverse a single column
   const secondsPerColumn = COL_WIDTH_PIXELS / enemy.speed;
   // Seconds by which to adjust entry times based on visual edges of sprites
-  const secondsPerEntryEdgeAdjustWidth = (Enemy.EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT)
+  const secondsPerEntryEdgeAdjustWidth = (ENEMY_EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT)
     / enemy.speed;
   // Same, buf for exit times
-  const secondsPerExitEdgeAdjustWidth = (Enemy.EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT)
+  const secondsPerExitEdgeAdjustWidth = (ENEMY_EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT)
     / enemy.speed;
 
   const now = Date.now() / 1000;
@@ -194,7 +197,7 @@ class EnemyHandler {
         }, this);
         // Add paused time to tile entries and exits (for collisions)
         board.roadRowNumbers.forEach(i => {
-          const rowIndex = board.pixelCoordinatesForBoardCoordinates(0, i).y + Enemy.PIXEL_ADJUST;
+          const rowIndex = board.pixelCoordinatesForBoardCoordinates(0, i).y + ENEMY_PIXEL_ADJUST;
           if (this.activeEnemiesByRow[rowIndex] !== undefined) {
             this.activeEnemiesByRow[rowIndex].forEach(enemyObject => {
               for (let j = enemyObject.entryTimes.length - 1; j >= 0; j--) {
@@ -352,7 +355,7 @@ class EnemyHandler {
       return null;
     }
 
-    const rowIndex = board.pixelCoordinatesForBoardCoordinates(x, y).y + Enemy.PIXEL_ADJUST;
+    const rowIndex = board.pixelCoordinatesForBoardCoordinates(x, y).y + ENEMY_PIXEL_ADJUST;
 
     this.potentialCollisionLocation.column = x;
     this.potentialCollisionLocation.rowIndex = rowIndex;
