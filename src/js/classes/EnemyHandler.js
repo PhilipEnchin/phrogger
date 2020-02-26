@@ -135,21 +135,10 @@ class EnemyHandler {
     }
   }
 
-  /**
-   * If a retired enemy is available, returns that enemy. Otherwise, creates a new
-   * enemy and returns that. Either way, the enemy returned is packaged in an
-   * object along with its retireTime.
-   * @return {Object.<string, Enemy | number>}
-   */
   getNewEnemy() {
-    const { board } = this;
-    let newEnemy;
-    if (!(newEnemy = this.retiredEnemies.pop())) {
-      newEnemy = { enemy: new Enemy(this.ctx), retireTime: null };
-    }
-    const yCoordinate = board.randomRoadYCoordinate();
-    newEnemy.enemy.init(SPAWN_X, yCoordinate, this.lowerSpeedLimit,
-      this.upperSpeedLimit); // Initialize (or reinitialize) enemy
+    const newEnemy = this.retiredEnemies.pop() || { enemy: new Enemy(this.ctx) };
+    const yCoordinate = this.board.randomRoadYCoordinate();
+    newEnemy.enemy.init(SPAWN_X, yCoordinate, this.lowerSpeedLimit, this.upperSpeedLimit);
     return newEnemy;
   }
 
