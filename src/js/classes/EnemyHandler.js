@@ -81,23 +81,14 @@ class EnemyHandler {
     }
   }
 
-  /**
-   * @param {number} spawnInterval New spawn interval.
-   * @param {number} spawnVariance New spawn variance.
-   */
   setSpawnIntervalAndVariance(spawnInterval, spawnVariance) {
-    // If the next spawn is so far away that it doesn't fit into the new
-    // parameters, generate it again.
-    if (this.timeUntilSpawn
-      > (this.spawnInterval = spawnInterval) * ((this.spawnVariance = spawnVariance) + 1)) {
+    // If the next spawn is so far away that it doesn't fit the new parameters, generate it again.
+    if ((this.spawnInterval = spawnInterval) * ((this.spawnVariance = spawnVariance) + 1)
+      < this.timeUntilSpawn) {
       this.newTimeUntilSpawn();
     }
   }
 
-  /**
-   * @param {number} lowerSpeedLimit New lower bound for enemy speed
-   * @param {number} upperSpeedLimit New upper bound for enemy speed
-   */
   setSpeeds(lowerSpeedLimit, upperSpeedLimit) {
     this.lowerSpeedLimit = lowerSpeedLimit;
     this.upperSpeedLimit = upperSpeedLimit;
