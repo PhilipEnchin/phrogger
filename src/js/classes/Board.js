@@ -100,18 +100,8 @@ class Board {
     COLS.forEach(c => this.setTile(c, rowNumber, tileType));
   }
 
-  /**
-   * Takes column and row numbers, and a tile type, and sets that tile. Depending
-   * on the game state, this method will either set the tile immediately, or add
-   * it to the collection of tile changes that will animate.
-   * @param {number} colNumber The column number, from left to right, starting at
-   *     zero
-   * @param {number} rowNumber The row number, from top to bottom, starting at zero.
-   * @param {tileType} tileType The type of tile
-   */
   setTile(colNumber, rowNumber, tileType) {
-    const { game } = this;
-    switch (game.state) {
+    switch (this.game.state) {
       case GAME_STATE.PLAY:
       case GAME_STATE.TITLE:
         this.tileTypes[colNumber][rowNumber] = tileType;
