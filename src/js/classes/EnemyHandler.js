@@ -6,29 +6,20 @@ import {
 const [PLAYER_EDGE_ADJUST_RIGHT, PLAYER_EDGE_ADJUST_LEFT] = [29, 30];
 const [ENEMY_EDGE_ADJUST_RIGHT, ENEMY_EDGE_ADJUST_LEFT] = [5, 36];
 
-/**
- * Puts the Enemy object inside another object with entry and exit times.
- * @param {Enemy} enemy The enemy object
- * @return {Object.<string, Enemy | Array.<number>>}
- */
+// Puts the Enemy object inside another object with entry and exit times.
 const packageEnemyWithEntryAndExitTimes = enemy => {
   const entryTimes = [];
   const exitTimes = [];
-  // Seconds required to traverse a single column
-  const secondsPerColumn = COL_WIDTH_PIXELS / enemy.speed;
-  // Seconds by which to adjust entry times based on visual edges of sprites
-  const secondsPerEntryEdgeAdjustWidth = (ENEMY_EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT)
-    / enemy.speed;
-  // Same, buf for exit times
-  const secondsPerExitEdgeAdjustWidth = (ENEMY_EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT)
-    / enemy.speed;
+  const secondsPerColumn = COL_WIDTH_PIXELS / enemy.speed; // Seconds to traverse a column
+
+  // Adjust entry and exit times based on visual edges of sprites
+  const secondsPerEntry = (ENEMY_EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT) / enemy.speed;
+  const secondsPerExit = (ENEMY_EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT) / enemy.speed;
 
   const now = Date.now() / 1000;
-  for (let col = COLUMN_COUNT + 1; col >= 0; col--) {
-    entryTimes.splice(0, 0,
-      col * secondsPerColumn + secondsPerEntryEdgeAdjustWidth + now);
-    exitTimes.splice(0, 0,
-      (col + 2) * secondsPerColumn - secondsPerExitEdgeAdjustWidth + now);
+  for (let col = 0; col <= COLUMN_COUNT + 1; col++) {
+    entryTimes.push(col * secondsPerColumn + secondsPerEntry + now);
+    exitTimes.push((col + 2) * secondsPerColumn - secondsPerExit + now);
   }
 
   return { enemy, entryTimes, exitTimes };
