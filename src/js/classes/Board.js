@@ -42,10 +42,6 @@ class Board {
     this.mapAccessories = mapAccessories;
   }
 
-  /**
-   * Sets up map accordinly when game state is set.
-   * @param {number} state The new game state.
-   */
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
@@ -70,26 +66,12 @@ class Board {
     }
   }
 
-  /**
-   * Returns the pixel coordinates for the column and row corresponding to a tile.
-   * @param {number} colNumber The column number, from left to right, starting at
-   *     zero
-   * @param {number} rowNumber The row number, from top to bottom, starting at zero.
-   * @return {Object.<string,number>} The coordinates of the specified tile.
-   */
   pixelCoordinatesForBoardCoordinates(colNumber, rowNumber) {
     return { ...this.tilePixels[colNumber][rowNumber] };
   }
 
-  /**
-   * Takes pairs of arguments. The first of each pair is either a row number or an
-   * array of row numbers. The second of each pair is a tile type. Optionally, a
-   * single extra tile type argument (or if no pairs are specified, a single
-   * argument) can be used to apply that tile to all the rows now already specified
-   * by the previous arguments. If that last one is omitted, no additional rows are
-   * changed. This method uses Board.prototype.setRow() to actually set the rows.
-   * @param {...*} var_args See above description.
-   */
+  /* 0 or more arguments in pairs: A row number or array of row numbers followed by a tile type for
+     that row. An optional final single tile type argument for all remaining rows. */
   setRows(...args) {
     const remainingRows = []; // Stores rows not yet set in this invocation
     let rowArray;
