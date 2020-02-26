@@ -51,30 +51,18 @@ class EnemyHandler {
     this.player = player;
   }
 
-  /**
-   * Sets properties and calls methods based on the new game state.
-   * @param {number} state The new game state
-   */
+  // Do stuff when the game state changes
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
     } = GAME_STATE;
     switch (state) {
       case TITLE:
-        this.moveable = true;
-        this.hidden = false;
         this.setSpeeds(200, 500);
         this.setSpawnIntervalAndVariance(0.3, 0.5);
-        break;
       case INSTRUCTIONS:
-        this.moveable = true;
-        this.hidden = false;
-        break;
       case LEVEL_TITLE:
       case REINCARNATE:
-        this.moveable = true;
-        this.hidden = false;
-        break;
       case PLAY:
         this.moveable = true;
         this.hidden = false;
