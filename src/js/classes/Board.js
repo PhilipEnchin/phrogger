@@ -159,22 +159,12 @@ class Board {
     }
   }
 
-  /**
-   * Randomly generates a Y coordinate corresponding with a tile on an existing
-   * road. Used when an enemy is generated to ensure its location is random but
-   * placed correctly on a road.
-   * @return {number} A vertical pixel coordinate corresponding with a road.
-   */
   randomRoadYCoordinate() {
     const roadRowIndex = Math.floor(Math.random() * this.roadRowNumbers.length);
     const rowIndex = this.roadRowNumbers[roadRowIndex];
     return this.pixelCoordinatesForBoardCoordinates(0, rowIndex).y;
   }
 
-  /**
-   * @return {Object.<string, number>} An object that contains randomly generated
-   *     row and column numbers.
-   */
   randomRoadBoardLocation() {
     return {
       column: Math.floor(Math.random() * COLUMN_COUNT),
@@ -182,23 +172,13 @@ class Board {
     };
   }
 
-  /**
-   * Returns a boolean indicating whether or not the player is able to move to the
-   * specified location. (The player cannot if the location is off the edge of the
-   * game board, or if there's an object blocking its way.) Also calls the same
-   * method on mapAccessories, and sets the game state to .WIN_LEVEL if the move
-   * to the specified location results in passing the level.
-   * @param {number} x A row number
-   * @param {number} y A column number
-   * @return {boolean} Whether the move is legal.
-   */
+  // Checks location validity and win state before moving player
   playerCanMoveHere(x, y) {
-    const { game, mapAccessories: ma } = this;
-    // If mapAccessories says player can move here, and the player isn't trying
-    // to move off the game board...
-    if (ma.playerCanMoveHere(x, y) && x < COLUMN_COUNT && x >= 0 && y < ROWS_COUNT && y >= 0) {
+    // If mapAccessories says player can move, and isn't trying to move off the game board...
+    if (this.mapAccessories.playerCanMoveHere(x, y)
+    && x < COLUMN_COUNT && x >= 0 && y < ROWS_COUNT && y >= 0) {
       // If the player is hitting the top row and isn't drowning, level is won!
-      if (y === 0 && this.tileTypes[x][y] !== TILE.WATER) { game.setState(GAME_STATE.WIN_LEVEL); }
+      if (y === 0 && this.tileTypes[x][y] !== TILE.WATER) this.game.setState(GAME_STATE.WIN_LEVEL);
       return true; // Move is legal
     }
     return false; // Move is illegal
