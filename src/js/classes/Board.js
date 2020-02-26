@@ -113,66 +113,46 @@ class Board {
     }
   }
 
-  /**
-   * Adds this tile change to the upcoming tile change animation.
-   * @param {number} colNumber The column number, from left to right, starting at
-   *     zero
-   * @param {number} rowNumber The row number, from top to bottom, starting at zero.
-   * @param {tileType} tileType The type of tile
-   */
+  // Adds this tile change to the upcoming tile change animation.
   addTileChangeToPending(column, row, tileType) {
     this.pendingTileChanges.changes.push({
-      location: { column, row }, // The location on the game board
-      tileType, // The type of tile
-      time: Math.random(), // A randomly generated time (processed in update())
+      location: { column, row },
+      tileType,
+      duration: Math.random(), // A randomly generated time (processed in update())
     });
     this.pendingTileChanges.status = ANIMATION_STATE.CONTAINS_NEW_CHANGES;
   }
 
-  /**
-   * If the animation state is .CONTAINS_NEW_CHANGES, it completes the processing
-   * of the data contained in this.pendingTileChanges and initiates the animation.
-   * If the animation state is .ANIMATE, it animates the changes whose time has
-   * come. Otherwise, this method does nothing.
-   * @param {number} dt The time elapsed since the last update
-   * @param {number} now The system time at the moment of invocation
-   */
+  // Prepare if required, and update animation between levels
   update(dt, now) {
-    const { game } = this;
-    let changes; // Array of upcoming tile changes
     switch (this.pendingTileChanges.status) {
       case ANIMATION_STATE.NOTHING_TO_ANIMATE: break;
       case ANIMATION_STATE.CONTAINS_NEW_CHANGES: {
-        changes = this.pendingTileChanges.changes;
-        changes.sort((a, b) => a.time - b.time);
+        const { changes } = this.pendingTileChanges;
+        changes.sort((a, b) => a.duration - b.duration);
         // Use the randomly generated values as delta-time, and replace those
         // with corresponding system time
         let previousValue = 0;
-        let totalTime = changes[changes.length - 1].time;
+        let totalTime = changes[changes.length - 1].duration;
         changes.forEach(change => {
-          previousValue = change.time += previousValue;
+          previousValue = change.duration += previousValue;
         });
         totalTime += previousValue;
         // Scale the time to fit the time alotted for the animation
-        changes.forEach(change => {
-          change.time *= game.timeRemaining * 9 / totalTime / 10;
-          change.time += now;
+        changes.reverse().forEach(change => {
+          change.duration *= this.game.timeRemaining * 9 / totalTime / 10;
+          change.duration += now;
         });
         this.pendingTileChanges.status = ANIMATION_STATE.ANIMATE;
       }
       case ANIMATION_STATE.ANIMATE: {
-        changes = this.pendingTileChanges.changes;
-        let change;
-        let location;
+        const { changes } = this.pendingTileChanges;
         // Animate changes that are to be complete at this time
-        while (changes.length > 0 && now >= changes[0].time) {
-          change = changes.shift();
-          location = change.location;
-          this.tileTypes[location.column][location.row] = change.tileType;
+        while (changes.length && now >= changes[changes.length - 1].duration) {
+          const { location, tileType } = changes.pop();
+          this.tileTypes[location.column][location.row] = tileType;
         }
-        if (changes.length === 0) { // No tile changes left, finish animation
-          this.pendingTileChanges.status = ANIMATION_STATE.NOTHING_TO_ANIMATE;
-        }
+        if (!changes.length) this.pendingTileChanges.status = ANIMATION_STATE.NOTHING_TO_ANIMATE;
         break;
       }
       default: throw new Error(`Unknown animation state: ${this.pendingTileChanges.status}`);
