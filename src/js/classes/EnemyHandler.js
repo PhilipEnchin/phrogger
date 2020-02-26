@@ -102,53 +102,34 @@ class EnemyHandler {
    * @param {number} now System time at invocation
    */
   update(dt, now) {
-    const { board, player } = this;
     if (this.moveable) {
       // If the game has been paused, add that time onto the active enemies
       if (this.timePaused > 0) {
         // Add paused time to retire time
-        this.activeEnemies.forEach(enemyObject => {
-          enemyObject.retireTime += this.timePaused;
-        }, this);
+        this.activeEnemies.forEach(enemyObject => enemyObject.retireTime += this.timePaused);
         // Add paused time to tile entries and exits (for collisions)
-        board.roadRowNumbers.forEach(i => {
-          const rowIndex = board.pixelCoordinatesForBoardCoordinates(0, i).y + ENEMY_PIXEL_ADJUST;
-          if (this.activeEnemiesByRow[rowIndex] !== undefined) {
-            this.activeEnemiesByRow[rowIndex].forEach(enemyObject => {
-              for (let j = enemyObject.entryTimes.length - 1; j >= 0; j--) {
-                enemyObject.entryTimes[j] += this.timePaused;
-              }
-              for (let j = enemyObject.exitTimes.length - 1; j >= 0; j--) {
-                enemyObject.exitTimes[j] += this.timePaused;
-              }
-            }, this);
-          }
-        }, this);
+        Object.values(this.activeEnemiesByRow)
+          .forEach(activeEnemies => activeEnemies
+            .forEach(enemy => {
+              enemy.entryTimes = enemy.entryTimes.map(t => t + this.timePaused);
+              enemy.exitTimes = enemy.exitTimes.map(t => t + this.timePaused);
+            }));
         // Add paused time to current upcoming collision
-        player.addPauseTimeToCollision(this.timePaused);
+        this.player.addPauseTimeToCollision(this.timePaused);
         this.timePaused = 0; // Reset paused time to zero
       }
-      let retiredEnemy;
-      /* This loop will result in some enemies that aren't retired immediately
-        as they move offscreen, in the case of an enemy that was generated
-        later, but reached the right side of the screen first, but doing it
-        this way avoids the overhead of sorting the enemies in by retire time
-        every time a new enemy is generated */
+      // Retire enemies if the first activeEnemy is of retirement age
       while (this.activeEnemies.length > 0 && now >= this.activeEnemies[0].retireTime) {
-        retiredEnemy = this.activeEnemies.shift();
+        const retiredEnemy = this.activeEnemies.shift();
         this.retiredEnemies.push(retiredEnemy);
         this.activeEnemiesByRow[retiredEnemy.enemy.y].shift();
       }
 
       // Update remaining active enemies
-      for (let i = this.activeEnemies.length - 1; i >= 0; i--) {
-        this.activeEnemies[i].enemy.update(dt);
-      }
+      this.activeEnemies.forEach(({ enemy }) => enemy.update(dt));
 
       // Spawn a new enemy if the time until spawn has reached zero.
-      if ((this.timeUntilSpawn -= dt) <= 0) {
-        this.spawnNewEnemy();
-      }
+      if ((this.timeUntilSpawn -= dt) <= 0) this.spawnNewEnemy();
     } else {
       this.timePaused += dt;
     }
