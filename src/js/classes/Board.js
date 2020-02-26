@@ -73,30 +73,18 @@ class Board {
   /* 0 or more arguments in pairs: A row number or array of row numbers followed by a tile type for
      that row. An optional final single tile type argument for all remaining rows. */
   setRows(...args) {
-    const remainingRows = []; // Stores rows not yet set in this invocation
-    let rowArray;
-    let tileType;
-    for (let i = ROWS_COUNT - 1; i >= 0; i--) {
-      remainingRows.splice(0, 0, i);
-    }
-    while (args.length > 1) { // If there is at least one pair remaining in args
-      if (args[0].constructor === Number) { // If the first arg is a number
-        rowArray = [args.shift()]; // Place in an array, then save
-      } else { // If the first arg is an array
-        rowArray = args.shift(); // Save as is
+    const remainingRows = new Set([...Array(ROWS_COUNT)].map((_, i) => i)); // Rows not yet set
+    args.forEach((tileType, i) => {
+      if (i % 2) {
+        (Array.isArray(args[i - 1]) ? args[i - 1] : [args[i - 1]]).forEach(row => {
+          this.setRow(row, tileType);
+          remainingRows.delete(row);
+        });
       }
-      tileType = args.shift(); // Next arg is tile type
-      // Step through rows specified and change those rows
-      for (let i = rowArray.length - 1; i >= 0; i--) {
-        this.setRow(rowArray[i], tileType);
-        remainingRows.splice(remainingRows.indexOf(rowArray[i]), 1);
-      }
-    }
-    if (args.length > 0) { // If the last arg is not part of a pair...
-      tileType = args.pop(); // The arg is a tile type
-      while (remainingRows.length > 0) { // Change remaining rows to that type
-        this.setRow(remainingRows.pop(), tileType);
-      }
+    });
+    if (args.length % 2) {
+      const tileType = args[args.length - 1];
+      remainingRows.forEach(row => this.setRow(row, tileType));
     }
   }
 
