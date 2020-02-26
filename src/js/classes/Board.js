@@ -90,29 +90,14 @@ class Board {
     }
   }
 
-  /**
-   * Takes a row number and a tile type, and sets that row to that tile type. This
-   * method uses Board.prototype.setTile() to actually set the individual tiles.
-   * @param {number} rowNumber The row number, from top to bottom, starting at zero.
-   * @param {tileType} tileType The type of tile
-   */
   setRow(rowNumber, tileType) {
-    if (tileType === TILE.STONE) { // If row is set to be a road...
-      if (this.roadRowNumbers.indexOf(rowNumber) === -1) {
-        this.roadRowNumbers.push(rowNumber); // Remember this row is a road
-      } else {
-        return; // This row is already a road. Do nothing.
-      }
-    } else { // This row is going to be non-road. Un-remember this row is a road
+    if (tileType === TILE.STONE) {
+      this.roadRowNumbers.push(...(this.roadRowNumbers.includes(rowNumber) ? [] : [rowNumber]));
+    } else {
       const rowArrayIndex = this.roadRowNumbers.indexOf(rowNumber);
-      if (rowArrayIndex !== -1) { // This row is going from road to something else
-        this.roadRowNumbers.splice(rowArrayIndex, 1);
-      }
+      if (rowArrayIndex !== -1) this.roadRowNumbers.splice(rowArrayIndex, 1);
     }
-    // Set tiles in this row
-    for (let col = COLUMN_COUNT - 1; col >= 0; col--) {
-      this.setTile(col, rowNumber, tileType);
-    }
+    COLS.forEach(c => this.setTile(c, rowNumber, tileType));
   }
 
   /**
