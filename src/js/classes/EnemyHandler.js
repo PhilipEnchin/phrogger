@@ -5,6 +5,7 @@ import {
 
 const [PLAYER_EDGE_ADJUST_RIGHT, PLAYER_EDGE_ADJUST_LEFT] = [29, 30];
 const [ENEMY_EDGE_ADJUST_RIGHT, ENEMY_EDGE_ADJUST_LEFT] = [5, 36];
+const SPAWN_X = -COL_WIDTH_PIXELS;
 
 // Puts the Enemy object inside another object with entry and exit times.
 const packageEnemyWithEntryAndExitTimes = enemy => {
@@ -40,18 +41,11 @@ class EnemyHandler {
     this.activeEnemiesByRow = {};
     this.potentialCollisionLocation = { column: null, rowIndex: null }; // Player location
     this.timePaused = 0; // Running total of time paused to adjust collisions after unpausing
-    this.spawnX = null; // Enemy spawn location
-    this.retireX = null; // Enemy retire location
 
     this.ctx = ctx;
   }
 
-  /** Initializes spawnX and retireX, which require the map to be initialized */
   init(game, board, player) {
-    this.spawnX = board.pixelCoordinatesForBoardCoordinates(0, 0).x - COL_WIDTH_PIXELS;
-    this.retireX = board.pixelCoordinatesForBoardCoordinates(COLUMN_COUNT - 1, 0).x
-      + COL_WIDTH_PIXELS;
-
     this.board = board;
     this.game = game;
     this.player = player;
@@ -194,7 +188,7 @@ class EnemyHandler {
       newEnemy = { enemy: new Enemy(this.ctx), retireTime: null };
     }
     const yCoordinate = board.randomRoadYCoordinate();
-    newEnemy.enemy.init(this.spawnX, yCoordinate, this.lowerSpeedLimit,
+    newEnemy.enemy.init(SPAWN_X, yCoordinate, this.lowerSpeedLimit,
       this.upperSpeedLimit); // Initialize (or reinitialize) enemy
     return newEnemy;
   }
