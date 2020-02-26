@@ -188,15 +188,12 @@ class Board {
    * Renders the game board.
    */
   render() {
-    let coordinates;
-    let image;
-    for (let row = 0; row < ROWS_COUNT; row++) {
-      for (let col = 0; col < COLUMN_COUNT; col++) {
-        coordinates = this.tilePixels[col][row];
-        image = Resources.get(IMAGE_URL_ARRAY[this.tileTypes[col][row]]);
-        this.ctx.drawImage(image, coordinates.x, coordinates.y);
-      }
-    }
+    ROWS.forEach(r => {
+      COLS.forEach(c => {
+        const { x, y } = this.tilePixels[c][r];
+        this.ctx.drawImage(Resources.get(IMAGE_URL_ARRAY[this.tileTypes[c][r]]), x, y);
+      });
+    });
   }
 }
 
