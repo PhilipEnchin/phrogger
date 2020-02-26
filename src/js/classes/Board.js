@@ -11,6 +11,8 @@ const ANIMATION_STATE = {
 
 const IMAGE_URL_ARRAY = [IMAGE.WATER, IMAGE.STONE, IMAGE.GRASS];
 
+const [ROWS, COLS] = [ROWS_COUNT, COLUMN_COUNT].map(c => [...Array(c)].map((_, i) => i));
+
 class Board {
   constructor(ctx) {
     this.tileTypes = []; // 2d array of tile types
@@ -25,16 +27,16 @@ class Board {
   }
 
   init(game, mapAccessories) {
-    const rowTypes = [...Array(ROWS_COUNT)].map((_, i) => i === 0 ? TILE.WATER : TILE.GRASS);
+    const rowTypes = ROWS.map(r => r === 0 ? TILE.WATER : TILE.GRASS);
 
-    for (let col = 0; col < COLUMN_COUNT; col++) {
+    COLS.forEach(c => {
       this.tilePixels.push([]);
       this.tileTypes.push([...rowTypes]);
-      const x = col * COL_WIDTH_PIXELS;
-      for (let row = 0; row < ROWS_COUNT; row++) {
-        this.tilePixels[col].push({ x, y: row * ROW_HEIGHT_PIXELS });
-      }
-    }
+      const x = c * COL_WIDTH_PIXELS;
+      ROWS.forEach(r => {
+        this.tilePixels[c].push({ x, y: r * ROW_HEIGHT_PIXELS });
+      });
+    });
 
     this.pendingTileChanges.status = ANIMATION_STATE.NOTHING_TO_ANIMATE;
 
@@ -73,7 +75,7 @@ class Board {
   /* 0 or more arguments in pairs: A row number or array of row numbers followed by a tile type for
      that row. An optional final single tile type argument for all remaining rows. */
   setRows(...args) {
-    const remainingRows = new Set([...Array(ROWS_COUNT)].map((_, i) => i)); // Rows not yet set
+    const remainingRows = new Set(ROWS); // Rows not yet set
     args.forEach((tileType, i) => {
       if (i % 2) {
         (Array.isArray(args[i - 1]) ? args[i - 1] : [args[i - 1]]).forEach(row => {
