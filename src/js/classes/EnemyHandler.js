@@ -8,14 +8,15 @@ const [ENEMY_EDGE_ADJUST_RIGHT, ENEMY_EDGE_ADJUST_LEFT] = [5, 36];
 const SPAWN_X = -COL_WIDTH_PIXELS;
 
 // Puts the Enemy object inside another object with entry and exit times.
-const packageEnemyWithEntryAndExitTimes = enemy => {
+const addEntryAndExitTimes = enemyObject => {
+  const { speed } = enemyObject.enemy;
   const entryTimes = [];
   const exitTimes = [];
-  const secondsPerColumn = COL_WIDTH_PIXELS / enemy.speed; // Seconds to traverse a column
+  const secondsPerColumn = COL_WIDTH_PIXELS / speed; // Seconds to traverse a column
 
   // Adjust entry and exit times based on visual edges of sprites
-  const secondsPerEntry = (ENEMY_EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT) / enemy.speed;
-  const secondsPerExit = (ENEMY_EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT) / enemy.speed;
+  const secondsPerEntry = (ENEMY_EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT) / speed;
+  const secondsPerExit = (ENEMY_EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT) / speed;
 
   const now = Date.now() / 1000;
   for (let col = 0; col <= COLUMN_COUNT + 1; col++) {
@@ -23,7 +24,11 @@ const packageEnemyWithEntryAndExitTimes = enemy => {
     exitTimes.push((col + 2) * secondsPerColumn - secondsPerExit + now);
   }
 
-  return { enemy, entryTimes, exitTimes };
+  enemyObject.entryTimes = entryTimes;
+  enemyObject.exitTimes = exitTimes;
+  enemyObject.retireTime = entryTimes[COLUMN_COUNT + 1];
+
+  return enemyObject;
 };
 
 /* A system for dealing with the evil bugs! Takes care of initializing the bugs,
@@ -157,19 +162,10 @@ class EnemyHandler {
     const { player } = this;
     // Quick check to make sure we haven't attempted this spawn too many times
     if (attemptIndex < EnemyHandler.MAX_SPAWN_ATTEMPTS) {
-      const enemyObjectWithRetireTime = this.getNewEnemy();
-      const nakedEnemy = enemyObjectWithRetireTime.enemy; // Unpackaged Enemy
-      const enemyObjectWithEntryAndExitTimes = packageEnemyWithEntryAndExitTimes(nakedEnemy);
-      const { entryTimes } = enemyObjectWithEntryAndExitTimes;
-      const rowIndex = nakedEnemy.y; // For activeEnemiesByRow...
-      const retireTime = entryTimes[COLUMN_COUNT + 1];
-      let rowOfEnemies = this.activeEnemiesByRow[rowIndex];
-
-      // Creates the row if this is the first enemy in that row.
-      if (rowOfEnemies === undefined) {
-        rowOfEnemies = [];
-        this.activeEnemiesByRow[rowIndex] = rowOfEnemies;
-      }
+      const enemyObject = addEntryAndExitTimes(this.getNewEnemy());
+      const { entryTimes } = enemyObject;
+      const { y } = enemyObject.enemy; // For activeEnemiesByRow...
+      const rowOfEnemies = this.activeEnemiesByRow[y] || (this.activeEnemiesByRow[y] = []);
 
       // If this is not the only active enemy in this row, we need to make sure
       // it won't overlap another enemy.
@@ -184,7 +180,7 @@ class EnemyHandler {
         // then we have potential for overlap. Retire that enemy and attempt
         // another spawn.
         if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
-          this.retiredEnemies.push(enemyObjectWithRetireTime);
+          this.retiredEnemies.push(enemyObject);
           this.spawnNewEnemy(attemptIndex + 1);
           return;
         }
@@ -196,7 +192,7 @@ class EnemyHandler {
         // enemy is out of that space, we have potential for overlap. Retire
         // that enemy and attempt another spawn.
         if (newEnemyFirstColumnEntry < leftMostEnemyInRowSecondColumnEntry) {
-          this.retiredEnemies.push(enemyObjectWithRetireTime);
+          this.retiredEnemies.push(enemyObject);
           this.spawnNewEnemy(attemptIndex + 1);
           return;
         }
@@ -204,16 +200,15 @@ class EnemyHandler {
 
       // If the player, in its current location, could be run over by this new
       // enemy, call newEnemyInRow() on player to let it know.
-      if (this.potentialCollisionLocation.rowIndex === rowIndex) {
+      if (this.potentialCollisionLocation.rowIndex === y) {
         player.newEnemyInRow(entryTimes[this.potentialCollisionLocation.column]);
       }
 
       // Push new enemy onto the appropriate row. Order here is guaranteed already.
-      this.activeEnemiesByRow[rowIndex].push(enemyObjectWithEntryAndExitTimes);
+      rowOfEnemies.push(enemyObject);
 
       // Update retire time in packaged enemy, then push onto activeEnemies
-      enemyObjectWithRetireTime.retireTime = retireTime;
-      this.activeEnemies.push(enemyObjectWithRetireTime);
+      this.activeEnemies.push(enemyObject);
     }
 
     this.newTimeUntilSpawn(); // Generate next spawn time
