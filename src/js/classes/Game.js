@@ -6,16 +6,8 @@ import Player from './Player';
 import {
   WIDTH, HEIGHT, GAME_STATE, TILE, STARTING_LIVES,
   REINCARNATE_DURATION, WIN_LEVEL_DURATION, DIE_DURATION,
+  KEY, ACTION,
 } from '../constants';
-
-const ALLOWED_KEYS = {
-  32: 'space',
-  37: 'left',
-  38: 'up',
-  39: 'right',
-  40: 'down',
-  80: 'pause',
-};
 
 const HIGH_SCORE_COOKIE_KEY = 'highScore';
 const COOKIE_EXPIRY = new Date(new Date().setFullYear(new Date().getFullYear() + 15)).toUTCString();
@@ -30,8 +22,8 @@ class Game {
     this.distanceToHighScore = null; // Positive when high score is beaten
 
     document.addEventListener('keydown', ({ keyCode }) => {
-      const keyString = ALLOWED_KEYS[keyCode];
-      if (keyString) this.handleInput(keyString);
+      const keyId = KEY[keyCode];
+      if (keyId) this.handleInput(keyId);
     });
 
     this.ctx = ctx;
@@ -95,27 +87,22 @@ class Game {
     }
   }
 
-  /**
-   * Handles the input passed on from the listener added to document. Sends the
-   * input to the appropriate object, and takes care of other state or level changes.
-   * @param {string} keyString String specifying the input from keyboard.
-   */
-  handleInput(keyString) {
-    switch (keyString) {
-      case 'up':
-      case 'down':
-      case 'left':
-      case 'right':
-        this.player.handleInput(keyString);
+  handleInput(keyId) {
+    switch (keyId) {
+      case ACTION.UP:
+      case ACTION.DOWN:
+      case ACTION.LEFT:
+      case ACTION.RIGHT:
+        this.player.handleInput(keyId);
         break;
-      case 'pause':
+      case ACTION.PAUSE:
         if (this.state === GAME_STATE.PLAY) {
           this.setState(GAME_STATE.PAUSED);
         } else if (this.state === GAME_STATE.PAUSED) {
           this.setState(GAME_STATE.PLAY);
         }
         break;
-      case 'space':
+      case ACTION.SPACE:
         if (this.state === GAME_STATE.TITLE) {
           this.setState(GAME_STATE.INSTRUCTIONS);
         } else if (this.state === GAME_STATE.INSTRUCTIONS) {
@@ -125,7 +112,7 @@ class Game {
           this.setState(GAME_STATE.TITLE);
         }
         break;
-      default: throw new Error(`Unrecognized keyString: ${keyString}`);
+      default: throw new Error(`Unrecognized keyId: ${keyId}`);
     }
   }
 

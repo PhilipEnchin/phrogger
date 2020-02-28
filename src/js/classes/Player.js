@@ -1,7 +1,7 @@
 import Resources from '../resources';
 import {
   GAME_STATE, TILE,
-  ROWS_COUNT, COLUMN_COUNT, IMAGE,
+  ROWS_COUNT, COLUMN_COUNT, IMAGE, ACTION,
 } from '../constants';
 
 /**
@@ -156,14 +156,14 @@ class Player {
    * Handles keyboard input for the movement of the player.
    * @param {string} keyString String representing the direction of movement.
    */
-  handleInput(keyString) {
+  handleInput(keyId) {
     if (this.moveable) {
-      switch (keyString) {
-        case 'left':
-        case 'right':
-        case 'up':
-        case 'down': this.move(keyString); break;
-        default: throw new Error(`Unrecognized keyString: ${keyString}`);
+      switch (keyId) {
+        case ACTION.LEFT:
+        case ACTION.RIGHT:
+        case ACTION.UP:
+        case ACTION.DOWN: this.move(keyId); break;
+        default: throw new Error(`Unrecognized keyId: ${keyId}`);
       }
     }
   }
@@ -177,10 +177,10 @@ class Player {
     let x = this.column;
     let y = this.row;
     switch (directionString) {
-      case 'left': x--; break;
-      case 'right': x++; break;
-      case 'up': y--; break;
-      case 'down': y++; break;
+      case ACTION.LEFT: x--; break;
+      case ACTION.RIGHT: x++; break;
+      case ACTION.UP: y--; break;
+      case ACTION.DOWN: y++; break;
       default: throw new Error(`Unrecognized directionString: ${directionString}`);
     }
     if (board.playerCanMoveHere(x, y)) { this.setPosition(x, y); }

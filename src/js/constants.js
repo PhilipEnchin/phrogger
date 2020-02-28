@@ -38,3 +38,21 @@ export const STARTING_LIVES = 2;
 export const REINCARNATE_DURATION = 2;
 export const WIN_LEVEL_DURATION = 2;
 export const DIE_DURATION = 2;
+
+export const ACTION = {
+  DOWN: 1,
+  LEFT: 2,
+  PAUSE: 3,
+  RIGHT: 4,
+  SPACE: 5,
+  UP: 6,
+};
+
+export const KEY = {
+  32: ACTION.SPACE,
+  37: ACTION.LEFT,
+  38: ACTION.UP,
+  39: ACTION.RIGHT,
+  40: ACTION.DOWN,
+  80: ACTION.PAUSE,
+};
