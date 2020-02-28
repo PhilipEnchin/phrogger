@@ -195,61 +195,46 @@ class EnemyHandler {
     this.newTimeUntilSpawn(); // Generate next spawn time
   }
 
-  /** Randomly generates a new timeUntilSpawn */
+  // Randomly generates a new timeUntilSpawn
   newTimeUntilSpawn() {
     this.timeUntilSpawn = this.spawnInterval * (this.spawnVariance * (2 * Math.random() - 1) + 1);
   }
 
-  /**
-   * Detects either an immediate or future collision. If there is an immediate
-   * collision, player.die() is called.
-   * @param {number} x Column number.
-   * @param {number} y Row number.
-   * @return {number | undefined} The upcoming collision time, or if there isn't
-   *     one, undefined.
-   */
+  // Detects immediate or future collision
   collisionTimeForCoordinates(x, y) {
-    const { board, player } = this;
+    const { board, player, potentialCollisionLocation } = this;
     if (x === undefined) { // Clear collision location. No upcoming collion.
-      this.potentialCollisionLocation.column = null;
-      this.potentialCollisionLocation.rowIndex = null;
-      return null;
+      return potentialCollisionLocation.column = potentialCollisionLocation.rowIndex = null;
     }
 
     const rowIndex = board.pixelCoordinatesForBoardCoordinates(x, y).y + ENEMY_PIXEL_ADJUST;
-
-    this.potentialCollisionLocation.column = x;
-    this.potentialCollisionLocation.rowIndex = rowIndex;
-
     const rowOfEnemies = this.activeEnemiesByRow[rowIndex];
-    if (rowOfEnemies === undefined) { return null; } // No row? No collisions.
+    if (!rowOfEnemies) return null; // No row? No collisions.
 
-    let enemyObject; // Packaged with entry and exit times
-    let columnEntry;
-    let columnExit;
+    potentialCollisionLocation.column = x;
+    potentialCollisionLocation.rowIndex = rowIndex;
+
+    let columnEntry = null;
     const now = Date.now() / 1000;
 
-    for (let i = 0; i < rowOfEnemies.length; i++) {
-      enemyObject = rowOfEnemies[i];
-      columnEntry = enemyObject.entryTimes[x];
-      columnExit = enemyObject.exitTimes[x];
-      if (columnEntry > now) { // Enemy not yet at this column.
-        return columnEntry; // Return this time as the next collision
+    rowOfEnemies.some(({ entryTimes, exitTimes }) => {
+      if (entryTimes[x] > now) { // Enemy's entry into this column is in the future
+        columnEntry = entryTimes[x]; // Next collision time
+        return true;
       }
-      if (columnExit > now) { // Enemy is still in this column
+      if (exitTimes[x] > now) { // Enemy is in column (entry has occured and exit is in the future)
         player.die();
-        return null;
+        return true;
       }
-    }
-    return null; // No possible collision in this row with current active enemies
+      return false;
+    });
+    return columnEntry;
   }
 
   /** Renders all active enemies */
   render() {
     if (!this.hidden) {
-      this.activeEnemies.forEach(enemyObject => {
-        enemyObject.enemy.render();
-      });
+      this.activeEnemies.forEach(enemyObject => enemyObject.enemy.render());
     }
   }
 }
