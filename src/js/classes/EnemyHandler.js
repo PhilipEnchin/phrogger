@@ -163,51 +163,32 @@ class EnemyHandler {
     // Quick check to make sure we haven't attempted this spawn too many times
     if (attemptIndex < EnemyHandler.MAX_SPAWN_ATTEMPTS) {
       const enemyObject = addEntryAndExitTimes(this.getNewEnemy());
-      const { entryTimes } = enemyObject;
-      const { y } = enemyObject.enemy; // For activeEnemiesByRow...
+      const { entryTimes, enemy } = enemyObject;
+      const { y } = enemy;
       const rowOfEnemies = this.activeEnemiesByRow[y] || (this.activeEnemiesByRow[y] = []);
 
-      // If this is not the only active enemy in this row, we need to make sure
-      // it won't overlap another enemy.
+      // Make sure new enemy won't overlap with an existing enemy in the same row
       if (rowOfEnemies.length > 0) {
-        // Entry times for leftmost enemy in row
-        const leftMostEnemyEntryTimes = rowOfEnemies[rowOfEnemies.length - 1].entryTimes;
-        // The moment when the leftmost enemy will be completely offscreen
-        const leftMostEnemyInRowExitCompletion = leftMostEnemyEntryTimes[COLUMN_COUNT + 1];
-        // The moment when the new enemy will begin to exit the screen
+        const leftMostEnemyEntries = rowOfEnemies[rowOfEnemies.length - 1].entryTimes;
+        const leftMostEnemyExitEnd = leftMostEnemyEntries[COLUMN_COUNT + 1];
         const newEnemyExitBegin = entryTimes[COLUMN_COUNT];
-        // If the new enemy begins to exit before the existing any is gone,
-        // then we have potential for overlap. Retire that enemy and attempt
-        // another spawn.
-        if (newEnemyExitBegin < leftMostEnemyInRowExitCompletion) {
-          this.retiredEnemies.push(enemyObject);
-          this.spawnNewEnemy(attemptIndex + 1);
-          return;
-        }
-        // The moment the leftmost enemy begins exiting the first column
-        const leftMostEnemyInRowSecondColumnEntry = leftMostEnemyEntryTimes[1];
-        // The moment when the new enemy begins entering the first column
-        const newEnemyFirstColumnEntry = entryTimes[0];
-        // If the new enemy begins to enter the screen before the leftmost
-        // enemy is out of that space, we have potential for overlap. Retire
-        // that enemy and attempt another spawn.
-        if (newEnemyFirstColumnEntry < leftMostEnemyInRowSecondColumnEntry) {
+        const leftMostEnemyCol2Begin = leftMostEnemyEntries[1];
+        const newEnemyCol1End = entryTimes[0];
+
+        // If there may be overlap, retire new enemy and try spawning again
+        if (newEnemyExitBegin < leftMostEnemyExitEnd || newEnemyCol1End < leftMostEnemyCol2Begin) {
           this.retiredEnemies.push(enemyObject);
           this.spawnNewEnemy(attemptIndex + 1);
           return;
         }
       }
 
-      // If the player, in its current location, could be run over by this new
-      // enemy, call newEnemyInRow() on player to let it know.
+      // New enemy is in same row as player
       if (this.potentialCollisionLocation.rowIndex === y) {
         player.newEnemyInRow(entryTimes[this.potentialCollisionLocation.column]);
       }
 
-      // Push new enemy onto the appropriate row. Order here is guaranteed already.
       rowOfEnemies.push(enemyObject);
-
-      // Update retire time in packaged enemy, then push onto activeEnemies
       this.activeEnemies.push(enemyObject);
     }
 
