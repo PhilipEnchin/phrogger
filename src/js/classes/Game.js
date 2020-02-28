@@ -8,72 +8,35 @@ import {
 } from '../constants';
 
 const ALLOWED_KEYS = {
-  32: 'space', // spacebar
-  37: 'left', // left arrow
-  38: 'up', // up arrow
-  39: 'right', // right arrow
-  40: 'down', // down arrow
-  80: 'pause', // P key
+  32: 'space',
+  37: 'left',
+  38: 'up',
+  39: 'right',
+  40: 'down',
+  80: 'pause',
 };
+
+const HIGH_SCORE_COOKIE_KEY = 'highScore';
+const COOKIE_EXPIRY = new Date(new Date().setFullYear(new Date().getFullYear() + 15)).toUTCString();
 
 class Game {
   constructor(ctx) {
-    /**
-     * Time remaining for showing titles for levels, etc. The timer is active as
-     * long as this.timeRemaining > 0.
-     * @type {number}
-     */
-    this.timeRemaining = 0;
-    /**
-     * The state of the game, constants below.
-     * @type {number}
-     */
+    this.timeRemaining = 0; // ...for showing level-titles, etc.
     this.state = null;
-    /*
-     * Lives remaining. (When there's 0, the player can still play, à la video
-     * game norm.)
-     * @type {number}
-     */
     this.lives = null;
-    /*
-     * Current level. Starts at 1.
-     * @type {number}
-     */
     this.level = null;
-    /*
-     * High score. Pulled from cookie, if it exists, otherwise it starts at 0.
-     * This will always be the higher of the last level passed and the current
-     * high score. The cookie is also updated alongside this variable.
-     * @type {number}
-     */
     this.highScore = null;
-    /*
-     * This is always the high score minus the last level passed. As a result,
-     * it's positive before the high score is beaten, zero when it's tied, and
-     * negative when the player has set a new high score. This is used when the
-     * game is over in order to present the appropriate message regarding the
-     * player's high score.
-     * @type {number}
-     */
-    this.distanceToHighScore = null;
-    /*
-     * The expiry date for the cookie.
-     * @type {number}
-     */
-    this.highScoreCookieExpiry = null;
+    this.distanceToHighScore = null; // Positive when high score is beaten
 
-    document.addEventListener('keydown', e => {
-      const keyString = ALLOWED_KEYS[e.keyCode];
+    document.addEventListener('keydown', ({ keyCode }) => {
+      const keyString = ALLOWED_KEYS[keyCode];
       if (keyString) this.handleInput(keyString);
     });
 
     this.ctx = ctx;
   }
 
-
-  /**
-   * Initializes the objects that need initializing, and initiates the game.
-   */
+  // Initializes the objects that need initializing, and initiates the game.
   init() {
     this.board = new Board(this.ctx);
     this.enemyHandler = new EnemyHandler(this.ctx);
@@ -87,14 +50,9 @@ class Game {
     this.hud.init(this);
     this.mapAccessories.init(this, this.board);
 
-    // Initialize high score cookie expiry (15 years off, rather permanent)
-    const expiry = new Date();
-    expiry.setFullYear(expiry.getFullYear() + 15);
-    this.highScoreCookieExpiry = expiry.toUTCString();
-
     // Read cookie and store current high score
     const cookieString = document.cookie;
-    const highScoreKeyIndex = cookieString.indexOf(Game.HIGH_SCORE_COOKIE_KEY);
+    const highScoreKeyIndex = cookieString.indexOf(HIGH_SCORE_COOKIE_KEY);
     if (highScoreKeyIndex >= 0) { // High score exists already
       const highScoreValueIndex = cookieString.indexOf('=', highScoreKeyIndex) + 1;
       this.highScore = parseInt(cookieString.substring(highScoreValueIndex), 10);
@@ -190,7 +148,7 @@ class Game {
     const { board, enemyHandler, mapAccessories } = this;
     // Update high score related variables (and the high score cookie) as needed
     if (--this.distanceToHighScore < 0) {
-      document.cookie = `${Game.HIGH_SCORE_COOKIE_KEY}=${++this.highScore}; expires=${this.highScoreCookieExpiry}`;
+      document.cookie = `${HIGH_SCORE_COOKIE_KEY}=${++this.highScore}; expires=${COOKIE_EXPIRY}`;
     }
 
     this.level = newLevel;
@@ -329,11 +287,5 @@ class Game {
     this.hud.render(); // Render all text
   }
 }
-
-/**
-* The key string used in the cookie that holds the high score
-* @const
-*/
-Game.HIGH_SCORE_COOKIE_KEY = 'highScore';
 
 export default Game;
