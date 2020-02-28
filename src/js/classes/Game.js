@@ -6,7 +6,7 @@ import Player from './Player';
 import {
   WIDTH, HEIGHT, GAME_STATE, TILE, STARTING_LIVES,
   REINCARNATE_DURATION, WIN_LEVEL_DURATION, DIE_DURATION,
-  KEY, ACTION,
+  KEY, ACTION, LEVEL_ROWS,
 } from '../constants';
 
 const HIGH_SCORE_COOKIE_KEY = 'highScore';
@@ -112,14 +112,9 @@ class Game {
     }
   }
 
-  /**
-   * Sets any parameters to do with changing levels. Also updates the high score
-   * (and accompanying cookie) if needed.
-   *  @param {number} newLevel The new level
-   */
   setLevel(newLevel) {
-    const { board, enemyHandler, mapAccessories } = this;
-    // Update high score related variables (and the high score cookie) as needed
+    const { enemyHandler, mapAccessories } = this;
+
     if (--this.distanceToHighScore < 0) {
       document.cookie = `${HIGH_SCORE_COOKIE_KEY}=${++this.highScore}; expires=${COOKIE_EXPIRY}`;
     }
@@ -127,60 +122,37 @@ class Game {
     this.level = newLevel;
 
     // Set game parameters per level
+    this.board.setRows(...(LEVEL_ROWS[newLevel] || []));
     switch (newLevel) {
       case 1:
-        board.setRows(
-          0, TILE.WATER,
-          2, TILE.STONE,
-          TILE.GRASS,
-        );
         mapAccessories.leftMostRockPosition = 0;
         mapAccessories.leftMostKeyPosition = 3;
         enemyHandler.setSpeeds(250, 300);
         enemyHandler.setSpawnIntervalAndVariance(0.75, 0.8);
         break;
       case 2:
-        board.setRows(
-          1, TILE.STONE,
-          2, TILE.GRASS,
-        );
         mapAccessories.leftMostRockPosition = 3;
         mapAccessories.leftMostKeyPosition = 2;
         break;
       case 3:
-        board.setRows(3, TILE.STONE);
         enemyHandler.setSpawnIntervalAndVariance(0.4, 0.6);
         enemyHandler.setSpeeds(225, 325);
         break;
       case 4:
-        board.setRows(4, TILE.STONE);
         mapAccessories.leftMostRockPosition = 3;
         enemyHandler.setSpawnIntervalAndVariance(0.35, 0.4);
         break;
       case 5:
-        board.setRows(
-          2, TILE.STONE,
-          3, TILE.GRASS,
-        );
         break;
       case 6:
-        board.setRows(
-          1, TILE.GRASS,
-          3, TILE.STONE,
-        );
         mapAccessories.leftMostRockPosition = 0;
         enemyHandler.setSpawnIntervalAndVariance(0.4, 0.4);
         break;
       case 7:
-        board.setRows(
-          1, TILE.STONE,
-          4, TILE.GRASS,
-        );
         mapAccessories.leftMostRockPosition = 2;
         mapAccessories.leftMostKeyPosition = 3;
         break;
       case 8:
-        board.setRows(4, TILE.STONE);
         break;
       default: // Level 9 and onward, make the game just a little faster
         enemyHandler.setSpawnIntervalAndVariance(

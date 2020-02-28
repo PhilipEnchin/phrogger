@@ -56,3 +56,14 @@ export const KEY = {
   40: ACTION.DOWN,
   80: ACTION.PAUSE,
 };
+
+export const LEVEL_ROWS = [null,
+  [0, TILE.WATER, 2, TILE.STONE, TILE.GRASS], // Level 1
+  [1, TILE.STONE, 2, TILE.GRASS], // Level 2
+  [3, TILE.STONE], // Level 3
+  [4, TILE.STONE], // Level 4
+  [2, TILE.STONE, 3, TILE.GRASS], // Level 5
+  [1, TILE.GRASS, 3, TILE.STONE], // Level 6
+  [1, TILE.STONE, 4, TILE.GRASS], // Level 7
+  [4, TILE.STONE], // Level 8+
+];
