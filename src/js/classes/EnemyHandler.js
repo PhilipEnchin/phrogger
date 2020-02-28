@@ -7,6 +7,10 @@ const [PLAYER_EDGE_ADJUST_RIGHT, PLAYER_EDGE_ADJUST_LEFT] = [29, 30];
 const [ENEMY_EDGE_ADJUST_RIGHT, ENEMY_EDGE_ADJUST_LEFT] = [5, 36];
 const SPAWN_X = -COL_WIDTH_PIXELS;
 
+// An enemy will not spawn if it will overlap with another enemy. This limits spawn attempts.
+const MAX_SPAWN_ATTEMPTS = 10;
+
+
 // Puts the Enemy object inside another object with entry and exit times.
 const addEntryAndExitTimes = enemyObject => {
   const { speed } = enemyObject.enemy;
@@ -31,9 +35,8 @@ const addEntryAndExitTimes = enemyObject => {
   return enemyObject;
 };
 
-/* A system for dealing with the evil bugs! Takes care of initializing the bugs,
-   making sure they're retired at the right time, caching collision times, and
-   recycling the Enemy objects for reuse. */
+/* A system for dealing with the evil bugs! Takes care of initializing the bugs, making sure they're
+   retired at the right time, caching collision times, and recycling the Enemy objects for reuse. */
 class EnemyHandler {
   constructor(ctx) {
     this.activeEnemies = [];
@@ -99,13 +102,7 @@ class EnemyHandler {
     this.upperSpeedLimit = upperSpeedLimit;
   }
 
-  /**
-   * Updates all Enemy objects, retires them if required, adds new ones if needed,
-   * updates this.timePaused if the game is paused, or adds this.timePaused to all
-   * variables that depend on proper time keeping.
-   * @param {number} dt Time elapsed since last update
-   * @param {number} now System time at invocation
-   */
+  // Updates all Enemies, retires/creates if required, deals with pause time
   update(dt, now) {
     if (this.moveable) {
       // If the game has been paused, add that time onto the active enemies
@@ -147,21 +144,11 @@ class EnemyHandler {
     return newEnemy;
   }
 
-  /**
-   * Takes a limited number of attempts at spawning a new enemy. This method uses
-   * this.getNewEnemy() to either create a new enemy, or recycle an old one. If
-   * successful, the new enemy is stored in this.activeEnemies and
-   * this.activeEnemiesByRow. If not, it's put into this.retiredEnemies. This
-   * method also tells the player when it will get hit, so as to avoid any taxing
-   * collision detection algorithms.
-   * @param {number} attemptIndex An attempt counter. This is used to make sure
-   *     the spawnNewEnemy() method is not called too many times recursively.
-   *     Note: This argument is not required! Yay!
-   */
+  // Spawns a new enemy, or at least tries. No overlapping enemies allowed.
   spawnNewEnemy(attemptIndex = 0) {
     const { player } = this;
     // Quick check to make sure we haven't attempted this spawn too many times
-    if (attemptIndex < EnemyHandler.MAX_SPAWN_ATTEMPTS) {
+    if (attemptIndex < MAX_SPAWN_ATTEMPTS) {
       const enemyObject = addEntryAndExitTimes(this.getNewEnemy());
       const { entryTimes, enemy } = enemyObject;
       const { y } = enemy;
@@ -231,21 +218,12 @@ class EnemyHandler {
     return columnEntry;
   }
 
-  /** Renders all active enemies */
+  // Renders all active enemies
   render() {
     if (!this.hidden) {
       this.activeEnemies.forEach(enemyObject => enemyObject.enemy.render());
     }
   }
 }
-
-/**
- * Maximum number of attempts at spawning an enemy until giving up. Remember, an
- * enemy will not spawn when it will overlap with another enemy on screen. If,
- * after this many attempts at randomly generating an enemy, we still don't have
- * an enemy that meets this requirement, spawning is abandoned.
- * @const
- */
-EnemyHandler.MAX_SPAWN_ATTEMPTS = 10;
 
 export default EnemyHandler;
