@@ -4,7 +4,8 @@ import HeadsUp from './HeadsUp';
 import MapAccessories from './MapAccessories';
 import Player from './Player';
 import {
-  WIDTH, HEIGHT, GAME_STATE, TILE,
+  WIDTH, HEIGHT, GAME_STATE, TILE, STARTING_LIVES,
+  REINCARNATE_DURATION, WIN_LEVEL_DURATION, DIE_DURATION,
 } from '../constants';
 
 const ALLOWED_KEYS = {
@@ -59,39 +60,32 @@ class Game {
     this.setState(GAME_STATE.TITLE);
   }
 
-  /**
-   * Used to set the state of the game. Also passes on the state change to any
-   * object that needs it.
-   * @param {number} state A game state constant.
-   */
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
     } = GAME_STATE;
 
     this.state = state;
-    this.hud.setState(state);
-    this.board.setState(state);
-    this.enemyHandler.setState(state);
-    this.player.setState(state);
-    this.mapAccessories.setState(state);
+
+    [this.hud, this.board, this.enemyHandler, this.player, this.mapAccessories]
+      .forEach(o => o.setState(state));
 
     switch (state) {
       case TITLE:
-        this.lives = 2;
+        this.lives = STARTING_LIVES;
         this.distanceToHighScore = this.highScore + 1;
         break;
       case LEVEL_TITLE:
       case REINCARNATE:
-        this.timeRemaining = 2.0;
+        this.timeRemaining = REINCARNATE_DURATION;
         break;
       case WIN_LEVEL:
-        this.timeRemaining = 2.0;
+        this.timeRemaining = WIN_LEVEL_DURATION;
         this.board.setRows(0, TILE.WATER);
         this.setLevel(this.level + 1);
         break;
       case DIED:
-        this.timeRemaining = 1.0;
+        this.timeRemaining = DIE_DURATION;
         break;
       case INSTRUCTIONS:
       case PLAY:

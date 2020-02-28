@@ -33,3 +33,8 @@ export const IMAGE = {
 };
 
 export const ENEMY_PIXEL_ADJUST = -20;
+
+export const STARTING_LIVES = 2;
+export const REINCARNATE_DURATION = 2;
+export const WIN_LEVEL_DURATION = 2;
+export const DIE_DURATION = 2;
