@@ -93,25 +93,21 @@ class Game {
       case ACTION.DOWN:
       case ACTION.LEFT:
       case ACTION.RIGHT:
-        this.player.handleInput(keyId);
-        break;
+        return this.player.handleInput(keyId);
       case ACTION.PAUSE:
-        if (this.state === GAME_STATE.PLAY) {
-          this.setState(GAME_STATE.PAUSED);
-        } else if (this.state === GAME_STATE.PAUSED) {
-          this.setState(GAME_STATE.PLAY);
+        switch (this.state) {
+          case GAME_STATE.PLAY: return this.setState(GAME_STATE.PAUSED);
+          case GAME_STATE.PAUSED: return this.setState(GAME_STATE.PLAY);
+          default: return null;
         }
-        break;
       case ACTION.SPACE:
-        if (this.state === GAME_STATE.TITLE) {
-          this.setState(GAME_STATE.INSTRUCTIONS);
-        } else if (this.state === GAME_STATE.INSTRUCTIONS) {
-          this.setLevel(1);
-          this.setState(GAME_STATE.LEVEL_TITLE);
-        } else if (this.state === GAME_STATE.GAME_OVER) {
-          this.setState(GAME_STATE.TITLE);
+        switch (this.state) {
+          case GAME_STATE.TITLE: return this.setState(GAME_STATE.INSTRUCTIONS);
+          case GAME_STATE.INSTRUCTIONS:
+            this.setLevel(1); return this.setState(GAME_STATE.LEVEL_TITLE);
+          case GAME_STATE.GAME_OVER: return this.setState(GAME_STATE.TITLE);
+          default: return null;
         }
-        break;
       default: throw new Error(`Unrecognized keyId: ${keyId}`);
     }
   }
