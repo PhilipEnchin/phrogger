@@ -53,12 +53,8 @@ class Game {
     // Read cookie and store current high score
     const cookieString = document.cookie;
     const highScoreKeyIndex = cookieString.indexOf(HIGH_SCORE_COOKIE_KEY);
-    if (highScoreKeyIndex >= 0) { // High score exists already
-      const highScoreValueIndex = cookieString.indexOf('=', highScoreKeyIndex) + 1;
-      this.highScore = parseInt(cookieString.substring(highScoreValueIndex), 10);
-    } else { // High score doesn't yet exist, initialize at zero
-      this.highScore = 0;
-    }
+    this.highScore = highScoreKeyIndex < 0 ? 0
+      : parseInt(cookieString.substring(cookieString.indexOf('=', highScoreKeyIndex) + 1), 10);
 
     this.setState(GAME_STATE.TITLE);
   }
