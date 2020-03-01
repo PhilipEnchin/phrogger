@@ -151,16 +151,8 @@ class Game {
     }
   }
 
-  /**
-   * Decreases the number of lives and initiates the next state, depending on the
-   * number of lives remaining.
-   */
   died() {
-    if (--this.lives >= 0) { // At least one more life available
-      this.setState(GAME_STATE.REINCARNATE);
-    } else { // No more lives, game over.
-      this.setState(GAME_STATE.GAME_OVER);
-    }
+    this.setState(GAME_STATE[--this.lives >= 0 ? 'REINCARNATE' : 'GAME_OVER']);
   }
 
   /**
