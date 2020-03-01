@@ -155,17 +155,12 @@ class Game {
     this.setState(GAME_STATE[--this.lives >= 0 ? 'REINCARNATE' : 'GAME_OVER']);
   }
 
-  /**
-   * Adds a life and calls HeadsUp.extraLife() in order to update the HUD
-   */
   extraLife() {
     this.lives++;
     this.hud.extraLife();
   }
 
-  /**
-   * Decrements the timer and takes the appropriate action if the timer runs out.
-   */
+  // For timing transitions... Between levels, after dying, etc.
   decrementTimer(dt) {
     if ((this.timeRemaining -= dt) <= 0) {
       switch (this.state) {
@@ -178,33 +173,18 @@ class Game {
     }
   }
 
-  /**
-   * Forwards the update command to other objects, and decrements timer if the
-   * timer is active.
-   * @param {number} dt The time elapsed since the last update
-   * @param {number} now The system time at the moment of invocation
-   */
   update(dt, now) {
     this.enemyHandler.update(dt, now);
     this.player.update(dt, now);
     this.board.update(dt, now);
 
-    if (this.timeRemaining > 0) { // If timer is active...
-      this.decrementTimer(dt);
-    }
+    if (this.timeRemaining > 0) this.decrementTimer(dt);
   }
 
-  /**
-   * Begins the rendering sequence by clearing the screen, then calling render()
-   * methods in other objects.
-   */
   render() {
-    this.ctx.clearRect(0, 0, WIDTH, HEIGHT); // Clear background
-    this.board.render(); // Render map
-    this.mapAccessories.render(); // Render map accessores (rock, key, heart)
-    this.player.render(); // Render player
-    this.enemyHandler.render(); // Render all enemies
-    this.hud.render(); // Render all text
+    this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    [this.board, this.mapAccessories, this.player, this.enemyHandler, this.hud]
+      .forEach(o => o.render());
   }
 }
 
