@@ -67,3 +67,35 @@ export const LEVEL_ROWS = [null,
   [1, TILE.STONE, 4, TILE.GRASS], // Level 7
   [4, TILE.STONE], // Level 8+
 ];
+
+export const LEVEL_SPEEDS = [null,
+  [250, 300], // Level 1
+  [250, 300], // Level 2
+  [225, 325], // Level 3
+  [225, 325], // Level 4
+  [225, 325], // Level 5
+  [225, 325], // Level 6
+  [225, 325], // Level 7
+  [225, 325], // Level 8
+];
+
+export const LEVEL_SPAWN_INTERVALS_AND_VARIANCES = [null,
+  [0.75, 0.8], // Level 1
+  [0.75, 0.8], // Level 2
+  [0.4, 0.6], // Level 3
+  [0.35, 0.4], // Level 4
+  [0.35, 0.4], // Level 5
+  [0.4, 0.4], // Level 6
+  [0.4, 0.4], // Level 7
+  [0.4, 0.4], // Level 8
+];
+
+export const LEVEL_ROCK_LEFT_BOUNDARY = [null, 0, 3, 3, 3, 3, 0, 2, 2];
+LEVEL_ROCK_LEFT_BOUNDARY[12] = 2;
+LEVEL_ROCK_LEFT_BOUNDARY[15] = 2;
+LEVEL_ROCK_LEFT_BOUNDARY[18] = 1;
+
+export const LEVEL_KEY_LEFT_BOUNDARY = [null, 3, 2, 2, 2, 2, 2, 3, 3];
+LEVEL_KEY_LEFT_BOUNDARY[12] = 2;
+LEVEL_KEY_LEFT_BOUNDARY[15] = 1;
+LEVEL_KEY_LEFT_BOUNDARY[18] = 1;

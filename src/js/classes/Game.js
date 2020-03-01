@@ -6,7 +6,8 @@ import Player from './Player';
 import {
   WIDTH, HEIGHT, GAME_STATE, TILE, STARTING_LIVES,
   REINCARNATE_DURATION, WIN_LEVEL_DURATION, DIE_DURATION,
-  KEY, ACTION, LEVEL_ROWS,
+  KEY, ACTION, LEVEL_ROWS, LEVEL_SPEEDS, LEVEL_SPAWN_INTERVALS_AND_VARIANCES,
+  LEVEL_KEY_LEFT_BOUNDARY, LEVEL_ROCK_LEFT_BOUNDARY,
 } from '../constants';
 
 const HIGH_SCORE_COOKIE_KEY = 'highScore';
@@ -119,41 +120,27 @@ class Game {
       document.cookie = `${HIGH_SCORE_COOKIE_KEY}=${++this.highScore}; expires=${COOKIE_EXPIRY}`;
     }
 
-    this.level = newLevel;
-
     // Set game parameters per level
-    this.board.setRows(...(LEVEL_ROWS[newLevel] || []));
+    this.board.setRows(...(LEVEL_ROWS[this.level = newLevel] || []));
     switch (newLevel) {
       case 1:
-        mapAccessories.leftMostRockPosition = 0;
-        mapAccessories.leftMostKeyPosition = 3;
-        enemyHandler.setSpeeds(250, 300);
-        enemyHandler.setSpawnIntervalAndVariance(0.75, 0.8);
-        break;
       case 2:
-        mapAccessories.leftMostRockPosition = 3;
-        mapAccessories.leftMostKeyPosition = 2;
-        break;
       case 3:
-        enemyHandler.setSpawnIntervalAndVariance(0.4, 0.6);
-        enemyHandler.setSpeeds(225, 325);
-        break;
       case 4:
-        mapAccessories.leftMostRockPosition = 3;
-        enemyHandler.setSpawnIntervalAndVariance(0.35, 0.4);
-        break;
       case 5:
-        break;
       case 6:
-        mapAccessories.leftMostRockPosition = 0;
-        enemyHandler.setSpawnIntervalAndVariance(0.4, 0.4);
-        break;
       case 7:
-        mapAccessories.leftMostRockPosition = 2;
-        mapAccessories.leftMostKeyPosition = 3;
-        break;
       case 8:
+        enemyHandler.setSpeeds(...LEVEL_SPEEDS[newLevel]);
+        enemyHandler.setSpawnIntervalAndVariance(...LEVEL_SPAWN_INTERVALS_AND_VARIANCES[newLevel]);
+        mapAccessories.leftMostRockPosition = LEVEL_ROCK_LEFT_BOUNDARY[newLevel];
+        mapAccessories.leftMostKeyPosition = LEVEL_KEY_LEFT_BOUNDARY[newLevel];
         break;
+      case 12:
+      case 15:
+      case 18:
+        mapAccessories.leftMostRockPosition = LEVEL_ROCK_LEFT_BOUNDARY[newLevel];
+        mapAccessories.leftMostKeyPosition = LEVEL_KEY_LEFT_BOUNDARY[newLevel];
       default: // Level 9 and onward, make the game just a little faster
         enemyHandler.setSpawnIntervalAndVariance(
           enemyHandler.spawnInterval * 0.98, enemyHandler.spawnVariance * 0.99,
@@ -161,10 +148,6 @@ class Game {
         enemyHandler.setSpeeds(
           enemyHandler.lowerSpeedLimit * 1.04, enemyHandler.upperSpeedLimit * 1.06,
         );
-        // Move leftmost key and rock positions left (more difficult)
-        if (newLevel === 12) mapAccessories.leftMostKeyPosition = 2;
-        else if (newLevel === 15) mapAccessories.leftMostKeyPosition = 1;
-        else if (newLevel === 18) mapAccessories.leftMostRockPosition = 1;
     }
   }
 
