@@ -52,10 +52,6 @@ class HeadsUp {
     this.game = game;
   }
 
-  /**
-   * Sets HUD text based on game state.
-   * @param {number} state The new game state.
-   */
   setState(state) {
     const { game } = this;
     const {
@@ -128,33 +124,21 @@ class HeadsUp {
     }
   }
 
-  /**
-   * Updates the lives text on screen when an extra life is achieved.
-   */
   extraLife() {
     this.livesText = livesPrefix + this.game.lives;
   }
 
-  /**
-   * Renders all non-empty text strings to the screen
-   */
   render() {
     if (this.bigText) {
       renderText(this.ctx, this.bigText, BIG_TEXT_X, BIG_TEXT_Y, TITLE_TEXT_SIZE, TYPEFACE, 'center');
     }
-    if (this.instructionText) {
-      if (Array.isArray(this.instructionText)) {
-        for (let i = this.instructionText.length - 1; i >= 0; i--) {
-          renderText(
-            this.ctx,
-            this.instructionText[i],
-            INSTRUCTIONS_X, INSTRUCTION_LINE_HEIGHT * i + INSTRUCTIONS_Y,
-            INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center',
-          );
-        }
-      } else {
-        renderText(this.ctx, this.instructionText, INSTRUCTIONS_X, INSTRUCTIONS_Y, INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center');
-      }
+    if (Array.isArray(this.instructionText)) {
+      this.instructionText.forEach((text, i) => renderText(
+        this.ctx, text, INSTRUCTIONS_X, INSTRUCTION_LINE_HEIGHT * i + INSTRUCTIONS_Y,
+        INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center',
+      ));
+    } else if (this.instructionText) {
+      renderText(this.ctx, this.instructionText, INSTRUCTIONS_X, INSTRUCTIONS_Y, INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center');
     }
     if (this.levelText) {
       renderText(this.ctx, this.levelText, LEVEL_X, LEVEL_Y, LEVEL_TEXT_SIZE, TYPEFACE, 'left');
