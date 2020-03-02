@@ -1,7 +1,6 @@
 import Resources from '../resources';
 import {
-  GAME_STATE, TILE,
-  ROWS_COUNT, COLUMN_COUNT, IMAGE,
+  GAME_STATE, TILE, COLUMN_COUNT, IMAGE,
 } from '../constants';
 
 const IMAGE_URL_ARRAY = [IMAGE.KEY, IMAGE.ROCK, IMAGE.HEART];
@@ -10,46 +9,14 @@ const ROCK_PIXEL_ADJUST = -25;
 const KEY_PIXEL_ADJUST = -15;
 const PROBABILITY_OF_EXTRA_LIFE = 1 / 20;
 
-const randomBoardLocationInRows = (...args) => {
-  let row;
-  if (args.length === 0) { // No rows provided, use all possible rows
-    row = Math.floor(Math.random() * ROWS_COUNT);
-  } else if (args[0].constructor === Array) { // Rows in an array
-    row = args[0][Math.floor(Math.random() * args.length)];
-  } else { // Rows are specified in individual arguments
-    row = args[Math.floor(Math.random() * args.length)];
-  }
-  return { column: Math.floor(Math.random() * COLUMN_COUNT), row };
-};
-
-/**
- * The MapAccessories class deals with objects that can be placed on the map at
- * the beginning of a level. The possible objects are a rock, a key, and a heart.
- * @constructor
- */
 class MapAccessories {
   constructor(ctx) {
-    /**
-     * An array of all active accessories
-     * @type {Array.<Object<string, number | Object.<string, Object.<string, number>>>>}
-     */
-    this.accessories = [];
-    /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
+    this.accessories = []; // Key, rock, heart
     this.rockAccessory = null;
-    /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
     this.keyAccessory = null;
-    /** @type {Object.<string, number | Object<string, Object<string, number>>>} */
     this.heartAccessory = null;
-    /** @type{boolean} */ this.hidden = true;
-    /**
-     * The leftmost column number where the rock might end up in a given level.
-     * @type {number}
-     */
+    this.hidden = true;
     this.leftMostRockPosition = 0;
-    /**
-     * The leftmost column number where the key might end up in a given level.
-     * @type {number}
-     */
     this.leftMostKeyPosition = 0;
 
     this.ctx = ctx;
@@ -60,54 +27,46 @@ class MapAccessories {
     this.board = board;
   }
 
-  /**
-   * Places accessories on game board before a level begins.
-   */
   placeAccessories() {
     const { board } = this;
     // If rock and key are already placed, don't place them again!
-    if (this.accessories.indexOf(this.rockAccessory) !== -1
-      && this.accessories.indexOf(this.keyAccessory) !== -1) { return; }
+    if (this.accessories.includes(this.rockAccessory)
+      && this.accessories.includes(this.keyAccessory)) return;
+
     // Rock...
     this.accessories = [];
-    let rockLocation = randomBoardLocationInRows(0);
-    while (rockLocation.column < this.leftMostRockPosition) {
-      rockLocation = randomBoardLocationInRows(0);
-    }
-    board.setTile(rockLocation.column, rockLocation.row, TILE.STONE);
-    this.rockAccessory = this.packageAccessory(ACCESSORY_TYPE.ROCK, rockLocation);
+    const rockCoords = {
+      row: 0,
+      column: Math.floor(Math.random() * (COLUMN_COUNT - this.leftMostRockPosition))
+        + this.leftMostRockPosition,
+    };
+    board.setTile(rockCoords.column, rockCoords.row, TILE.STONE);
+    this.rockAccessory = this.packageAccessory(ACCESSORY_TYPE.ROCK, rockCoords);
     this.rockAccessory.coordinates.y += ROCK_PIXEL_ADJUST;
+
     // Key...
-    let keyLocation = board.randomRoadBoardLocation();
-    while (keyLocation.column < this.leftMostKeyPosition) {
-      keyLocation = board.randomRoadBoardLocation();
-    }
-    this.keyAccessory = this.packageAccessory(ACCESSORY_TYPE.KEY, keyLocation);
+    let keyCoords;
+    do {
+      keyCoords = board.randomRoadBoardLocation();
+    } while (keyCoords.column < this.leftMostKeyPosition);
+    this.keyAccessory = this.packageAccessory(ACCESSORY_TYPE.KEY, keyCoords);
     this.keyAccessory.coordinates.y += KEY_PIXEL_ADJUST;
 
     // Add rock and key to accessories array
-    this.accessories.splice(0, 0, this.rockAccessory, this.keyAccessory);
+    this.accessories.push(this.rockAccessory, this.keyAccessory);
 
     // Heart...
     if (Math.random() <= PROBABILITY_OF_EXTRA_LIFE) {
-      let heartLocation = board.randomRoadBoardLocation();
-      while (heartLocation.column === keyLocation.column && heartLocation.row === keyLocation.row) {
-        heartLocation = board.randomRoadBoardLocation();
-      }
-      this.heartAccessory = this.packageAccessory(ACCESSORY_TYPE.HEART, heartLocation);
+      let heartCoords;
+      do {
+        heartCoords = board.randomRoadBoardLocation();
+      } while (heartCoords.column === keyCoords.column && heartCoords.row === keyCoords.row);
+      this.heartAccessory = this.packageAccessory(ACCESSORY_TYPE.HEART, heartCoords);
       this.accessories.push(this.heartAccessory);
     }
   }
 
-  /**
-   * Packages the accessory and its location (both board- and pixel-coordinates)
-   * into an object.
-   * @param {number} type Accessory type.
-   * @param {Object.<string, number>} Row-column coordinates.
-   * @return {Object.<string, number | Object.<string, number>>} An object that
-   *     contains the type of accessory, its row-column coordinates, and its pixel
-   *     coordinates.
-   */
+  // Packages the accessory with its location (both board- and pixel-coordinates)
   packageAccessory(accessoryType, location) {
     return {
       accessoryType,
@@ -116,17 +75,9 @@ class MapAccessories {
     };
   }
 
-  /**
-   * Returns whether the move is legal, taking into account map accessories, and
-   * takes the appropriate action in the case of an accessory whose collection has
-   * a consequence.
-   * @param {number} x Column number.
-   * @param {number} y Row number.
-   * @return {boolean} Whether the move is legal, looking only at map accessories.
-   */
   playerCanMoveHere(x, y) {
     // Player can't occupy the same space as the rock
-    if (this.accessories.indexOf(this.rockAccessory) !== -1
+    if (this.accessories.includes(this.rockAccessory)
       && this.rockAccessory.location.column === x
       && this.rockAccessory.location.row === y) {
       return false; // Move is illegal
@@ -146,11 +97,6 @@ class MapAccessories {
     return true; // Move is legal
   }
 
-  /**
-   * Changes settings in the MapAccessories object as a result of a change in game
-   * state
-   * @param {number} state The new game state.
-   */
   setState(state) {
     const {
       TITLE, INSTRUCTIONS, LEVEL_TITLE, PLAY, PAUSED, GAME_OVER, DIED, WIN_LEVEL, REINCARNATE,
@@ -162,7 +108,7 @@ class MapAccessories {
         break;
       case REINCARNATE:
         this.hidden = true;
-        this.accessories.splice(0, 0, this.rockAccessory, this.keyAccessory);
+        this.accessories.push(this.rockAccessory, this.keyAccessory);
         break;
       case PLAY:
         this.hidden = false;
@@ -188,18 +134,13 @@ class MapAccessories {
     }
   }
 
-  /**
-   * Renders all active map accessories.
-   */
   render() {
     if (!this.hidden) {
-      let image;
-      let coordinates;
       this.accessories.forEach(accessoryObject => {
-        image = Resources.get(IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
-        coordinates = accessoryObject.coordinates;
+        const image = Resources.get(IMAGE_URL_ARRAY[accessoryObject.accessoryType]);
+        const { coordinates } = accessoryObject;
         this.ctx.drawImage(image, coordinates.x, coordinates.y);
-      }, this);
+      });
     }
   }
 }
