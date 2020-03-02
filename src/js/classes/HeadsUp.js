@@ -27,6 +27,8 @@ const LEVEL_X = 0;
 const LEVEL_Y = (ROWS_COUNT + 1) * ROW_HEIGHT_PIXELS + 25;
 const LIVES_X = COLUMN_COUNT * COL_WIDTH_PIXELS;
 const LIVES_Y = (ROWS_COUNT + 1) * ROW_HEIGHT_PIXELS + 25;
+const [BIG_TEXT_X, BIG_TEXT_Y] = [WIDTH / 2, HEIGHT / 2 - 20];
+const [INSTRUCTIONS_X, INSTRUCTIONS_Y] = [WIDTH / 2, HEIGHT / 2 + 20];
 
 const renderText = (ctx, text, x, y, textSize, typeface, alignment) => {
   ctx.font = `${textSize}pt ${typeface}, sans-serif`;
@@ -37,40 +39,16 @@ const renderText = (ctx, text, x, y, textSize, typeface, alignment) => {
 
 class HeadsUp {
   constructor(ctx) {
-    /** @type {string} */ this.levelText = null;
-    /** @type {string} */ this.livesText = null;
-    /** @type {string} */ this.bigText = null;
-    /** @type {string} */ this.bigTextSize = null;
-    /** @type {string} */ this.instructionText = null;
+    this.levelText = null;
+    this.livesText = null;
+    this.bigText = null;
+    this.bigTextSize = null;
+    this.instructionText = null;
 
     this.ctx = ctx;
   }
 
-  /**
-   * Sets constants that can't be set until after engine.js is loaded.
-   */
   init(game) {
-    /**
-     * X position of HUD "big" text.
-     * @const
-     */
-    this.BIG_TEXT_X = WIDTH / 2;
-    /**
-     * Y position of HUD "big" text.
-     * @const
-     */
-    this.BIG_TEXT_Y = HEIGHT / 2 - 20;
-    /**
-     * X position of HUD instructions text.
-     * @const
-     */
-    this.INSTRUCTIONS_X = WIDTH / 2;
-    /**
-     * Y position of HUD instructions text.
-     * @const
-     */
-    this.INSTRUCTIONS_Y = HEIGHT / 2 + 20;
-
     this.game = game;
   }
 
@@ -162,7 +140,7 @@ class HeadsUp {
    */
   render() {
     if (this.bigText) {
-      renderText(this.ctx, this.bigText, this.BIG_TEXT_X, this.BIG_TEXT_Y, TITLE_TEXT_SIZE, TYPEFACE, 'center');
+      renderText(this.ctx, this.bigText, BIG_TEXT_X, BIG_TEXT_Y, TITLE_TEXT_SIZE, TYPEFACE, 'center');
     }
     if (this.instructionText) {
       if (Array.isArray(this.instructionText)) {
@@ -170,12 +148,12 @@ class HeadsUp {
           renderText(
             this.ctx,
             this.instructionText[i],
-            this.INSTRUCTIONS_X, INSTRUCTION_LINE_HEIGHT * i + this.INSTRUCTIONS_Y,
+            INSTRUCTIONS_X, INSTRUCTION_LINE_HEIGHT * i + INSTRUCTIONS_Y,
             INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center',
           );
         }
       } else {
-        renderText(this.ctx, this.instructionText, this.INSTRUCTIONS_X, this.INSTRUCTIONS_Y, INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center');
+        renderText(this.ctx, this.instructionText, INSTRUCTIONS_X, INSTRUCTIONS_Y, INSTRUCTION_TEXT_SIZE, TYPEFACE, 'center');
       }
     }
     if (this.levelText) {
