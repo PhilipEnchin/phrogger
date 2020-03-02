@@ -3,14 +3,7 @@ import {
   ROWS_COUNT, COLUMN_COUNT, ROW_HEIGHT_PIXELS, COL_WIDTH_PIXELS,
 } from '../constants';
 
-/**
- * Object representing the heads-up display - lives remaining, level number,
- * etc. Renders all in-game text to the screen.
- * @constructor
- */
-
 const GAME_TITLE = 'PHROGGER';
-// const FONT = `$"{TYPEFACE}", serif`
 const GAME_INSTRUCTIONS = [
   'Use arrow keys to get across the road',
   'Don\'t forget to grab the key!',
@@ -35,15 +28,6 @@ const LEVEL_Y = (ROWS_COUNT + 1) * ROW_HEIGHT_PIXELS + 25;
 const LIVES_X = COLUMN_COUNT * COL_WIDTH_PIXELS;
 const LIVES_Y = (ROWS_COUNT + 1) * ROW_HEIGHT_PIXELS + 25;
 
-/**
- * Helper method to display text with an outline.
- * @param {string} text The text to be rendered.
- * @param {number} x The x pixel coordinate.
- * @param {number} y The y pixel coordinate.
- * @param {number} textSize The size of the text to be rendered.
- * @param {string} typeface The typeface to be used.
- * @param {string} alignment Left, right or center alignment.
- */
 const renderText = (ctx, text, x, y, textSize, typeface, alignment) => {
   ctx.font = `${textSize}pt ${typeface}, sans-serif`;
   ctx.textAlign = alignment;
