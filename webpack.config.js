@@ -1,3 +1,5 @@
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
 module.exports = {
   entry: './src/js/engine',
   module: {
@@ -8,4 +10,9 @@ module.exports = {
       },
     ],
   },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: 'Phrogger',
+    }),
+  ],
 };
