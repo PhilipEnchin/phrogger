@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
 
 module.exports = {
   entry: './src/js/engine',
@@ -13,6 +14,8 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       title: 'Phrogger',
+      inlineSource: /\.js$/,
     }),
+    new HtmlWebpackInlineSourcePlugin(),
   ],
 };

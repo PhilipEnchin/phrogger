@@ -6,7 +6,8 @@
   "scripts": {
     "start-dev": "npm run build-dev & npm run serve-dev",
     "build-dev": "webpack -d --mode=\"development\" --watch",
-    "serve-dev": "live-server dist"
+    "serve-dev": "live-server dist",
+    "build": "webpack -p --mode=\"production\" && rm dist/main.js"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "eslint": "^6.1.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.20.1",
+    "html-webpack-inline-source-plugin": "0.0.10",
     "html-webpack-plugin": "^3.2.0",
     "live-server": "^1.2.1",
     "style-loader": "^1.1.3",
