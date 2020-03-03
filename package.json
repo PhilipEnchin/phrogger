@@ -1,5 +1,5 @@
 {
-  "name": "Phrogger",
+  "name": "phrogger",
   "version": "1.0.0",
   "description": "Phrogger ======== By Philip Enchin ---------------- [To play, click here!](http://pianomatic.github.io/frontend-nanodegree-arcade-game/)",
   "main": "index.js",
