@@ -7,7 +7,8 @@
     "start-dev": "npm run build-dev & npm run serve-dev",
     "build-dev": "webpack -d --mode=\"development\" --watch",
     "serve-dev": "live-server dist",
-    "build": "webpack -p --mode=\"production\" && rm dist/main.js"
+    "build": "webpack -p --mode=\"production\" && rm dist/main.js",
+    "deploy": "npm run build && firebase deploy"
   },
   "repository": {
     "type": "git",
