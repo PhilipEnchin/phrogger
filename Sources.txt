@@ -1,6 +1,0 @@
-Mozilla Developer Network
-JavaScript reference
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference
-
-Google JavaScript Style Guide
-https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml
