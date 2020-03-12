@@ -16,8 +16,8 @@ You'll need [Node.js](https://nodejs.org/en/) installed. Then:
 
 The project is configured to deploy (and [is deployed](https://phrogger.web.app)) to [Firebase](https://firebase.google.com/):
 
-1. Run `npx firebase login` and provide login credentials (optionally drop `npx` if you have firebase installed globally)
-1. Run `npx firebase init` and...
+1. Run `npm run deploy-init` and...
+    1. Provide login credentials
     1. Select `Hosting`
     1. `Create a new project` or, if you've set one up already, `Use an existing project`, then follow the prompts until...
     1. Use `dist` as your public directory

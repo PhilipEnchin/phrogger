@@ -13,6 +13,7 @@
     "start-dev": "npm run build-dev & npm run serve-dev",
     "build-dev": "webpack -d --mode=\"development\" --watch",
     "serve-dev": "live-server dist",
+    "deploy-init": "firebase login && firebase init",
     "build": "webpack -p --mode=\"production\" && rm dist/main.js",
     "deploy": "npm run build && firebase deploy"
   },
