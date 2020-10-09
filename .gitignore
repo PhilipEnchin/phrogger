@@ -3,3 +3,4 @@ dist/*
 !dist/images
 .firebase
 .firebaserc
+package-lock.json
