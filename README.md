@@ -1,5 +1,7 @@
 # Phrogger
 
+[![Vanilla JS](http://vanilla-js.com/assets/button.png)](http://vanilla-js.com/)
+
 ## To play online
 
 [Click here!](https://phrogger.web.app/)
