@@ -1,5 +1,6 @@
 import Game from './classes/Game';
 import Resources from './resources';
+import Time from './classes/Time';
 import '../style.css';
 import {
   WIDTH, HEIGHT, TYPEFACE, IMAGE,
@@ -17,7 +18,7 @@ const game = new Game(ctx);
 
 /* Game loop */
 const main = () => {
-  const now = Date.now() / 1000;
+  const now = Time.now() / 1000;
   const dt = (now - lastTime);
 
   game.update(dt, now);
@@ -33,7 +34,7 @@ const main = () => {
   * outline), then initializes the game.
   */
 const init = () => {
-  lastTime = Date.now() / 1000;
+  lastTime = Time.now() / 1000;
 
   ctx.fillStyle = 'white';
   ctx.strokeStyle = 'black';

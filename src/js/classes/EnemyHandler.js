@@ -2,6 +2,7 @@ import Enemy from './Enemy';
 import {
   GAME_STATE, COL_WIDTH_PIXELS, COLUMN_COUNT, ENEMY_PIXEL_ADJUST,
 } from '../constants';
+import Time from './Time';
 
 const [PLAYER_EDGE_ADJUST_RIGHT, PLAYER_EDGE_ADJUST_LEFT] = [29, 30];
 const [ENEMY_EDGE_ADJUST_RIGHT, ENEMY_EDGE_ADJUST_LEFT] = [5, 36];
@@ -21,7 +22,7 @@ const addEntryAndExitTimes = enemyObject => {
   const secondsPerEntry = (ENEMY_EDGE_ADJUST_RIGHT + PLAYER_EDGE_ADJUST_LEFT) / speed;
   const secondsPerExit = (ENEMY_EDGE_ADJUST_LEFT + PLAYER_EDGE_ADJUST_RIGHT) / speed;
 
-  const now = Date.now() / 1000;
+  const now = Time.now() / 1000;
   for (let col = 0; col <= COLUMN_COUNT + 1; col++) {
     entryTimes.push(col * secondsPerColumn + secondsPerEntry + now);
     exitTimes.push((col + 2) * secondsPerColumn - secondsPerExit + now);
@@ -201,7 +202,7 @@ class EnemyHandler {
     potentialCollisionLocation.rowIndex = rowIndex;
 
     let columnEntry = null;
-    const now = Date.now() / 1000;
+    const now = Time.now() / 1000;
 
     rowOfEnemies.some(({ entryTimes, exitTimes }) => {
       if (entryTimes[x] > now) { // Enemy's entry into this column is in the future
