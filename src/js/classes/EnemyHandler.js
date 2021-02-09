@@ -10,7 +10,6 @@ const SPAWN_X = -COL_WIDTH_PIXELS;
 // An enemy will not spawn if it will overlap with another enemy. This limits spawn attempts.
 const MAX_SPAWN_ATTEMPTS = 10;
 
-
 // Puts the Enemy object inside another object with entry and exit times.
 const addEntryAndExitTimes = enemyObject => {
   const { speed } = enemyObject.enemy;

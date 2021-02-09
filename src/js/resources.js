@@ -25,7 +25,6 @@ const isReady = () => Object.values(resourceCache).every(r => r);
   */
 const onReady = func => readyCallbacks.push(func);
 
-
 /* This is our private image loader function, it is
   * called by the public image loader function.
   */

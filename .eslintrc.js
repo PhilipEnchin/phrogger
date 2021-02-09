@@ -5,7 +5,7 @@ module.exports = {
   extends: 'airbnb-base',
   rules: {
     'arrow-parens': ['error', 'as-needed'],
-    'import/no-extraneous-dependencies': ['error', {'devDependencies': true}],
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'no-cond-assign': 'off',
     'no-confusing-arrow': 'off',
     'no-fallthrough': 'off',
