@@ -6,7 +6,6 @@ let speed;
 let timeZero;
 
 const Time = {
-  init: () => timeZero = Date.now(),
   now: () => {
     const now = Date.now();
     if (!timeZero) Time.speed = SPEED_DEFAULT;
